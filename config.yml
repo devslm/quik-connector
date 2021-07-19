@@ -1,0 +1,10 @@
+version: 1.0.0
+
+log:
+  level: INFO # DEBUG | INFO | WARN | ERROR
+  path: logs
+  name: quik-connector.log
+
+redis:
+  host: 127.0.0.1
+  port: 6379

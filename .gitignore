@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+*.log
+
+/logs/
+
+/cmake-build-*/*
