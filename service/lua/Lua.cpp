@@ -11,6 +11,9 @@ static lua_State *luaState;
 static recursive_mutex mutexLock;
 
 void luaInit(lua_State *L) {
+    if (luaState != nullptr) {
+        free(luaState);
+    }
     luaState = L;
 }
 
@@ -18,24 +21,25 @@ lua_State* luaGetState() {
     return luaState;
 }
 
-recursive_mutex *luaGetMutex() {
+recursive_mutex* luaGetMutex() {
     return &mutexLock;
 }
 
-bool luaGetScriptPath(lua_State *luaState, string *buffer) {
+Option<string> luaGetScriptPath(lua_State *luaState) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
+    string path;
     bool isSuccess = luaCallFunction(luaState, "getScriptPath", 0, 1, nullptr);
 
     if (!isSuccess) {
-        return false;
+        return Option<string>();
     }
-    isSuccess = luaGetString(luaState, buffer);
+    isSuccess = luaGetString(luaState, &path);
 
     if (isSuccess) {
-        return true;
+        return Option<string>(path);
     }
-    return false;
+    return Option<string>();
 }
 
 const char *luaGetType(lua_State *L, int index) {
@@ -139,12 +143,42 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
     lua_getfield(L, fieldIndexInStack, key);
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
-        logError("Could not get table string field with key: %s from table! Current stack value type is: <<%s>> but required number!",
+        logError("Could not get table number field with key: %s from table! Current stack value type is: <<%s>> but required number!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
     }
     *buffer = lua_tonumber(L, fieldIndexInStack);
+
+    lua_pop(L,1);
+
+    return true;
+}
+
+bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
+    logDebug("Get lua table integer field with key: %s from table", key);
+
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    int fieldIndexInStack = -1;
+
+    if (!lua_istable(L, fieldIndexInStack)) {
+        logError("Could not get table integer field with key: %s! Current stack value type is: <<%s>> but required table!",
+             key, luaGetType(L, fieldIndexInStack));
+
+        *buffer = 0.0;
+
+        return false;
+    }
+    lua_getfield(L, fieldIndexInStack, key);
+
+    if (!lua_isinteger(L, fieldIndexInStack)) {
+        logError("Could not get table integer field with key: %s from table! Current stack value type is: <<%s>> but required integer!",
+             key, luaGetType(L, fieldIndexInStack));
+
+        return false;
+    }
+    *buffer = (uint64_t)lua_tointeger(L, fieldIndexInStack);
 
     lua_pop(L,1);
 
@@ -185,6 +219,24 @@ bool luaGetString(lua_State *L, string *buffer) {
     convertToUtf8(lua_tostring(L, fieldIndexInStack), tmpBuffer);
 
     *buffer = tmpBuffer;
+
+    lua_pop(L,1);
+
+    return true;
+}
+
+bool luaGetNumber(lua_State *L, double *buffer) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    int fieldIndexInStack = -1;
+
+    if (!lua_isnumber(L, fieldIndexInStack)) {
+        logError("Could not get plain number value! Current stack value type is: <<%s>> but required number!",
+             luaGetType(L, fieldIndexInStack));
+
+        return false;
+    }
+    *buffer = lua_tonumber(L, fieldIndexInStack);
 
     lua_pop(L,1);
 

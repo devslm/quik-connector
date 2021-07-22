@@ -14,6 +14,7 @@ ConfigService::ConfigService(const string& scriptPath) {
     errorList.push_back(loadCommonConfig());
     errorList.push_back(loadLogConfig());
     errorList.push_back(loadRedisConfig());
+    errorList.push_back(loadOrderConfig());
 
     for (Option<string>& error : errorList) {
         if (error.isPresent()) {
@@ -66,6 +67,19 @@ Option<string> ConfigService::loadRedisConfig() {
     }
     config.redis.host = configYaml["redis"]["host"].as<string>();
     config.redis.port = configYaml["redis"]["port"].as<int>();
+
+    return Option<string>();
+}
+
+Option<string> ConfigService::loadOrderConfig() {
+    if (!configYaml["order"]) {
+        return Option<string>("Order section required");
+    } else if (!configYaml["order"]["ignore"]) {
+        return Option<string>("Order ignore required");
+    } else if (!configYaml["order"]["ignore"]["canceled"]) {
+        return Option<string>("Order ignore canceled required");
+    }
+    config.order.ignoreCancelled = configYaml["order"]["ignore"]["canceled"].as<bool>();
 
     return Option<string>();
 }

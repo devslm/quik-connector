@@ -7,21 +7,15 @@
 local DEBUG_MODE = "DEBUG"
 local PROD_MODE = "PROD"
 
-RUN_MODE = DEBUG_MODE
+RUN_MODE = PROD_MODE
 WORKING_DIRECTORY = getScriptPath()
 
-package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\?.dll;C:\\Users\\Sergey\\CLionProjects\\quik-connector\\cmake-build-release\\quik_connector.dll"
+if RUN_MODE == PROD_MODE then
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-release\\?.dll;"
+else
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-debug\\?.dll;"
+end
 
 require("quik_connector")
-
---[[function main() 
-    while (true) do
-        if OnStop == nil then
-            message('No OnStop')
-        else
-            message('Exists OnStop')
-        end
-    
-        sleep(10000)
-    end
-end]]--

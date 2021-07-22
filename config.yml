@@ -8,3 +8,7 @@ log:
 redis:
   host: 127.0.0.1
   port: 6379
+
+order:
+  ignore:
+    canceled: true # Remove canceled orders from the list

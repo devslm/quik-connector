@@ -28,6 +28,10 @@ typedef struct RedisConfigDto {
     int port;
 } RedisConfigDto;
 
+typedef struct OrderConfigDto {
+    bool ignoreCancelled;
+} OrderConfigDto;
+
 typedef struct ConfigDto {
     ConfigDto(): directorySeparator(DIRECTORY_SEPARATOR) {};
     string directorySeparator;
@@ -35,6 +39,7 @@ typedef struct ConfigDto {
     string scriptPath;
     LogConfigDto log;
     RedisConfigDto redis;
+    OrderConfigDto order;
 } ConfigDto;
 
 #endif //QUIK_CONNECTOR_CONFIG_H

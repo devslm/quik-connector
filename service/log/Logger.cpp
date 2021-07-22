@@ -3,10 +3,17 @@
 //
 
 #include "Logger.h"
+#include <windows.h>
 
 Logger::Logger(const ConfigDto& config) {
     auto filePath = config.log.path + config.directorySeparator + config.log.name;
     logLevel = getLogLevelByType(config.log.level);
+
+    int errorCode = CreateDirectory(config.log.path.c_str(), nullptr);
+
+    if (ERROR_PATH_NOT_FOUND == errorCode) {
+        throw runtime_error("Could not init logger because path: " + config.log.path + " not found!");
+    }
     logFile = fopen(filePath.c_str(), "w");
 
     log_set_level(logLevel);

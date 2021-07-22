@@ -12,80 +12,76 @@ bool toTradeDto(lua_State *luaState, TradeDto *trade) {
 
         return false;
     }
-    bool isSuccess = true;
 
-    if (!luaGetTableNumberField(luaState, "trade_num", &trade->tradeNum)) {
-        isSuccess = false;
+    if (!luaGetTableIntegerField(luaState, "trade_num", &trade->tradeNum)) {
+        return false;
     }
-
+    if (!luaGetTableIntegerField(luaState, "order_num", &trade->orderNum)) {
+        return false;
+    }
     if (!luaGetTableNumberField(luaState, "flags", &trade->flags)) {
-        isSuccess = false;
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "price", &trade->price)) {
-        isSuccess = false;
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "qty", &trade->qty)) {
-        isSuccess = false;
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "value", &trade->value)) {
-        isSuccess = false;
+        return false;
     }
-
-    if (!luaGetTableNumberField(luaState, "accruedint", &trade->accruedint)) {
-        isSuccess = false;
+    if (!luaGetTableNumberField(luaState, "accruedint", &trade->accruedInt)) {
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "yield", &trade->yield)) {
-        isSuccess = false;
+        return false;
     }
-
-    if (!luaGetTableStringField(luaState, "settlecode", &trade->settlecode)) {
-        isSuccess = false;
+    if (!luaGetTableStringField(luaState, "settlecode", &trade->settleCode)) {
+        return false;
     }
-
-    if (!luaGetTableNumberField(luaState, "reporate", &trade->reporate)) {
-        isSuccess = false;
+    if (!luaGetTableNumberField(luaState, "reporate", &trade->repoRate)) {
+        return false;
     }
-
-    if (!luaGetTableNumberField(luaState, "repovalue", &trade->repovalue)) {
-        isSuccess = false;
+    if (!luaGetTableNumberField(luaState, "repovalue", &trade->repoValue)) {
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "repo2value", &trade->repo2value)) {
-        isSuccess = false;
+        return false;
     }
-
-    if (!luaGetTableNumberField(luaState, "repoterm", &trade->repoterm)) {
-        isSuccess = false;
+    if (!luaGetTableNumberField(luaState, "repoterm", &trade->repoTerm)) {
+        return false;
     }
-
     if (!luaGetTableStringField(luaState, "sec_code", &trade->secCode)) {
-        isSuccess = false;
+        return false;
     }
-
     if (!luaGetTableStringField(luaState, "class_code", &trade->classCode)) {
-        isSuccess = false;
+        return false;
     }
-
     if (!luaGetTableNumberField(luaState, "period", &trade->period)) {
-        isSuccess = false;
+        return false;
     }
-
-    if (!luaGetTableNumberField(luaState, "open_interest", &trade->openInterest)) {
-        isSuccess = false;
-    }
-
     if (!luaGetTableStringField(luaState, "exchange_code", &trade->exchangeCode)) {
-        isSuccess = false;
+        return false;
     }
-
+    if (!luaGetTableNumberField(luaState, "clearing_comission", &trade->clearingComission)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "exchange_comission", &trade->exchangeComission)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "tech_center_comission", &trade->techCenterComission)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "broker_comission", &trade->brokerComission)) {
+        return false;
+    }
     if (!toDateMillis(luaState, "datetime", &trade->date)) {
-        isSuccess = false;
+        return false;
     }
-    return isSuccess;
+    lua_pop(luaState, 1);
+
+    return true;
 }
 
 string toTradeJson(Option<TradeDto> *tradeOption) {
@@ -94,25 +90,28 @@ string toTradeJson(Option<TradeDto> *tradeOption) {
     }
     json jsonObject;
     TradeDto trade = tradeOption->get();
-
     jsonObject["tradeNum"] = trade.tradeNum;
+    jsonObject["orderNum"] = trade.orderNum;
     jsonObject["flags"] = trade.flags;
     jsonObject["price"] = trade.price;
     jsonObject["qty"] = trade.qty;
     jsonObject["value"] = trade.value;
-    jsonObject["accruedint"] = trade.accruedint;
+    jsonObject["accruedInt"] = trade.accruedInt;
     jsonObject["yield"] = trade.yield;
-    jsonObject["settlecode"] = trade.settlecode;
-    jsonObject["reporate"] = trade.reporate;
-    jsonObject["repovalue"] = trade.repovalue;
+    jsonObject["settleCode"] = trade.settleCode;
+    jsonObject["repoRate"] = trade.repoRate;
+    jsonObject["repoValue"] = trade.repoValue;
     jsonObject["repo2value"] = trade.repo2value;
-    jsonObject["repoterm"] = trade.repoterm;
+    jsonObject["repoTerm"] = trade.repoTerm;
     jsonObject["secCode"] = trade.secCode;
     jsonObject["classCode"] = trade.classCode;
     jsonObject["date"] = trade.date;
     jsonObject["period"] = trade.period;
-    jsonObject["openInterest"] = trade.openInterest;
     jsonObject["exchangeCode"] = trade.exchangeCode;
+    jsonObject["clearingComission"] = trade.clearingComission;
+    jsonObject["exchangeComission"] = trade.exchangeComission;
+    jsonObject["techCenterComission"] = trade.techCenterComission;
+    jsonObject["brokerComission"] = trade.brokerComission;
 
     return jsonObject.dump();
 }

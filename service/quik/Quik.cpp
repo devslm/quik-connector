@@ -4,19 +4,12 @@
 
 #include "Quik.h"
 
-const char MESSAGE_FUNCTION_NAME[] = "message";
-const char IS_CONNECTED_FUNCTION_NAME[] = "isConnected";
-const char GET_CLASSES_LIST_FUNCTION_NAME[] = "getClassesList";
-const char GET_CLASS_INFO_FUNCTION_NAME[] = "getClassInfo";
-const char GET_INFO_PARAM_FUNCTION_NAME[] = "getInfoParam";
-const char GET_QUOTE_LEVEL_2_FUNCTION_NAME[] = "getQuoteLevel2";
-
 Quik::Quik() {
     this->mutexLock = luaGetMutex();
 }
 
 Quik::~Quik() {
-    logInfo("Quik service destroyed");
+
 }
 
 bool Quik::isRunning() const {
@@ -24,17 +17,22 @@ bool Quik::isRunning() const {
 }
 
 int Quik::onStart(lua_State *luaState) {
-    this->isConnectorRunning = true;
     string logMessage = APP_NAME + " started";
     auto config = configService->getConfig();
 
-    //this->queueService = new QueueService(this, config.redis.host, config.redis.port);
-    //this->queueService->subscribe();
+    this->queueService = new QueueService(this, config.redis.host, config.redis.port);
+    this->queueService->subscribe();
 
-    //this->quikCandleService = new QuikCandleService(this->queueService);
-    //this->quikCandleService->init();
+    this->quikCandleService = new QuikCandleService(this->queueService);
+    this->quikCandleService->init();
+
+    this->quikOrderService = new QuikOrderService(this);
+
+    isConnectorRunning = true;
 
     this->checkQuotesThread = thread([this] {startCheckQuotesThread();});
+    this->checkNewOrdersThread = thread([this] {startCheckNewOrdersThread();});
+    this->isConnectorRunning = true;
 
     logInfo(logMessage.c_str());
     message(luaState, logMessage);
@@ -48,7 +46,11 @@ int Quik::onStop(lua_State *luaState) {
 
     quikCandleService->destroy();
 
+    delete quikOrderService;
+    delete queueService;
+
     checkQuotesThread.join();
+    checkNewOrdersThread.join();
 
     logInfo(logMessage.c_str());
     message(luaState, logMessage);
@@ -69,7 +71,7 @@ int Quik::onAllTrade(lua_State *L) {
     if (isSuccess) {
         trades.push(trade);
     } else {
-        // Send error
+        logError("Could not handle all trade changes!");
     }
     return 0;
 }
@@ -100,7 +102,7 @@ int Quik::onQuote(lua_State *luaState) {
     bool isSuccess = luaGetString(luaState, &classCode);
 
     if (!isSuccess) {
-        logError("Could not get changed quote classCode");
+        logError("Could not get changed quote class code");
         return 0;
     }
     isSuccess = luaGetString(luaState, &ticker);
@@ -109,10 +111,10 @@ int Quik::onQuote(lua_State *luaState) {
         logError("Could not get changed quote ticker");
         return 0;
     }
+    changedQuotes[ticker] = classCode;
+
     quoteLock.unlock();
     changedQuoteMapLock.unlock();
-
-    changedQuotes[ticker] = classCode;
 
     return 0;
 }
@@ -123,7 +125,9 @@ void Quik::startCheckQuotesThread() {
 
         changedQuoteMapLock.lock();
 
-        unordered_map<string, string> quotes = changedQuotes;
+        unordered_map<string, string> quotes(changedQuotes);
+
+        changedQuotes.clear();
 
         changedQuoteMapLock.unlock();
 
@@ -132,7 +136,48 @@ void Quik::startCheckQuotesThread() {
             string classCode = entry.second;
             auto tickerQuotes = getTickerQuotes(luaGetState(), ticker, classCode);
 
-            logInfo("New quotes: %s", toTickerQuoteJson(&tickerQuotes).dump().c_str());
+            //logInfo("New quotes: %s", toTickerQuoteJson(&tickerQuotes).dump().c_str());
+        }
+    }
+}
+
+int Quik::onOrder(lua_State *luaState) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    orderLock.lock();
+    changedOrderListLock.lock();
+
+    OrderDto order;
+
+    bool isSuccess = toOrderDto(luaState, this, &order);
+
+    orderLock.unlock();
+    changedOrderListLock.unlock();
+
+    if (isSuccess) {
+        newOrders.push_back(order);
+    } else {
+        logError("Could not get new order from callback!");
+    }
+    return 0;
+}
+
+void Quik::startCheckNewOrdersThread() {
+    while (isConnectorRunning) {
+        this_thread::sleep_for(chrono::milliseconds(100));
+
+        changedOrderListLock.lock();
+
+        list<OrderDto> orders(newOrders);
+
+        newOrders.clear();
+
+        changedOrderListLock.unlock();
+
+        for (const auto& order : orders) {
+            Option<OrderDto> orderOption(order);
+
+            logInfo("New order received: %s", toOrderJson(orderOption).dump().c_str());
         }
     }
 }
@@ -261,4 +306,83 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string classCo
     logError("Could not get ticker quotes for class: %s and ticker: %s!", classCode.c_str(), ticker.c_str());
 
     return Option<TickerQuoteDto>();
+}
+
+list<TradeDto> Quik::getTrades(lua_State *luaState) {
+    list<TradeDto> existsTrades;
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{STRING_TYPE, QUIK_TRADES_TABLE_NAME, 0, 0.0, false}};
+
+    if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
+        logError("Could not call QUIK %s function!", GET_NUMBER_OF_FUNCTION_NAME);
+        return existsTrades;
+    }
+    double totalOrders = 0.0;
+    bool isSuccess = luaGetNumber(luaState, &totalOrders);
+
+    if (!isSuccess) {
+        logError("Could not get trades because can't retrieve total trades number!");
+        return existsTrades;
+    }
+    logDebug("Found: %d trades", (int)totalOrders);
+
+    for (int i = 0; i < totalOrders; ++i) {
+        FunctionArgDto args[] = {
+            {STRING_TYPE,  QUIK_TRADES_TABLE_NAME, 0, 0.0, false},
+            {INTEGER_TYPE, "",                     i, 0.0, false}
+        };
+
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
+            logError("Could not call QUIK %s function!", GET_ITEM_FUNCTION_NAME);
+            return existsTrades;
+        }
+        TradeDto trade;
+
+        isSuccess = toTradeDto(luaState, &trade);
+
+        if (!isSuccess) {
+            logError("Could not convert trade data to dto!");
+            continue;
+        }
+        Option<TradeDto> tradeOption(trade);
+
+        logDebug("Trade: %s", toTradeJson(&tradeOption).c_str());
+
+        existsTrades.push_back(trade);
+    }
+    return existsTrades;
+}
+
+list<OrderDto> Quik::getNewOrders(lua_State *luaState) {
+    return quikOrderService->getNewOrders(luaState);
+}
+
+list<OrderDto> Quik::getOrders(lua_State *luaState) {
+    return quikOrderService->getOrders(luaState);
+}
+
+Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, string tickerCode) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {
+        {STRING_TYPE, classCode, 0, 0.0, false},
+        {STRING_TYPE, tickerCode, 0, 0.0, false}
+    };
+
+    if (!luaCallFunction(luaState, GET_SECURITY_INFO_FUNCTION_NAME, 2, 1, args)) {
+        logError("Could not call QUIK %s function!", GET_SECURITY_INFO_FUNCTION_NAME);
+        return Option<TickerDto>();
+    }
+    TickerDto ticker;
+
+    bool isSuccess = toTickerDto(luaState, &ticker);
+
+    if (isSuccess) {
+        return Option<TickerDto>(ticker);
+    }
+    logError("Could not get ticker info for class: %s and ticker: %s!", classCode.c_str(), tickerCode.c_str());
+
+    return Option<TickerDto>();
 }

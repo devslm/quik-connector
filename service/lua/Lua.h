@@ -10,6 +10,7 @@
 #include "../../dto/lua/FunctionArgDto.h"
 #include "../utils/debug/DebugFunctions.h"
 #include "../utils/string/StringUtils.h"
+#include "../../dto/option/Option.h"
 
 extern "C" {
 #include "lua.h"
@@ -23,9 +24,9 @@ void luaInit(lua_State *L);
 
 lua_State* luaGetState();
 
-recursive_mutex *luaGetMutex();
+recursive_mutex* luaGetMutex();
 
-bool luaGetScriptPath(lua_State *luaState, string *buffer);
+Option<string> luaGetScriptPath(lua_State *luaState);
 
 const char *luaGetType(lua_State *L, int index);
 
@@ -37,9 +38,13 @@ void luaGcCollect(lua_State *luaState);
 
 bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer);
 
+bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer);
+
 bool luaGetTableStringField(lua_State *L, const char *key, string *buffer);
 
 bool luaGetString(lua_State *L, string *buffer);
+
+bool luaGetNumber(lua_State *L, double *buffer);
 
 int luaLoadReference(lua_State *luaState, int index);
 

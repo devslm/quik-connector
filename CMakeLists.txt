@@ -56,7 +56,7 @@ add_library(
     mapper/quik/QuikServerMapper.cpp mapper/quik/QuikServerMapper.h
     mapper/request/RequestMapper.cpp mapper/request/RequestMapper.h
     dto/connector/request/RequestDto.h
-    dto/quik/QuikUserInfoDto.h dto/quote/TickerQuoteDto.h mapper/quote/QuoteMapper.cpp mapper/quote/QuoteMapper.h dto/candle/ChangedCandleDto.h service/config/ConfigService.cpp service/config/ConfigService.h)
+    dto/quik/QuikUserInfoDto.h dto/quote/TickerQuoteDto.h mapper/quote/QuoteMapper.cpp mapper/quote/QuoteMapper.h dto/candle/ChangedCandleDto.h service/config/ConfigService.cpp service/config/ConfigService.h dto/order/OrderDto.h mapper/order/OrderMapper.cpp mapper/order/OrderMapper.h service/quik/order/QuikOrderService.cpp service/quik/order/QuikOrderService.h dto/ticker/TickerDto.h mapper/ticker/TickerMapper.cpp mapper/ticker/TickerMapper.h dto/order/OrderCommissionDto.h component/redis/Redis.cpp component/redis/Redis.h)
 
 link_directories(
     C:/lua-5.3.6

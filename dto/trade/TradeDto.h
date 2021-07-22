@@ -7,25 +7,31 @@
 
 #include <string>
 
+using namespace std;
+
 typedef struct TradeDto {
-    double tradeNum;
+    uint64_t tradeNum;
+    uint64_t orderNum;
     double flags;
     double price;
     double qty;
     double value;
-    double accruedint;
+    double accruedInt;
     double yield;
-    std::string settlecode;
-    double reporate;
-    double repovalue;
+    string settleCode;
+    double repoRate;
+    double repoValue;
     double repo2value;
-    double repoterm;
-    std::string secCode;
-    std::string classCode;
+    double repoTerm;
+    string secCode;
+    string classCode;
     uint64_t date;
     double period;
-    double openInterest;
-    std::string exchangeCode;
+    string exchangeCode;
+    double clearingComission;
+    double exchangeComission;
+    double techCenterComission;
+    double brokerComission;
 } TradeDto;
 
 #endif //QUIK_CONNECTOR_TRADEDTO_H

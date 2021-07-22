@@ -29,6 +29,8 @@ private:
     Option<string> loadLogConfig();
 
     Option<string> loadRedisConfig();
+
+    Option<string> loadOrderConfig();
 };
 
 #endif //QUIK_CONNECTOR_CONFIGSERVICE_H
