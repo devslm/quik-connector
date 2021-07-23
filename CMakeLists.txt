@@ -26,37 +26,40 @@ FetchContent_Declare(
     GIT_TAG yaml-cpp-0.7.0
 )
 set(YAML_CPP_BUILD_TESTS OFF)
+
 FetchContent_MakeAvailable(yaml-cpp)
+
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
 add_library(
     quik_connector
     SHARED
     library.cpp library.h
-    service/log/log.c service/log/log.h
-    service/log/Logger.cpp service/log/Logger.h
-    service/quik/Quik.cpp service/quik/Quik.h
-    dto/trade/TradeDto.h
-    mapper/trade/TradeMapper.cpp
-    dto/option/Option.h
-    service/lua/Lua.cpp service/lua/Lua.h
-    mapper/trade/TradeMapper.h
-    mapper/date/DateMapper.cpp mapper/date/DateMapper.h
-    service/utils/debug/DebugFunctions.cpp service/utils/debug/DebugFunctions.h
-    service/quik/utils/QuikUtils.cpp service/quik/utils/QuikUtils.h
-    dto/config/Config.h
-    service/utils/string/StringUtils.cpp service/utils/string/StringUtils.h
-    dto/class/ClassInfoDto.h
-    mapper/class/ClassInfoMapper.cpp mapper/class/ClassInfoMapper.h
-    dto/candle/CandleSubscriptionDto.h
-    service/quik/candle/QuikCandleService.h service/quik/candle/QuikCandleService.cpp
-    dto/candle/CandleDto.h
-    mapper/candle/CandleMapper.cpp mapper/candle/CandleMapper.h
-    service/queue/QueueService.cpp service/queue/QueueService.h
-    dto/quik/QuikConnectionStatusDto.h
-    mapper/quik/QuikServerMapper.cpp mapper/quik/QuikServerMapper.h
-    mapper/request/RequestMapper.cpp mapper/request/RequestMapper.h
-    dto/connector/request/RequestDto.h
-    dto/quik/QuikUserInfoDto.h dto/quote/TickerQuoteDto.h mapper/quote/QuoteMapper.cpp mapper/quote/QuoteMapper.h dto/candle/ChangedCandleDto.h service/config/ConfigService.cpp service/config/ConfigService.h dto/order/OrderDto.h mapper/order/OrderMapper.cpp mapper/order/OrderMapper.h service/quik/order/QuikOrderService.cpp service/quik/order/QuikOrderService.h dto/ticker/TickerDto.h mapper/ticker/TickerMapper.cpp mapper/ticker/TickerMapper.h dto/order/OrderCommissionDto.h component/redis/Redis.cpp component/redis/Redis.h)
+        src/service/log/log.c src/service/log/log.h
+        src/service/log/Logger.cpp src/service/log/Logger.h
+        src/service/quik/Quik.cpp src/service/quik/Quik.h
+        src/dto/trade/TradeDto.h
+        src/mapper/trade/TradeMapper.cpp
+        src/dto/option/Option.h
+        src/service/lua/Lua.cpp src/service/lua/Lua.h
+        src/mapper/trade/TradeMapper.h
+        src/mapper/date/DateMapper.cpp src/mapper/date/DateMapper.h
+        src/service/utils/debug/DebugFunctions.cpp src/service/utils/debug/DebugFunctions.h
+        src/service/quik/utils/QuikUtils.cpp src/service/quik/utils/QuikUtils.h
+        src/dto/config/Config.h
+        src/service/utils/string/StringUtils.cpp src/service/utils/string/StringUtils.h
+        src/dto/class/ClassInfoDto.h
+        src/mapper/class/ClassInfoMapper.cpp src/mapper/class/ClassInfoMapper.h
+        src/dto/candle/CandleSubscriptionDto.h
+        src/service/quik/candle/QuikCandleService.h src/service/quik/candle/QuikCandleService.cpp
+        src/dto/candle/CandleDto.h
+        src/mapper/candle/CandleMapper.cpp src/mapper/candle/CandleMapper.h
+        src/service/queue/QueueService.cpp src/service/queue/QueueService.h
+        src/dto/quik/QuikConnectionStatusDto.h
+        src/mapper/quik/QuikServerMapper.cpp src/mapper/quik/QuikServerMapper.h
+        src/mapper/request/RequestMapper.cpp src/mapper/request/RequestMapper.h
+        src/dto/connector/request/RequestDto.h
+        src/dto/quik/QuikUserInfoDto.h src/dto/quote/TickerQuoteDto.h src/mapper/quote/QuoteMapper.cpp src/mapper/quote/QuoteMapper.h src/dto/candle/ChangedCandleDto.h src/service/config/ConfigService.cpp src/service/config/ConfigService.h src/dto/order/OrderDto.h src/mapper/order/OrderMapper.cpp src/mapper/order/OrderMapper.h src/service/quik/order/QuikOrderService.cpp src/service/quik/order/QuikOrderService.h src/dto/ticker/TickerDto.h src/mapper/ticker/TickerMapper.cpp src/mapper/ticker/TickerMapper.h src/dto/order/OrderCommissionDto.h src/component/redis/Redis.cpp src/component/redis/Redis.h)
 
 link_directories(
     C:/lua-5.3.6
