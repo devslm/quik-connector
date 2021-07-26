@@ -51,6 +51,7 @@ class QueueService;
 class QuikOrderService;
 
 extern ConfigService* configService;
+extern shared_ptr<spdlog::logger> LOGGER;
 
 class Quik {
 public:

@@ -44,7 +44,7 @@ void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumA
                 }
                 break;
             default:
-                logError("Could not debug function arguments because argument: #%d has unknown type: %d", i + 1, arg.type);
+                LOGGER->error("Could not debug function arguments because argument: #{} has unknown type: {}", i + 1, arg.type);
 
                 strcpy(argType, "UNKNOWN");
                 strcpy(argValue, "UNKNOWN");

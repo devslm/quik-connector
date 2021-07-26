@@ -29,7 +29,7 @@ string QuikUtils::getIntervalName(Interval interval) {
         case INTERVAL_D1:
             return "INTERVAL_D1";
         default:
-            logError("Could not find interval name! Because interval: %d is undefined!", interval);
+            LOGGER->error("Could not find interval name! Because interval: {} is undefined!", interval);
             return "INTERVAL_D1";
     }
 }
@@ -58,7 +58,7 @@ Interval QuikUtils::getIntervalByName(const string& interval) {
     } else if (interval == "INTERVAL_D1") {
         return INTERVAL_D1;
     }
-    logError("Could not find interval type! Because interval name: %d is undefined!", interval.c_str());
+    LOGGER->error("Could not find interval type! Because interval name: {} is undefined!", interval.c_str());
 
     return INTERVAL_D1;
 }
@@ -104,7 +104,7 @@ Option<string> QuikUtils::getClassTypeByCode(string& classCode) {
     if (classCodes.find(classCode) != end(classCodes)) {
         return Option<string>(classCodes.at(classCode));
     }
-    logError("Could not get class type by code: %s because code is undefined!", classCode.c_str());
+    LOGGER->error("Could not get class type by code: {} because code is undefined!", classCode);
 
     return Option<string>();
 }

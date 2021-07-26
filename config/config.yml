@@ -4,6 +4,9 @@ log:
   level: INFO # DEBUG | INFO | WARN | ERROR
   path: logs
   name: quik-connector.log
+  max:
+    size: 1 # Max file size in Mb
+    files: 5 # Rotate max files
 
 redis:
   host: 127.0.0.1

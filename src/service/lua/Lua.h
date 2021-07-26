@@ -15,10 +15,11 @@
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
-#include "../log/log.h"
 };
 
 using namespace std;
+
+extern shared_ptr<spdlog::logger> LOGGER;
 
 void luaInit(lua_State *L);
 

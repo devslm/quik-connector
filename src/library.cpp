@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+shared_ptr<spdlog::logger> LOGGER;
 Quik* quik;
 Logger* logger;
 ConfigService *configService;
@@ -17,6 +18,8 @@ static int onStop(lua_State *luaState) {
     delete redis;
     delete configService;
     delete logger;
+
+    LOGGER.reset();
 
     return returnCode;
 }
@@ -51,7 +54,7 @@ static int onStart(lua_State *luaState) {
     configService = new ConfigService(scriptPath.get());
     auto config = configService->getConfig();
     // Init logger before any other services otherwise we don't see any logs!
-    logger = new Logger(config);
+    LOGGER = Logger::init(config);
 
     redis = new Redis();
     redis->connect();

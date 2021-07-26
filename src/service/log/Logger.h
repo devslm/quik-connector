@@ -5,29 +5,21 @@
 #ifndef QUIK_CONNECTOR_LOGGER_H
 #define QUIK_CONNECTOR_LOGGER_H
 
-#include <stdio.h>
 #include <string>
+#include "../quik/utils/FileUtils.h"
 #include "../../dto/config/Config.h"
-
-extern "C" {
-#include "log.h"
-};
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 
 using namespace std;
 
 class Logger {
 public:
-    Logger(const ConfigDto& config);
+    static shared_ptr<spdlog::logger> init(const ConfigDto& config);
 
-    void info(const char *fmt...);
+    static void close();
 
-    ~Logger();
-
-private:
-    int logLevel;
-    FILE *logFile;
-
-    int getLogLevelByType(const string& logLevel);
+    static spdlog::level::level_enum Logger::getLogLevelByType(const string& level);
 };
 
 

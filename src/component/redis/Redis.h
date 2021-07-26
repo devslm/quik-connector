@@ -17,6 +17,7 @@ using namespace nlohmann;
 class ConfigService;
 
 extern ConfigService* configService;
+extern shared_ptr<spdlog::logger> LOGGER;
 
 class Redis {
 public:

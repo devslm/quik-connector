@@ -9,10 +9,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "../../../dto/lua/FunctionArgDto.h"
+#include "../../log/Logger.h"
 
-extern "C" {
-#include "../../log/log.h"
-};
+extern shared_ptr<spdlog::logger> LOGGER;
 
 void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumArgs, char *resultBuffer, int bufferSize);
 

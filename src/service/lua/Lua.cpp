@@ -70,7 +70,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 
         debugLuaFunctionArgsToString(functionArgs, numArgs, argsString, 512);
 
-        logError("Could not call lua function: %s and args: %s! Current stack value type is: <<%s>> but required function!",
+        LOGGER->error("Could not call lua function: {} and args: {}! Current stack value type is: <<{}>> but required function!",
              name, argsString, luaGetType(L, -1));
 
         return false;
@@ -94,7 +94,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
                 lua_pushboolean(L, arg.valueBoolean);
                 break;
             default:
-                logError("Could not call ticker function: %s because argument: #%d has unknown type: %d",
+                LOGGER->error("Could not call ticker function: {} because argument: #{} has unknown type: {}",
                      name, i + 1, arg.type);
 
                 return false;
@@ -103,7 +103,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
     int result = lua_pcall(L, numArgs, numReturns, 0);
 
     if (LUA_OK != result) {
-        logError("Could not call lua function!");
+        LOGGER->error("Could not call lua function!");
 
         return false;
     }
@@ -111,7 +111,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 }
 
 bool luaGetPlainBooleanField(lua_State *L, const char *fieldName, bool *buffer) {
-    logDebug("Get lua plain boolean field for: %s", fieldName);
+    LOGGER->debug("Get lua plain boolean field for: {}", fieldName);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
@@ -126,14 +126,14 @@ bool luaGetPlainBooleanField(lua_State *L, const char *fieldName, bool *buffer) 
 }
 
 bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
-    logDebug("Get lua table number field with key: %s from table", key);
+    LOGGER->debug("Get lua table number field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        logError("Could not get table number field with key: %s! Current stack value type is: <<%s>> but required table!",
+        LOGGER->error("Could not get table number field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         *buffer = 0.0;
@@ -143,7 +143,7 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
     lua_getfield(L, fieldIndexInStack, key);
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
-        logError("Could not get table number field with key: %s from table! Current stack value type is: <<%s>> but required number!",
+        LOGGER->error("Could not get table number field with key: {} from table! Current stack value type is: <<{}>> but required number!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -156,14 +156,14 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
 }
 
 bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
-    logDebug("Get lua table integer field with key: %s from table", key);
+    LOGGER->debug("Get lua table integer field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        logError("Could not get table integer field with key: %s! Current stack value type is: <<%s>> but required table!",
+        LOGGER->error("Could not get table integer field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         *buffer = 0.0;
@@ -173,7 +173,7 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
     lua_getfield(L, fieldIndexInStack, key);
 
     if (!lua_isinteger(L, fieldIndexInStack)) {
-        logError("Could not get table integer field with key: %s from table! Current stack value type is: <<%s>> but required integer!",
+        LOGGER->error("Could not get table integer field with key: {} from table! Current stack value type is: <<{}>> but required integer!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -186,14 +186,14 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
 }
 
 bool luaGetTableStringField(lua_State *L, const char *key, string *buffer) {
-    logDebug("Get lua table string field with key: %s from table", key);
+    LOGGER->debug("Get lua table string field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        logError("Could not get table string field with key: %s! Current stack value type is: <<%s>> but required table!",
+        LOGGER->error("Could not get table string field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -209,7 +209,7 @@ bool luaGetString(lua_State *L, string *buffer) {
     int fieldIndexInStack = -1;
 
     if (!lua_isstring(L, fieldIndexInStack)) {
-        logError("Could not get plain string value! Current stack value type is: <<%s>> but required string!",
+        LOGGER->error("Could not get plain string value! Current stack value type is: <<{}>> but required string!",
              luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -231,7 +231,7 @@ bool luaGetNumber(lua_State *L, double *buffer) {
     int fieldIndexInStack = -1;
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
-        logError("Could not get plain number value! Current stack value type is: <<%s>> but required number!",
+        LOGGER->error("Could not get plain number value! Current stack value type is: <<{}>> but required number!",
              luaGetType(L, fieldIndexInStack));
 
         return false;

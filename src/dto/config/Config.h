@@ -21,6 +21,8 @@ typedef struct LogConfigDto {
     string level;
     string path;
     string name;
+    int fileMaxSize;
+    int maxFiles;
 } LogConfigDto;
 
 typedef struct RedisConfigDto {

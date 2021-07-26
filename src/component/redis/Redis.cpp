@@ -9,7 +9,7 @@ Redis::Redis() {
 }
 
 Redis::~Redis() {
-    logInfo("[Redis] Close all connections");
+    LOGGER->info("[Redis] Close all connections");
 
     redisClient.disconnect(true);
 
@@ -25,7 +25,7 @@ void Redis::connect() {
     WSADATA data;
 
     if (WSAStartup(version, &data) != 0) {
-        logError("WSAStartup() failure");
+        LOGGER->error("WSAStartup() failure");
     }
     redisClient.connect(
         configService->getConfig().redis.host,
@@ -51,7 +51,7 @@ void Redis::connect() {
             }
 
             if (!message.empty()) {
-                logInfo("[Redis] %s", message.c_str());
+                LOGGER->info("[Redis] {}", message);
             }
         }, 5000, 1000, redisReconnectAttempts
     );

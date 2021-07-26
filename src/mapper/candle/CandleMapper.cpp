@@ -108,15 +108,15 @@ bool toCandleDto(CandleSubscriptionDto *candleSubscription, CandleDto *candle, i
 
 static void validateCandleStartIndex(int *candleFirstIndex, const int candleLastIndex) {
     if (*candleFirstIndex < CANDLE_FIRST_INDEX) {
-        logWarn("Could not convert candles to dto with the first index: %d because candles list starts from: %d so use: %d as first index",
-            candleFirstIndex, CANDLE_FIRST_INDEX, CANDLE_FIRST_INDEX);
+        LOGGER->warn("Could not convert candles to dto with the first index: {} because candles list starts from: {} so use: {} as first index",
+            *candleFirstIndex, CANDLE_FIRST_INDEX, CANDLE_FIRST_INDEX);
 
         *candleFirstIndex = CANDLE_FIRST_INDEX;
     }
 
     if (*candleFirstIndex > candleLastIndex) {
-        logWarn("Could not convert candles to dto with the first index: %d because first index should be less or equal last index: %d so use last index as first index",
-            candleFirstIndex, candleLastIndex, candleLastIndex);
+        LOGGER->warn("Could not convert candles to dto with the first index: {} because first index should be less or equal last index: {} so use last index as first index",
+            *candleFirstIndex, candleLastIndex, candleLastIndex);
 
         *candleFirstIndex = candleLastIndex;
     }

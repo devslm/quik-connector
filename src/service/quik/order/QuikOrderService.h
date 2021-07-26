@@ -24,6 +24,7 @@ class Redis;
 
 extern ConfigService *configService;
 extern Redis* redis;
+extern shared_ptr<spdlog::logger> LOGGER;
 
 class QuikOrderService {
 public:

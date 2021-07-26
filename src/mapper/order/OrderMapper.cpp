@@ -10,7 +10,7 @@ static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* or
 
 bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     if (!lua_istable(luaState, -1)) {
-        logError("Could not get table for order data! Current stack value type is: <<%s>> but required table!",
+        LOGGER->error("Could not get table for order data! Current stack value type is: <<{}>> but required table!",
              luaGetType(luaState, -1));
 
         return false;
@@ -147,7 +147,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     Option<string> classType = QuikUtils::getClassTypeByCode(order->classCode);
 
     if (!classType.isPresent()) {
-        logError("Could not get order class type with class code: %s", order->classCode.c_str());
+        LOGGER->error("Could not get order class type with class code: {}", order->classCode);
         return false;
     }
     order->classType = classType.get();
@@ -157,8 +157,8 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     Option<TickerDto> tickerOption = quik->getTickerById(luaState, order->classCode, order->ticker);
 
     if (!tickerOption.isPresent()) {
-        logError("Could not convert order data to dto! Reason: Can't get ticker data with class code: %s and ticker: %s",
-            order->classCode.c_str(), order->ticker.c_str());
+        LOGGER->error("Could not convert order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
+            order->classCode, order->ticker);
         return false;
     }
     TickerDto ticker = tickerOption.get();
@@ -172,7 +172,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
 }
 
 static Option<TradeDto> getTradeByOrderId(uint64_t orderId, list<TradeDto> trades) {
-    logDebug("Get trade data with order: %I64d", orderId);
+    LOGGER->debug("Get trade data with order: {}", orderId);
 
     for (const auto& trade : trades) {
         if (trade.orderNum == orderId) {
@@ -185,7 +185,7 @@ static Option<TradeDto> getTradeByOrderId(uint64_t orderId, list<TradeDto> trade
 static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* order) {
     if (configService->getConfig().order.ignoreCancelled
             && order->status == ORDER_STATUS_CANCELED) {
-        logDebug("Skipping add commission data to order: %I64d because it status: %s", order->status.c_str());
+        LOGGER->debug("Skipping add commission data to order: {} because it status: {}", order->orderNum, order->status);
         return;
     }
     list<TradeDto> trades = quik->getTrades(luaState);

@@ -22,6 +22,7 @@ class Quik;
 class Redis;
 
 extern Redis* redis;
+extern shared_ptr<spdlog::logger> LOGGER;
 
 typedef struct CommandResponseDto {
     CommandResponseDto(string command, string commandId, json commandJsonData) {

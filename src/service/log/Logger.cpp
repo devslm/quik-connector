@@ -3,42 +3,34 @@
 //
 
 #include "Logger.h"
-#include <Windows.h>
 
-Logger::Logger(const ConfigDto& config) {
-    auto filePath = config.log.path + config.directorySeparator + config.log.name;
-    logLevel = getLogLevelByType(config.log.level);
+const auto QUIK_CONNECTOR_LOGGER = "quik-connector";
+const auto REDIS_LOGGER = "redis";
 
-    int errorCode = CreateDirectory(config.log.path.c_str(), nullptr);
+shared_ptr<spdlog::logger> Logger::init(const ConfigDto& config) {
+    auto logger = spdlog::rotating_logger_mt(
+        QUIK_CONNECTOR_LOGGER,
+        config.log.path + config.directorySeparator + config.log.name,
+        config.log.fileMaxSize * 1024 * 1024,
+        config.log.maxFiles
+    );
+    logger->flush_on(
+        getLogLevelByType(config.log.level)
+    );
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%-5l] [%-5t]  %v");
 
-    if (ERROR_PATH_NOT_FOUND == errorCode) {
-        throw runtime_error("Could not init logger because path: " + config.log.path + " not found!");
-    }
-    logFile = fopen(filePath.c_str(), "w");
-
-    log_set_level(logLevel);
-    log_add_fp(logFile, logLevel);
+    return logger;
 }
 
-Logger::~Logger() {
-    if (logFile != nullptr) {
-        fclose(logFile);
-    }
-}
-
-void Logger::info(const char *fmt...) {
-    log_log(LOG_INFO,  __FILE__, __LINE__, fmt);
-}
-
-int Logger::getLogLevelByType(const string& level) {
+spdlog::level::level_enum Logger::getLogLevelByType(const string& level) {
     if ("DEBUG" == level) {
-        return LOG_DEBUG;
+        return spdlog::level::debug;
     } else if ("INFO" == level) {
-        return LOG_INFO;
+        return spdlog::level::info;
     } else if ("WARN" == level) {
-        return LOG_WARN;
+        return spdlog::level::warn;
     } else if ("ERROR" == level) {
-        return LOG_ERROR;
+        return spdlog::level::err;
     }
-    return LOG_INFO;
+    return spdlog::level::info;
 }

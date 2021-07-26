@@ -8,7 +8,7 @@ using namespace std;
 
 bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!lua_istable(luaState, -1)) {
-        logError("Could not get table for trade data! Current stack value type is: <<%s>> but required table!", luaGetType(luaState, -1));
+        LOGGER->error("Could not get table for trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }

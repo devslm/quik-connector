@@ -25,7 +25,7 @@ template<class T> Option<T> toRequestDto(const json& jsonData) {
             return toLastCandleRequestDto(jsonData);
         }
     } catch (json::parse_error& exception) {
-        logError("Could not convert queue command: %s to request dto! Reason: %s!", jsonData.dump().c_str(), exception.what());
+        LOGGER->error("Could not convert queue command: {} to request dto! Reason: {}!", jsonData.dump().c_str(), exception.what());
     }
     return Option<T>();
 }

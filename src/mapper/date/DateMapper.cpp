@@ -9,7 +9,7 @@ using namespace std;
 
 bool toDateMillis(lua_State *L, const char *fieldName, uint64_t *dateTime) {
     if (!lua_istable(L, -1)) {
-        logError("Could not get table for date data! Current stack value type is: <<%s>> but required table!", luaGetType(L, -1));
+        LOGGER->error("Could not get table for date data! Current stack value type is: <<{}>> but required table!", luaGetType(L, -1));
 
         return false;
     }

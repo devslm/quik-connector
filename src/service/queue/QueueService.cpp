@@ -30,7 +30,7 @@ QueueService::QueueService(Quik *quik, string host, int port) {
 }
 
 QueueService::~QueueService() {
-    logInfo("Queue service stopped");
+    LOGGER->info("Queue service stopped");
 
     this->isRunning = false;
 
@@ -84,7 +84,7 @@ void QueueService::startCheckResponsesThread() {
 
                     addRequestIdToResponse(commandResponse.commandId, &candleJson);
 
-                    logInfo("Candle JSON: %s", candleJson.dump().c_str());
+                    LOGGER->info("Candle JSON: {}", candleJson.dump());
 
                     if (true) {
                         pubSubPublish(QUIK_LAST_CANDLE_QUEUE, candleJson.dump());
@@ -92,8 +92,8 @@ void QueueService::startCheckResponsesThread() {
                 }
             }
         } catch (const exception& exception) {
-            logInfo("Could not send response for command: %s with id: %s! Reason: %s",
-                commandResponse.command.c_str(), commandResponse.commandId.c_str(), exception.what());
+            LOGGER->error("Could not send response for command: {} with id: {}! Reason: {}",
+                commandResponse.command, commandResponse.commandId, exception.what());
         }
     }
 }
@@ -102,7 +102,7 @@ void QueueService::publishOrders(list<OrderDto>& orders) {
     if (orders.empty()) {
         return;
     }
-    logInfo("[Redis] Send orders to: %s with size: %d", QUIK_ORDERS_QUEUE.c_str(), (int)orders.size());
+    LOGGER->info("[Redis] Send orders to: {} with size: {}", QUIK_ORDERS_QUEUE, orders.size());
 
     publish(QUIK_ORDERS_QUEUE, toOrderJson(orders).dump());
 }
@@ -114,7 +114,7 @@ static bool parseCommandJson(const string& message, json* jsonData) {
 
         return true;
     } catch (json::parse_error& exception) {
-        logError("Could not parse queue command: %s to json object! Reason: %s!", message.c_str(), exception.what());
+        LOGGER->error("Could not parse queue command: {} to json object! Reason: {}!", message, exception.what());
     }
     return false;
 }
@@ -122,7 +122,7 @@ static bool parseCommandJson(const string& message, json* jsonData) {
 
 void QueueService::subscribeToCommandQueue() {
     redisSubscriber.subscribe(QUIK_COMMAND_QUEUE, [this](const std::string& channel, const std::string& message) {
-         logDebug("[Redis] New incoming command: %s", message.c_str());
+        LOGGER->debug("[Redis] New incoming command: {}", message);
 
         json commandJsonData;
         auto isSuccess = parseCommandJson(message, &commandJsonData);
@@ -130,7 +130,7 @@ void QueueService::subscribeToCommandQueue() {
         auto commandName = commandJsonData["command"];
 
         if (!isSuccess || commandName.empty()) {
-            logError("[Redis] Could not handle incoming command: %s because JSON parse error!", message.c_str());
+            LOGGER->info("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
             CommandResponseDto commandResponse(commandName, commandId, commandJsonData);
 
@@ -170,7 +170,7 @@ void QueueService::subscribe() {
             }
 
             if (!message.empty()) {
-                logInfo("[Redis] %s", message.c_str());
+                LOGGER->info("[Redis] {}", message);
             }
         }, 5000, 1000, redisReconnectAttempts
     );
@@ -184,17 +184,17 @@ bool QueueService::addRequestIdToResponse(const string& commandId, json *jsonDat
 
         jsonData->push_back(requestIdJsonData);
 
-        logInfo("JSON: %s", jsonData->dump().c_str());
+        LOGGER->info("JSON: %s", jsonData->dump().c_str());
 
         return true;
     } catch (json::parse_error& exception) {
-        logError("Could not add request id response json! Reason: %s!", exception.what());
+        LOGGER->error("Could not add request id response json! Reason: {}!", exception.what());
     }
     return false;
 }
 
 void QueueService::publish(const string& channel, const string& message) {
-    logDebug("[Redis] Publish new message: %s to channel: %s", message.c_str(), channel.c_str());
+    LOGGER->debug("[Redis] Publish new message: {} to channel: {}", message, channel);
 
     if (redis->getConnection().is_connected()) {
         vector<string> values = { message };
@@ -205,7 +205,7 @@ void QueueService::publish(const string& channel, const string& message) {
 }
 
 void QueueService::pubSubPublish(const string& channel, const string& message) {
-    logDebug("[Redis] Publish pub/sub new message: %s to channel: %s", message.c_str(), channel.c_str());
+    LOGGER->debug("[Redis] Publish pub/sub new message: {} to channel: {}", message, channel);
 
     if (redis->getConnection().is_connected()) {
         redis->getConnection().publish(channel, message);

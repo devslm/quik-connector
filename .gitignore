@@ -35,4 +35,7 @@
 
 /logs/
 
+*/build/
+/quik-connector
+
 /cmake-build-*/*

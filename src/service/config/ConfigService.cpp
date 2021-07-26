@@ -49,10 +49,18 @@ Option<string> ConfigService::loadLogConfig() {
         return Option<string>("Log path required");
     } else if (!configYaml["log"]["name"]) {
         return Option<string>("Log name required");
+    } else if (!configYaml["log"]["max"]) {
+        return Option<string>("Log max section required");
+    } else if (!configYaml["log"]["max"]["size"]) {
+        return Option<string>("Log max size required");
+    } else if (!configYaml["log"]["max"]["files"]) {
+        return Option<string>("Log max files required");
     }
     config.log.level = configYaml["log"]["level"].as<string>();
     config.log.path = config.scriptPath + "\\" + configYaml["log"]["path"].as<string>();
     config.log.name = configYaml["log"]["name"].as<string>();
+    config.log.fileMaxSize = configYaml["log"]["max"]["size"].as<int>();
+    config.log.maxFiles = configYaml["log"]["max"]["files"].as<int>();
 
     return Option<string>();
 }

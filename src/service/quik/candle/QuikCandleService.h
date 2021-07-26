@@ -20,6 +20,8 @@ using namespace std;
 
 class QueueService;
 
+extern shared_ptr<spdlog::logger> LOGGER;
+
 class QuikCandleService {
 public:
     QuikCandleService(QueueService *queueService);
