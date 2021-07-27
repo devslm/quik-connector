@@ -65,10 +65,12 @@ public:
 
     static string getOrderType(double orderFlags);
 
-private:
-    static const map<const string, const string> classCodes;
+    static void decodeFlags(double flags);
 
     static bool bitTest(double number, int bitNumber);
+
+private:
+    static const map<const string, const string> classCodes;
 };
 
 

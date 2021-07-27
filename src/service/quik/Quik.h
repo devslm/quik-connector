@@ -65,7 +65,23 @@ public:
 
     int onStop(lua_State *luaState);
 
-    int onAllTrade(lua_State *L);
+    __forceinline int onAllTrade(lua_State *L) {
+        lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+        allTradeLock.lock();
+
+        TradeDto trade;
+        bool isSuccess = toAllTradeDto(L, &trade);
+
+        allTradeLock.unlock();
+
+        if (isSuccess) {
+            trades.push(trade);
+        } else {
+            LOGGER->error("Could not handle all trade changes!");
+        }
+        return 0;
+    }
 
     int onOrder(lua_State *luaState);
 
@@ -110,6 +126,7 @@ private:
     mutex orderLock;
     mutex changedQuoteMapLock;
     mutex changedOrderListLock;
+    thread checkAllTradesThread;
     thread checkQuotesThread;
     thread checkNewOrdersThread;
     unordered_map<string, string> changedQuotes;
@@ -117,6 +134,8 @@ private:
     QuikCandleService *quikCandleService;
     QuikOrderService *quikOrderService;
     QueueService *queueService;
+
+    void startCheckAllTradesThread();
 
     void startCheckQuotesThread();
 

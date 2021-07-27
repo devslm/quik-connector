@@ -13,8 +13,12 @@
 
 using namespace nlohmann;
 
+bool toAllTradeDto(lua_State *luaState, TradeDto *trade);
+
 bool toTradeDto(lua_State *L, TradeDto *trade);
 
-string toTradeJson(Option<TradeDto> *tradeOption);
+json toAllTradeJson(Option<TradeDto> *tradeOption);
+
+json toTradeJson(Option<TradeDto> *tradeOption);
 
 #endif //QUIK_CONNECTOR_TRADEMAPPER_H

@@ -6,6 +6,69 @@
 
 using namespace std;
 
+bool toAllTradeDto(lua_State *luaState, TradeDto *trade) {
+    if (!lua_istable(luaState, -1)) {
+        LOGGER->error("Could not get table for all trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
+
+        return false;
+    }
+
+    if (!luaGetTableIntegerField(luaState, "trade_num", &trade->tradeNum)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "flags", &trade->flags)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "price", &trade->price)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "qty", &trade->qty)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "value", &trade->value)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "accruedint", &trade->accruedInt)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "yield", &trade->yield)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "settlecode", &trade->settleCode)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "reporate", &trade->repoRate)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "repovalue", &trade->repoValue)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "repo2value", &trade->repo2value)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "repoterm", &trade->repoTerm)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "sec_code", &trade->secCode)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "class_code", &trade->classCode)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "period", &trade->period)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "exchange_code", &trade->exchangeCode)) {
+        return false;
+    }
+    if (!toDateMillis(luaState, "datetime", &trade->date)) {
+        return false;
+    }
+    lua_pop(luaState, 1);
+
+    return true;
+}
+
 bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!lua_istable(luaState, -1)) {
         LOGGER->error("Could not get table for trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
@@ -84,14 +147,14 @@ bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     return true;
 }
 
-string toTradeJson(Option<TradeDto> *tradeOption) {
-    if (tradeOption->isEmpty()) {
-        return "{}";
-    }
+json toAllTradeJson(Option<TradeDto> *tradeOption) {
     json jsonObject;
+
+    if (tradeOption->isEmpty()) {
+        return jsonObject;
+    }
     TradeDto trade = tradeOption->get();
     jsonObject["tradeNum"] = trade.tradeNum;
-    jsonObject["orderNum"] = trade.orderNum;
     jsonObject["flags"] = trade.flags;
     jsonObject["price"] = trade.price;
     jsonObject["qty"] = trade.qty;
@@ -108,10 +171,22 @@ string toTradeJson(Option<TradeDto> *tradeOption) {
     jsonObject["date"] = trade.date;
     jsonObject["period"] = trade.period;
     jsonObject["exchangeCode"] = trade.exchangeCode;
+
+    return jsonObject;
+}
+
+json toTradeJson(Option<TradeDto> *tradeOption) {
+    TradeDto trade = tradeOption->get();
+    json jsonObject = toAllTradeJson(tradeOption);
+
+    if (tradeOption->isEmpty()) {
+        return jsonObject;
+    }
+    jsonObject["orderNum"] = trade.orderNum;
     jsonObject["clearingComission"] = trade.clearingComission;
     jsonObject["exchangeComission"] = trade.exchangeComission;
     jsonObject["techCenterComission"] = trade.techCenterComission;
     jsonObject["brokerComission"] = trade.brokerComission;
 
-    return jsonObject.dump();
+    return jsonObject;
 }

@@ -136,6 +136,67 @@ string QuikUtils::getOrderType(double orderFlags) {
     return ORDER_TYPE_BUY;
 }
 
+void QuikUtils::decodeFlags(double flags) {
+    LOGGER->info("<--------------- Dump flags for: {} --------------->", flags);
+
+    if (QuikUtils::bitTest(flags, 0)) {
+        LOGGER->info("Bit 0: order is active");
+    } else {
+        LOGGER->info("Bit 0: order is inactive");
+    }
+
+    if (QuikUtils::bitTest(flags, 1)) {
+        LOGGER->info("Bit 1: order is canceled");
+    }
+
+    if (QuikUtils::bitTest(flags, 2)) {
+        LOGGER->info("Bit 2: order type buy");
+    } else {
+        LOGGER->info("Bit 2: order type sell");
+    }
+
+    if (QuikUtils::bitTest(flags, 3)) {
+        LOGGER->info("Bit 3: limit order");
+    }
+
+    if (QuikUtils::bitTest(flags, 5)) {
+        LOGGER->info("Bit 5: stop order waiting activation");
+    }
+
+    if (QuikUtils::bitTest(flags, 6)) {
+        LOGGER->info("Bit 6: stop order from another server");
+    }
+
+    if (QuikUtils::bitTest(flags, 8)) {
+        LOGGER->info("Bit 8: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 9)) {
+        LOGGER->info("Bit 9: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 10)) {
+        LOGGER->info("Bit 10: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 11)) {
+        LOGGER->info("Bit 11: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 12)) {
+        LOGGER->info("Bit 12: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 13)) {
+        LOGGER->info("Bit 13: true");
+    }
+
+    if (QuikUtils::bitTest(flags, 15)) {
+        LOGGER->info("Bit 15: true");
+    }
+    LOGGER->info("<--------------- End dump flags for: {} --------------->", flags);
+}
+
 bool QuikUtils::bitTest(double number, int bitNumber) {
     uint64_t mask =  1 << bitNumber;
     uint64_t maskedN = (uint64_t)number & mask;

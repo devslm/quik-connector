@@ -41,6 +41,8 @@ public:
     static const string QUIK_TICKER_QUOTES_QUEUE;
     static const string QUIK_CANDLE_CHANGE_QUEUE;
     static const string QUIK_ORDERS_QUEUE;
+    static const string QUIK_ALL_TRADES_QUEUE;
+
     static const string QUIK_GET_ORDERS_COMMAND;
     static const string QUIK_GET_NEW_ORDERS_COMMAND;
 

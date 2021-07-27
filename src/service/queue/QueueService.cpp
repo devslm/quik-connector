@@ -12,6 +12,7 @@ const string QUIK_LAST_CANDLE_QUEUE = "queue:quik:candles:last";
 const string QueueService::QUIK_CANDLE_CHANGE_QUEUE = "queue:quik:candle:change";
 const string QueueService::QUIK_TICKER_QUOTES_QUEUE = "queue:quik:ticker:quotes";
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
+const string QueueService::QUIK_ALL_TRADES_QUEUE = "queue:quik:trades:all";
 
 const string QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
 const string QUIK_GET_USER_INFO_COMMAND = "GET_USER";

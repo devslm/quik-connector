@@ -30,6 +30,7 @@ int Quik::onStart(lua_State *luaState) {
 
     isConnectorRunning = true;
 
+    this->checkAllTradesThread = thread([this] {startCheckAllTradesThread();});
     this->checkQuotesThread = thread([this] {startCheckQuotesThread();});
     this->checkNewOrdersThread = thread([this] {startCheckNewOrdersThread();});
     this->isConnectorRunning = true;
@@ -49,44 +50,40 @@ int Quik::onStop(lua_State *luaState) {
     delete quikOrderService;
     delete queueService;
 
+    checkAllTradesThread.join();
     checkQuotesThread.join();
     checkNewOrdersThread.join();
 
     LOGGER->info(logMessage);
+
     message(luaState, logMessage);
 
     return 0;
 }
 
-int Quik::onAllTrade(lua_State *L) {
-    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+void Quik::startCheckAllTradesThread() {
+    while (isConnectorRunning) {
+        this_thread::sleep_for(chrono::milliseconds(1));
 
-    allTradeLock.lock();
+        if (trades.empty()) {
+            continue;
+        }
+        list<string> tradeStrList;
 
-    TradeDto trade;
-    bool isSuccess = toTradeDto(L, &trade);
+        while (!trades.empty()) {
+            TradeDto trade = trades.front();
 
-    allTradeLock.unlock();
+            trades.pop();
 
-    if (isSuccess) {
-        trades.push(trade);
-    } else {
-        LOGGER->error("Could not handle all trade changes!");
-    }
-    return 0;
-}
+            Option<TradeDto> tradeOption(trade);
 
-Option<TradeDto> Quik::getNextTrade() {
-    if (!trades.empty()) {
-        Option<TradeDto> trade(trades.front());
+            tradeStrList.push_back(toAllTradeJson(&tradeOption).dump());
+        }
 
-        trades.pop();
-
-        return trade;
-    } else {
-        Option<TradeDto> trade;
-
-        return trade;
+        for (const auto& tradeString : tradeStrList) {
+            queueService->pubSubPublish(QueueService::QUIK_ALL_TRADES_QUEUE, tradeString);
+        }
+        tradeStrList.clear();
     }
 }
 
