@@ -1,0 +1,5 @@
+*.c linguist-detectable=false
+
+*.html linguist-detectable=false
+
+*.roff linguist-detectable=false
