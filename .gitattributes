@@ -1,4 +1,4 @@
-*.c linguist-detectable=false
+*.h linguist-detectable=false
 
 *.html linguist-detectable=false
 
