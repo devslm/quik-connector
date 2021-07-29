@@ -15,6 +15,7 @@
 #include "../date/DateMapper.h"
 #include "../../dto/option/Option.h"
 #include "../../dto/order/OrderDto.h"
+#include "../../dto/order/StopOrderDto.h"
 
 using namespace nlohmann;
 using namespace std;
@@ -26,8 +27,14 @@ extern ConfigService *configService;
 
 bool toOrderDto(lua_State *luaState, Quik* quik, OrderDto* order);
 
+bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder);
+
 json toOrderJson(list<OrderDto>& orders);
 
 json toOrderJson(Option<OrderDto>& orderOption);
+
+json toStopOrderJson(list<StopOrderDto>& stopOrders);
+
+json toStopOrderJson(Option<StopOrderDto>& stopOrderOption);
 
 #endif //QUIK_CONNECTOR_ORDERMAPPER_H

@@ -19,8 +19,6 @@ extern "C" {
 
 using namespace std;
 
-extern shared_ptr<spdlog::logger> LOGGER;
-
 void luaInit(lua_State *L);
 
 lua_State* luaGetState();
@@ -36,6 +34,8 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 const char *luaGetErrorMessage(lua_State *luaState);
 
 void luaGcCollect(lua_State *luaState);
+
+bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer);
 
 bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer);
 

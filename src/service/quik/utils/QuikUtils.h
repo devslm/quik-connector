@@ -36,6 +36,7 @@ const string ORDER_TYPE_BUY = "BUY";
 const string ORDER_TYPE_SELL = "SELL";
 
 enum Interval {
+    INTERVAL_TICK,
     INTERVAL_M1,
     INTERVAL_M2,
     INTERVAL_M3,
@@ -64,6 +65,10 @@ public:
     static string getOrderStatus(double orderFlags);
 
     static string getOrderType(double orderFlags);
+
+    static string getStopOrderConditionType(uint64_t conditionNumber);
+
+    static string getStopOrderType(uint64_t stopOrderType);
 
     static void decodeFlags(double flags);
 

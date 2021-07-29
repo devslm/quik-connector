@@ -10,7 +10,7 @@
 #include <atomic>
 #include "../utils/QuikUtils.h"
 #include "../../lua/Lua.h"
-#include "../../../dto/candle/CandleSubscriptionDto.h"
+#include "../../../dto/connector/subscription/QuikSubscriptionDto.h"
 #include "../../../dto/candle/CandleDto.h"
 #include "../../../dto/connector/request/RequestDto.h"
 #include "../../../mapper/candle/CandleMapper.h"
@@ -36,13 +36,13 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string classCode, string ticker, Interval interval);
 
-    bool getCandlesSize(CandleSubscriptionDto *candleSubscription, int *buffer);
+    bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
 
     Option<CandleDto> getLastCandle(lua_State *luaState, const LastCandleRequestDto *lastCandleRequest);
 
 private:
     thread checkCandlesThread;
-    unordered_map<string, CandleSubscriptionDto> candlesSubscriptions;
+    unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
     recursive_mutex *mutexLock;
     atomic_bool isRunning;
     QueueService *queueService;

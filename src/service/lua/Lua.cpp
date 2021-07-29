@@ -7,18 +7,18 @@
 
 using namespace std;
 
-static lua_State *luaState;
+static lua_State *luaMainThreadState;
 static recursive_mutex mutexLock;
 
 void luaInit(lua_State *L) {
-    if (luaState != nullptr) {
-        free(luaState);
+    if (luaMainThreadState != nullptr) {
+        free(luaMainThreadState);
     }
-    luaState = L;
+    luaMainThreadState = L;
 }
 
 lua_State* luaGetState() {
-    return luaState;
+    return luaMainThreadState;
 }
 
 recursive_mutex* luaGetMutex() {
@@ -122,6 +122,18 @@ bool luaGetPlainBooleanField(lua_State *L, const char *fieldName, bool *buffer) 
     //if (isSuccess) {
     //    *buffer = (intBuffer == 1 ? true : false);
     //}
+    return true;
+}
+
+bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer) {
+    double value;
+    auto isSuccess = luaGetTableNumberField(L, key, &value);
+
+    if (!isSuccess) {
+        return false;
+    }
+    *buffer = (int)value;
+
     return true;
 }
 

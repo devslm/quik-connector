@@ -94,3 +94,46 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
     }
     return orders;
 }
+
+list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
+    list<StopOrderDto> stopOrders;
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{STRING_TYPE, QUIK_STOP_ORDERS_TABLE_NAME, 0, 0.0, false}};
+
+    if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
+        return stopOrders;
+    }
+    double totalStopOrders = 0.0;
+    bool isSuccess = luaGetNumber(luaState, &totalStopOrders);
+
+    if (!isSuccess) {
+        LOGGER->error("Could not get stop orders because can't retrieve total stop orders number!");
+        return stopOrders;
+    }
+    LOGGER->debug("Found: {} active stop orders", (int)totalStopOrders);
+
+    for (int i = 0; i < totalStopOrders; ++i) {
+        FunctionArgDto args[] = {
+            {STRING_TYPE, QUIK_STOP_ORDERS_TABLE_NAME, 0, 0.0, false},
+            {INTEGER_TYPE, "", i, 0.0, false}
+        };
+
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
+            LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
+            return stopOrders;
+        }
+        StopOrderDto stopOrder;
+
+        isSuccess = toStopOrderDto(luaState, quik, &stopOrder);
+
+        if (!isSuccess) {
+            LOGGER->error("Could not convert stop order data to dto!");
+            continue;
+        }
+        stopOrders.push_back(stopOrder);
+    }
+    return stopOrders;
+}

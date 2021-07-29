@@ -62,3 +62,17 @@ void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumA
         }
     }
 }
+
+void debugDateTimeStructure(const tm& date) {
+    json jsonObject;
+    jsonObject["year"] = date.tm_year;
+    jsonObject["month"] = date.tm_mon;
+    jsonObject["weekDay"] = date.tm_wday;
+    jsonObject["day"] = date.tm_mday;
+    jsonObject["hour"] = date.tm_hour;
+    jsonObject["minutes"] = date.tm_min;
+    jsonObject["seconds"] = date.tm_sec;
+
+
+    LOGGER->info("Date structure fields: {}", jsonObject.dump());
+}

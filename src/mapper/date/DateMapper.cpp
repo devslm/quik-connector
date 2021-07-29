@@ -2,65 +2,61 @@
 // Created by Sergey on 25.06.2021.
 //
 
-#include <time.h>
+#include <ctime>
 #include "DateMapper.h"
 
 using namespace std;
 
-bool toDateMillis(lua_State *L, const char *fieldName, uint64_t *dateTime) {
-    if (!lua_istable(L, -1)) {
-        LOGGER->error("Could not get table for date data! Current stack value type is: <<{}>> but required table!", luaGetType(L, -1));
+bool toDateMillis(lua_State *luaState, const char *fieldName, uint64_t *dateTime) {
+    if (!lua_istable(luaState, -1)) {
+        LOGGER->error("Could not get table for date data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }
-    lua_getfield(L, -1, fieldName);
+    lua_getfield(luaState, -1, fieldName);
 
-    return toPlainDateMillis(L, dateTime);
+    return toPlainDateMillis(luaState, dateTime);
 }
 
-bool toPlainDateMillis(lua_State *L, uint64_t *dateTime) {
+bool toPlainDateMillis(lua_State *luaState, uint64_t *dateTime) {
     struct tm date = {0};
 
-    lua_getfield(L, -1, "sec");
-    date.tm_sec = lua_tonumber(L, -1);
-    lua_pop(L, 1);
+    if (!luaGetTableNumberFieldAsInt(luaState, "sec", &date.tm_sec)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "min", &date.tm_min)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "hour", &date.tm_hour)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "day", &date.tm_mday)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "week_day", &date.tm_wday)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "month", &date.tm_mon)) {
+        return false;
+    }
+    if (!luaGetTableNumberFieldAsInt(luaState, "year", &date.tm_year)) {
+        return false;
+    }
+    date.tm_year = date.tm_year - 1900;
 
-    lua_getfield(L, -1, "min");
-    date.tm_min = lua_tonumber(L, -1);
-    lua_pop(L, 1);
+    double milliseconds;
 
-    lua_getfield(L, -1, "hour");
-    date.tm_hour = lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "day");
-    date.tm_mday = lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "week_day");
-    date.tm_wday = lua_tonumber(L, -1) - 1;
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "month");
-    date.tm_mon = lua_tonumber(L, -1) - 1;
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "year");
-    date.tm_year = (int)lua_tonumber(L, -1) - 1900;
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "ms");
-    auto milliseconds = (uint64_t)lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
+    if (!luaGetTableNumberField(luaState, "ms", &milliseconds)) {
+        return false;
+    }
     auto result = mktime(&date);
 
     if (result > -1) {
-        *dateTime = (result * (uint64_t)1000) + milliseconds;
+        *dateTime = (result * (uint64_t)1000) + (uint64_t)milliseconds;
     } else {
         *dateTime = 0;
     }
-    lua_pop(L, 1);
+    lua_pop(luaState, 1);
 
     return true;
 }

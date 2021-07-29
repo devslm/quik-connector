@@ -22,12 +22,13 @@
 #include "../utils/string/StringUtils.h"
 #include "../../dto/class/ClassInfoDto.h"
 #include "../../mapper/class/ClassInfoMapper.h"
-#include "../../dto/candle/CandleSubscriptionDto.h"
+#include "../../dto/connector/subscription/QuikSubscriptionDto.h"
 #include "candle/QuikCandleService.h"
 #include "order/QuikOrderService.h"
 #include "../config/ConfigService.h"
 #include "../../dto/ticker/TickerDto.h"
 #include "../../dto/order/OrderDto.h"
+#include "../../dto/order/StopOrderDto.h"
 #include "../../mapper/ticker/TickerMapper.h"
 
 using namespace std;
@@ -44,14 +45,12 @@ const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
 
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
+const char QUIK_STOP_ORDERS_TABLE_NAME[] = "stop_orders";
 
 class ConfigService;
 class QuikCandleService;
 class QueueService;
 class QuikOrderService;
-
-extern ConfigService* configService;
-extern shared_ptr<spdlog::logger> LOGGER;
 
 class Quik {
 public:
@@ -87,8 +86,6 @@ public:
 
     void gcCollect(lua_State *luaState);
 
-    Option<TradeDto> getNextTrade();
-
     int onQuote(lua_State *luaState);
 
     void message(lua_State *luaState, string text);
@@ -114,6 +111,8 @@ public:
     list<OrderDto> getNewOrders(lua_State *luaState);
 
     list<OrderDto> getOrders(lua_State *luaState);
+
+    list<StopOrderDto> getStopOrders(lua_State *luaState);
 
     Option<TickerDto> getTickerById(lua_State *luaState, string classCode, string tickerCode);
 

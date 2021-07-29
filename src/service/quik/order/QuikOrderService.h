@@ -14,6 +14,7 @@
 #include "../../lua/Lua.h"
 #include "../../../mapper/order/OrderMapper.h"
 #include "../../../dto/order/OrderDto.h"
+#include "../../../dto/order/StopOrderDto.h"
 #include "../Quik.h"
 #include "../../../component/redis/Redis.h"
 
@@ -35,6 +36,8 @@ public:
     list<OrderDto> getNewOrders(lua_State *luaState);
 
     list<OrderDto> getOrders(lua_State *luaState);
+
+    list<StopOrderDto> getStopOrders(lua_State *luaState);
 
 private:
     recursive_mutex *mutexLock;

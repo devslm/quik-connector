@@ -66,9 +66,9 @@ static int onStart(lua_State *luaState) {
 
     isQuikStarted = true;
 
-    /*quik.subscribeToCandles(luaState, "SPBFUT", "RIU1", Interval::INTERVAL_D1);
+    //quik->subscribeToCandles(luaState, "SPBFUT", "RIU1", Interval::INTERVAL_M1);
     //quik.subscribeToCandles(luaState, "SPBFUT", "RIU1", Interval::INTERVAL_M1);
-    //quik.subscribeToCandles(luaState, "SPBFUT", "BRQ1", Interval::INTERVAL_H1);*/
+    //quik.subscribeToCandles(luaState, "SPBFUT", "BRQ1", Interval::INTERVAL_H1);
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);

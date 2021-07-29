@@ -29,7 +29,7 @@ void QuikCandleService::startCheckCandlesThread() {
         this_thread::sleep_for(chrono::seconds(3));
 
         for (const auto& keyValue : candlesSubscriptions) {
-            CandleSubscriptionDto candleSubscription = keyValue.second;
+            QuikSubscriptionDto candleSubscription = keyValue.second;
 
             int candlesSize = 0;
             bool isSuccess = getCandlesSize(&candleSubscription, &candlesSize);
@@ -98,7 +98,7 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string classCode
     // Push reference onto the stack
     lua_rawgeti(luaState, LUA_REGISTRYINDEX, dataSourceIndex);
 
-    CandleSubscriptionDto candleSubscription;
+    QuikSubscriptionDto candleSubscription;
     candleSubscription.luaState = luaState;
     candleSubscription.mutexLock = mutexLock;
     candleSubscription.dataSourceIndex = dataSourceIndex;
@@ -144,7 +144,7 @@ Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const La
     // Push reference onto the stack
     lua_rawgeti(luaState, LUA_REGISTRYINDEX, dataSourceIndex);
 
-    CandleSubscriptionDto candleSubscription;
+    QuikSubscriptionDto candleSubscription;
     candleSubscription.luaState = luaState;
     candleSubscription.mutexLock = mutexLock;
     candleSubscription.dataSourceIndex = dataSourceIndex;
@@ -169,7 +169,7 @@ Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const La
     return Option<CandleDto>();
 }
 
-bool QuikCandleService::getCandlesSize(CandleSubscriptionDto *candleSubscription, int *buffer) {
+bool QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer) {
     if (candleSubscription == nullptr) {
         LOGGER->error("Could not get candles size because subscription data is empty!");
         return false;

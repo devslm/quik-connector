@@ -6,6 +6,8 @@
 
 string QuikUtils::getIntervalName(Interval interval) {
     switch (interval) {
+        case INTERVAL_TICK:
+            return "INTERVAL_TICK";
         case INTERVAL_M1:
             return "INTERVAL_M1";
         case INTERVAL_M2:
@@ -35,7 +37,9 @@ string QuikUtils::getIntervalName(Interval interval) {
 }
 
 Interval QuikUtils::getIntervalByName(const string& interval) {
-    if (interval == "INTERVAL_M1") {
+    if (interval == "INTERVAL_TICK") {
+        return INTERVAL_TICK;
+    } else if (interval == "INTERVAL_M1") {
         return INTERVAL_M1;
     } else if (interval == "INTERVAL_M2") {
         return INTERVAL_M2;
@@ -119,7 +123,7 @@ string QuikUtils::getCurrency(string& currency) {
 string QuikUtils::getOrderStatus(double orderFlags) {
     if (bitTest(orderFlags, 1)) {
         return ORDER_STATUS_CANCELED;
-    } else if (!bitTest(orderFlags, 1)) {
+    } else if (!bitTest(orderFlags, 1) && !bitTest(orderFlags, 0)) {
         return ORDER_STATUS_SUCCESS_COMPLETED;
     } else if (bitTest(orderFlags, 0)) {
         return ORDER_STATUS_ACTIVE;
@@ -127,6 +131,34 @@ string QuikUtils::getOrderStatus(double orderFlags) {
         return ORDER_STATUS_INACTIVE;
     }
     return ORDER_STATUS_UNDEFINED;
+}
+
+string QuikUtils::getStopOrderConditionType(uint64_t condition) {
+    if (condition == 4) {
+        return "LESS_OR_EQUAL";
+    } else if (condition == 5) {
+        return "GREATER_OR_EQUAL";
+    }
+    return "UNDEFINED";
+}
+
+string QuikUtils::getStopOrderType(uint64_t type) {
+    if (type == 1) {
+        return "STOP_LIMIT";
+    } else if (type == 2) {
+        return "CONDITION_BY_ANOTHER_INSTRUMENT";
+    } else if (type == 3) {
+        return "WITH_LINKED_ORDER";
+    } else if (type == 4) {
+        return "TAKE_PROFIT";
+    } else if (type == 5) {
+        return "IF_DONE_STOP_LIMIT";
+    } else if (type == 6) {
+        return "IF_DONE_TAKE_PROFIT";
+    } else if (type == 7) {
+        return "TAKE_PROFIT_AND_STOP_LIMIT";
+    }
+    return "UNDEFINED";
 }
 
 string QuikUtils::getOrderType(double orderFlags) {

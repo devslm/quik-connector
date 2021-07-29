@@ -190,7 +190,6 @@ static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* or
     }
     list<TradeDto> trades = quik->getTrades(luaState);
     Option<TradeDto> tradeOption = getTradeByOrderId(order->orderNum, trades);
-    order->commission = {0.0, 0.0, 0.0, 0.0};
 
     if (tradeOption.isPresent()) {
         TradeDto trade = tradeOption.get();
@@ -201,11 +200,160 @@ static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* or
     }
 }
 
-json toOrderJson(list<OrderDto>& orders) {
-    if (orders.empty()) {
-        return "[]";
+bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
+    if (!lua_istable(luaState, -1)) {
+        LOGGER->error("Could not get table for stop order data! Current stack value type is: <<{}>> but required table!",
+            luaGetType(luaState, -1));
+
+        return false;
     }
+
+    if (!luaGetTableIntegerField(luaState, "order_num", &stopOrder->orderNum)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "flags", &stopOrder->flags)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "brokerref", &stopOrder->brokerRef)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "firmid", &stopOrder->firmId)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "account", &stopOrder->account)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "condition", &stopOrder->condition)) {
+        return false;
+    }
+    stopOrder->conditionType = QuikUtils::getStopOrderConditionType(stopOrder->condition);
+
+    if (!luaGetTableNumberField(luaState, "condition_price", &stopOrder->conditionPrice)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "price", &stopOrder->price)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "qty", &stopOrder->qty)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "linkedorder", &stopOrder->linkedOrder)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "expiry", &stopOrder->expiry)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "trans_id", &stopOrder->transId)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "client_code", &stopOrder->clientCode)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "co_order_num", &stopOrder->coOrderNum)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "co_order_price", &stopOrder->coOrderPrice)) {
+        return false;
+    }
+    uint64_t stopOrderType;
+
+    if (!luaGetTableIntegerField(luaState, "stop_order_type", &stopOrderType)) {
+        return false;
+    }
+    stopOrder->type = QuikUtils::getStopOrderType(stopOrderType);
+
+    if (!luaGetTableIntegerField(luaState, "orderdate", &stopOrder->orderDate)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "alltrade_num", &stopOrder->allTradeNum)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "stopflags", &stopOrder->stopFlags)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "offset", &stopOrder->offset)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "spread", &stopOrder->spread)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "balance", &stopOrder->balance)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "uid", &stopOrder->uid)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "filled_qty", &stopOrder->filledQty)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "withdraw_time", &stopOrder->withdrawTime)) {
+        return false;
+    }
+    if (!luaGetTableNumberField(luaState, "condition_price2", &stopOrder->conditionPrice2)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "active_from_time", &stopOrder->activeFromTime)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "active_to_time", &stopOrder->activeToTime)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "sec_code", &stopOrder->ticker)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "class_code", &stopOrder->classCode)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "condition_sec_code", &stopOrder->conditionTicker)) {
+        return false;
+    }
+    if (!luaGetTableStringField(luaState, "condition_class_code", &stopOrder->conditionClassCode)) {
+        return false;
+    }
+    if (!luaGetTableIntegerField(luaState, "canceled_uid", &stopOrder->canceledUid)) {
+        return false;
+    }
+    if (!toDateMillis(luaState, "order_date_time", &stopOrder->orderDateTime)) {
+        return false;
+    }
+    if (!toDateMillis(luaState, "withdraw_datetime", &stopOrder->withdrawDate)) {
+        return false;
+    }
+    if (!toDateMillis(luaState, "activation_date_time", &stopOrder->activationDate)) {
+        return false;
+    }
+    stopOrder->status = QuikUtils::getOrderStatus(stopOrder->flags);
+    Option<string> classType = QuikUtils::getClassTypeByCode(stopOrder->classCode);
+
+    if (!classType.isPresent()) {
+        LOGGER->error("Could not get stop order class type with class code: {}", stopOrder->classCode);
+        return false;
+    }
+    stopOrder->classType = classType.get();
+
+    Option<TickerDto> tickerOption = quik->getTickerById(luaState, stopOrder->classCode, stopOrder->ticker);
+
+    if (!tickerOption.isPresent()) {
+        LOGGER->error("Could not convert stop order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
+            stopOrder->classCode, stopOrder->ticker);
+        return false;
+    }
+    TickerDto ticker = tickerOption.get();
+    stopOrder->currency = ticker.faceUnit;
+    stopOrder->name = ticker.shortName;
+    stopOrder->lotSize = ticker.lotSize;
+
+    lua_pop(luaState, 2);
+
+    return true;
+}
+
+json toOrderJson(list<OrderDto>& orders) {
     json jsonArray = json::array();
+
+    if (orders.empty()) {
+        return jsonArray;
+    }
 
     for (const auto& order : orders) {
         Option<OrderDto> orderOption(order);
@@ -218,10 +366,11 @@ json toOrderJson(list<OrderDto>& orders) {
 }
 
 json toOrderJson(Option<OrderDto>& orderOption) {
-    if (orderOption.isEmpty()) {
-        return "{}";
-    }
     json jsonObject;
+
+    if (orderOption.isEmpty()) {
+        return jsonObject;
+    }
     OrderDto order = orderOption.get();
     jsonObject["orderNum"] = order.orderNum;
     jsonObject["flags"] = order.flags;
@@ -277,6 +426,76 @@ json toOrderJson(Option<OrderDto>& orderOption) {
     jsonObject["commission"]["clearing"] = order.commission.clearing;
     jsonObject["commission"]["exchange"] = order.commission.exchange;
     jsonObject["commission"]["techCenter"] = order.commission.techCenter;
+
+    return jsonObject;
+}
+
+json toStopOrderJson(list<StopOrderDto>& stopOrders) {
+    json jsonArray = json::array();
+
+    if (stopOrders.empty()) {
+        return jsonArray;
+    }
+
+    for (const auto& stopOrder : stopOrders) {
+        Option<StopOrderDto> stopOrderOption(stopOrder);
+
+        jsonArray.push_back(
+            toStopOrderJson(stopOrderOption)
+        );
+    }
+    return jsonArray;
+}
+
+json toStopOrderJson(Option<StopOrderDto>& stopOrderOption) {
+    json jsonObject;
+
+    if (stopOrderOption.isEmpty()) {
+        return jsonObject;
+    }
+    StopOrderDto stopOrder = stopOrderOption.get();
+    jsonObject["orderNum"] = stopOrder.orderNum;
+    jsonObject["date"] = stopOrder.date;
+    jsonObject["flags"] = stopOrder.flags;
+    jsonObject["brokerRef"] = stopOrder.brokerRef;
+    jsonObject["firmId"] = stopOrder.firmId;
+    jsonObject["account"] = stopOrder.account;
+    jsonObject["clientCode"] = stopOrder.clientCode;
+    jsonObject["ticker"] = stopOrder.ticker;
+    jsonObject["classCode"] = stopOrder.classCode;
+    jsonObject["classType"] = stopOrder.classType;
+    jsonObject["name"] = stopOrder.name;
+    jsonObject["condition"] = stopOrder.condition;
+    jsonObject["conditionType"] = stopOrder.conditionType;
+    jsonObject["conditionPrice"] = stopOrder.conditionPrice;
+    jsonObject["price"] = stopOrder.price;
+    jsonObject["qty"] = stopOrder.qty;
+    jsonObject["linkedOrder"] = stopOrder.linkedOrder;
+    jsonObject["expiry"] = stopOrder.expiry;
+    jsonObject["transId"] = stopOrder.transId;
+    jsonObject["coOrderNum"] = stopOrder.coOrderNum;
+    jsonObject["type"] = stopOrder.type;
+    jsonObject["orderDate"] = stopOrder.orderDate;
+    jsonObject["allTradeNum"] = stopOrder.allTradeNum;
+    jsonObject["stopFlags"] = stopOrder.stopFlags;
+    jsonObject["offset"] = stopOrder.offset;
+    jsonObject["spread"] = stopOrder.spread;
+    jsonObject["balance"] = stopOrder.balance;
+    jsonObject["uid"] = stopOrder.uid;
+    jsonObject["filledQty"] = stopOrder.filledQty;
+    jsonObject["withdrawTime"] = stopOrder.withdrawTime;
+    jsonObject["conditionPrice2"] = stopOrder.conditionPrice2;
+    jsonObject["activeFromTime"] = stopOrder.activeFromTime;
+    jsonObject["activeToTime"] = stopOrder.activeToTime;
+    jsonObject["conditionTicker"] = stopOrder.conditionTicker;
+    jsonObject["conditionClassCode"] = stopOrder.conditionClassCode;
+    jsonObject["canceledUid"] = stopOrder.canceledUid;
+    jsonObject["orderDateTime"] = stopOrder.orderDateTime;
+    jsonObject["withdrawDate"] = stopOrder.withdrawDate;
+    jsonObject["activationDate"] = stopOrder.activationDate;
+    jsonObject["currency"] = stopOrder.currency;
+    jsonObject["lotSize"] = stopOrder.lotSize;
+    jsonObject["status"] = stopOrder.status;
 
     return jsonObject;
 }

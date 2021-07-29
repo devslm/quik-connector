@@ -4,30 +4,33 @@
 
 #include "QueueService.h"
 
-const string QUIK_COMMAND_QUEUE = "queue:quik:commands";
-const string QUIK_CONNECTION_STATUS_QUEUE = "queue:quik:connection:status";
-const string QUIK_USER_QUEUE = "queue:quik:user";
-const string QueueService::QUIK_CANDLES_QUEUE = "queue:quik:candles";
-const string QUIK_LAST_CANDLE_QUEUE = "queue:quik:candles:last";
+const string QueueService::QUIK_COMMAND_TOPIC = "topic:quik:commands";
+const string QueueService::QUIK_CONNECTION_STATUS_TOPIC = "topic:quik:connection:status";
+const string QueueService::QUIK_TICKER_QUOTES_TOPIC = "topic:quik:ticker:quotes";
+const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
+const string QueueService::QUIK_STOP_ORDERS_TOPIC = "topic:quik:stop:orders";
+const string QueueService::QUIK_CANDLES_TOPIC = "topic:quik:candles";
+const string QueueService::QUIK_LAST_CANDLE_TOPIC = "topic:quik:candles:last";
+
 const string QueueService::QUIK_CANDLE_CHANGE_QUEUE = "queue:quik:candle:change";
-const string QueueService::QUIK_TICKER_QUOTES_QUEUE = "queue:quik:ticker:quotes";
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
 const string QueueService::QUIK_ALL_TRADES_QUEUE = "queue:quik:trades:all";
 
-const string QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
-const string QUIK_GET_USER_INFO_COMMAND = "GET_USER";
-const string QUIK_GET_CANDLES_COMMAND = "GET_CANDLES";
-const string QUIK_GET_LAST_CANDLE_COMMAND = "GET_LAST_CANDLE";
+const string QueueService::QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
+const string QueueService::QUIK_GET_USER_INFO_COMMAND = "GET_USER";
+const string QueueService::QUIK_GET_CANDLES_COMMAND = "GET_CANDLES";
+const string QueueService::QUIK_GET_LAST_CANDLE_COMMAND = "GET_LAST_CANDLE";
 const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
+const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
 
 QueueService::QueueService(Quik *quik, string host, int port) {
     this->quik = quik;
     this->redisHost = host;
     this->redisPort = port;
     this->redisReconnectAttempts = 1024 * 1024 * 1024;
-    this->commandResponseHandlerThread = thread([this] {startCheckResponsesThread();});
     this->isRunning = true;
+    this->commandResponseHandlerThread = thread([this] {startCheckResponsesThread();});
 }
 
 QueueService::~QueueService() {
@@ -44,39 +47,44 @@ void QueueService::startCheckResponsesThread() {
         this_thread::sleep_for(chrono::milliseconds(1));
 
         if (responseQueue.empty()) {
+            LOGGER->debug("[Redis] Response queue is empty");
             continue;
         }
-        responseQueueMutex.lock();
-
         CommandResponseDto commandResponse = responseQueue.front();
-        responseQueue.pop_front();
-
-        responseQueueMutex.unlock();
+        responseQueue.pop();
 
         try {
             if (QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND == commandResponse.command) {
                 auto quikConnectionStatus = quik->getServerConnectionStatus(luaGetState());
 
                 if (quikConnectionStatus.isPresent()) {
-                    pubSubPublish(QUIK_CONNECTION_STATUS_QUEUE,toQuikServerConnectionStatusJson(&quikConnectionStatus));
+                    pubSubPublish(QUIK_CONNECTION_STATUS_TOPIC,
+                                  toQuikServerConnectionStatusJson(&quikConnectionStatus));
                 }
             } else if (QUIK_GET_USER_INFO_COMMAND == commandResponse.command) {
                 auto quikUserInfo = quik->getUserName(luaGetState());
 
                 if (quikUserInfo.isPresent()) {
-                    pubSubPublish(QUIK_USER_QUEUE, toQuikUserInfoJson(&quikUserInfo));
+                    pubSubPublish(QUIK_USER_TOPIC, toQuikUserInfoJson(&quikUserInfo));
                 }
             } else if (QUIK_GET_ORDERS_COMMAND == commandResponse.command) {
                 auto orders = quik->getOrders(luaGetState());
 
                 publishOrders(orders);
+            } else if (QUIK_GET_STOP_ORDERS_COMMAND == commandResponse.command) {
+                auto stopOrders = quik->getStopOrders(luaGetState());
+
+                if (!stopOrders.empty()) {
+                    pubSubPublish(QUIK_STOP_ORDERS_TOPIC, toStopOrderJson(stopOrders).dump());
+                }
             } else if (QUIK_GET_NEW_ORDERS_COMMAND == commandResponse.command) {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
                 publishOrders(newOrders);
             } else if (QUIK_GET_LAST_CANDLE_COMMAND == commandResponse.command) {
                 Option<LastCandleRequestDto> candlesRequest = toRequestDto<LastCandleRequestDto>(
-                    commandResponse.commandJsonData);
+                    commandResponse.commandJsonData
+                );
 
                 if (candlesRequest.isPresent()) {
                     auto lastCandleRequest = candlesRequest.get();
@@ -88,7 +96,7 @@ void QueueService::startCheckResponsesThread() {
                     LOGGER->info("Candle JSON: {}", candleJson.dump());
 
                     if (true) {
-                        pubSubPublish(QUIK_LAST_CANDLE_QUEUE, candleJson.dump());
+                        pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
                     }
                 }
             }
@@ -103,7 +111,7 @@ void QueueService::publishOrders(list<OrderDto>& orders) {
     if (orders.empty()) {
         return;
     }
-    LOGGER->info("[Redis] Send orders to: {} with size: {}", QUIK_ORDERS_QUEUE, orders.size());
+    LOGGER->debug("[Redis] Send orders to: {} with size: {}", QUIK_ORDERS_QUEUE, orders.size());
 
     publish(QUIK_ORDERS_QUEUE, toOrderJson(orders).dump());
 }
@@ -122,8 +130,8 @@ static bool parseCommandJson(const string& message, json* jsonData) {
 
 
 void QueueService::subscribeToCommandQueue() {
-    redisSubscriber.subscribe(QUIK_COMMAND_QUEUE, [this](const std::string& channel, const std::string& message) {
-        LOGGER->debug("[Redis] New incoming command: {}", message);
+    redisSubscriber.subscribe(QUIK_COMMAND_TOPIC, [this](const std::string& channel, const std::string& message) {
+        LOGGER->debug("[Redis] New incoming command: {} in channel: {}", message, channel);
 
         json commandJsonData;
         auto isSuccess = parseCommandJson(message, &commandJsonData);
@@ -131,15 +139,14 @@ void QueueService::subscribeToCommandQueue() {
         auto commandName = commandJsonData["command"];
 
         if (!isSuccess || commandName.empty()) {
-            LOGGER->info("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
+            LOGGER->error("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
+            LOGGER->debug("[Redis] Send response for command: {} (response queue size: {})",
+                 commandName, responseQueue.size());
+
             CommandResponseDto commandResponse(commandName, commandId, commandJsonData);
 
-            responseQueueMutex.lock();
-
-            responseQueue.push_back(commandResponse);
-
-            responseQueueMutex.unlock();
+            responseQueue.push(commandResponse);
         }
     });
     redisSubscriber.commit();

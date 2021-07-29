@@ -331,12 +331,12 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
     LOGGER->debug("Found: {} trades", totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
-        FunctionArgDto args[] = {
+        FunctionArgDto getItemArgs[] = {
             {STRING_TYPE,  QUIK_TRADES_TABLE_NAME, 0, 0.0, false},
             {INTEGER_TYPE, "",                     i, 0.0, false}
         };
 
-        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return existsTrades;
         }
@@ -363,6 +363,10 @@ list<OrderDto> Quik::getNewOrders(lua_State *luaState) {
 
 list<OrderDto> Quik::getOrders(lua_State *luaState) {
     return quikOrderService->getOrders(luaState);
+}
+
+list<StopOrderDto> Quik::getStopOrders(lua_State *luaState) {
+    return quikOrderService->getStopOrders(luaState);
 }
 
 Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, string tickerCode) {

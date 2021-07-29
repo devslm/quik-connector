@@ -10,7 +10,7 @@ static void validateCandleStartIndex(int *candleFirstIndex, int candleLastIndex)
 
 static json toCandleValueJson(const CandleValueDto *candleValue);
 
-bool toCandleDto(CandleSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex) {
+bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex) {
     validateCandleStartIndex(&candleFirstIndex, candleLastIndex);
 
     candle->classCode = candleSubscription->classCode;

@@ -12,13 +12,13 @@
 #include "../date/DateMapper.h"
 #include "../../dto/candle/CandleDto.h"
 #include "../../dto/option/Option.h"
-#include "../../dto/candle/CandleSubscriptionDto.h"
+#include "../../dto/connector/subscription/QuikSubscriptionDto.h"
 #include "../../dto/candle/ChangedCandleDto.h"
 
 using namespace nlohmann;
 using namespace std;
 
-bool toCandleDto(CandleSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex);
+bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex);
 
 Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto> *candle);
 
