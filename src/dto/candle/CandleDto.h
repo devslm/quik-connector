@@ -10,12 +10,12 @@
 using namespace std;
 
 typedef struct CandleValueDto {
-    double open;
-    double close;
-    double high;
-    double low;
-    double volume;
-    uint64_t date;
+    double open = 0.0;
+    double close = 0.0;
+    double high = 0.0;
+    double low = 0.0;
+    double volume = 0.0;
+    uint64_t date = 0;
 } CandleValueDto;
 
 typedef struct CandleDto {

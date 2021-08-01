@@ -29,11 +29,19 @@ Option<string> luaGetScriptPath(lua_State *luaState);
 
 const char *luaGetType(lua_State *L, int index);
 
+bool luaCallFunctionWithTableArg(lua_State *luaState,
+                                 const char *name,
+                                 int numArgs,
+                                 uint8_t numReturns,
+                                 map<string, string>& argTable);
+
 bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numReturns, FunctionArgDto *functionArgs);
 
 const char *luaGetErrorMessage(lua_State *luaState);
 
 void luaGcCollect(lua_State *luaState);
+
+bool luaGetTableBooleanField(lua_State *L, const char *key, bool *buffer);
 
 bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer);
 

@@ -1,4 +1,5 @@
 #include "library.h"
+#include "repository/order/OrderRepository.h"
 
 #include <iostream>
 
@@ -45,6 +46,13 @@ static int onOrder(lua_State *luaState) {
     return 0;
 }
 
+static int onTransReply(lua_State *luaState) {
+    if (isQuikStarted) {
+        return quik->onTransReply(luaState);
+    }
+    return 0;
+}
+
 static int onStart(lua_State *luaState) {
     Option<string> scriptPath = luaGetScriptPath(luaState);
 
@@ -69,6 +77,17 @@ static int onStart(lua_State *luaState) {
     //quik->subscribeToCandles(luaState, "SPBFUT", "RIU1", Interval::INTERVAL_M1);
     //quik.subscribeToCandles(luaState, "SPBFUT", "RIU1", Interval::INTERVAL_M1);
     //quik.subscribeToCandles(luaState, "SPBFUT", "BRQ1", Interval::INTERVAL_H1);
+
+    CancelStopOrderRequestDto cancelStopOrderRequest;
+    cancelStopOrderRequest.stopOrderId = QuikUtils::newTransactionId();
+    cancelStopOrderRequest.account = "L01-00000F00";
+    cancelStopOrderRequest.clientCode = "OPEN88380";
+    cancelStopOrderRequest.classCode = "TQBR";
+    cancelStopOrderRequest.ticker = "MAGN";
+
+    //quik->cancelStopOrderById(luaState, cancelStopOrderRequest);
+
+    OrderRepository orderRepository;
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);
@@ -102,6 +121,9 @@ extern "C" __declspec(dllexport) int luaopen_quik_connector(lua_State *luaState)
 
     lua_pushcclosure(luaState, onOrder, 0);
     lua_setglobal(luaState, "OnOrder");
+
+    lua_pushcclosure(luaState, onTransReply, 0);
+    lua_setglobal(luaState, "OnTransReply");
 
     return 1;
 }

@@ -32,6 +32,14 @@ typedef struct NewStopOrderRequestDto {
     string expiryDate;
 } NewStopOrderRequestDto;
 
+typedef struct CancelStopOrderRequestDto {
+    uint64_t stopOrderId;
+    string account;
+    string clientCode;
+    string ticker;
+    string classCode;
+} CancelStopOrderRequestDto;
+
 typedef struct SellByMarketRequestDto {
     uint64_t transactionId;
     string account;
@@ -58,18 +66,5 @@ typedef struct LastCandleRequestDto {
     string classCode;
     Interval interval;
 } LastCandleRequestDto;
-
-typedef struct CommandDto {
-    uint64_t transactionId;
-    string account;
-    string clientCode;
-    string ticker;
-    string classCode;
-    uint64_t orderId;
-    int stopOrderId;
-    string secCode;
-    Interval interval;
-    list<TickerLastPriceDto> tickers;
-} CommandDto;
 
 #endif //QUIK_CONNECTOR_REQUESTDTO_H

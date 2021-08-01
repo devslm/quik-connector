@@ -137,3 +137,32 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
     }
     return stopOrders;
 }
+
+bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest) {
+    LOGGER->info(
+        "Cancel stop order with id: {}, account: {}, clientCode: {}, class code: {} and ticker: {}",
+         cancelStopOrderRequest.stopOrderId,
+         cancelStopOrderRequest.account,
+         cancelStopOrderRequest.clientCode,
+         cancelStopOrderRequest.classCode,
+         cancelStopOrderRequest.ticker
+     );
+    Option<string> validationError = validateCancelStopOrderData(cancelStopOrderRequest);
+
+    if (validationError.isPresent()) {
+        LOGGER->info("Could not cancel stop order: {}! Reason: {}!", cancelStopOrderRequest.stopOrderId, validationError.get());
+        return false;
+    }
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    map<string, string> luaTable;
+    luaTable["ACTION"] = "KILL_STOP_ORDER";
+    luaTable["ACCOUNT"] = cancelStopOrderRequest.account;
+    luaTable["CLIENT_CODE"] = cancelStopOrderRequest.clientCode;
+    luaTable["TRANS_ID"] = to_string(QuikUtils::newTransactionId());
+    luaTable["CLASSCODE"] = cancelStopOrderRequest.classCode;
+    luaTable["SECCODE"] = cancelStopOrderRequest.ticker;
+    luaTable["STOP_ORDER_KEY"] = cancelStopOrderRequest.stopOrderId;
+
+    return true;
+}

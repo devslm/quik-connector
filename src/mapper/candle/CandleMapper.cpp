@@ -161,7 +161,7 @@ Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto> *candleOption) {
     if (!candle.values.empty()) {
         changedCandle.previousCandle = candle.values.back();
     }
-    return changedCandle;
+    return Option<ChangedCandleDto>(changedCandle);
 }
 
 json toChangedCandleJson(Option<ChangedCandleDto> *changedCandleOption) {

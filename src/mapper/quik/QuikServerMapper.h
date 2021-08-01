@@ -18,10 +18,10 @@ using namespace std;
 
 bool toQuikServerConnectionStatusDto(lua_State *luaState, QuikConnectionStatusDto *quikConnectionStatus);
 
-string toQuikServerConnectionStatusJson(Option<QuikConnectionStatusDto> *quikConnectionStatusOption);
-
 bool toQuikUserInfoDto(lua_State *luaState, QuikUserInfoDto *quikUserInfo);
 
-string toQuikUserInfoJson(Option<QuikUserInfoDto> *quikUserInfoOption);
+json toQuikServerConnectionStatusJson(Option<QuikConnectionStatusDto> *quikConnectionStatusOption);
+
+json toQuikUserInfoJson(Option<QuikUserInfoDto> *quikUserInfoOption);
 
 #endif //QUIK_CONNECTOR_QUIKSERVERMAPPER_H

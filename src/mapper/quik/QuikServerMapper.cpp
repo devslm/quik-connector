@@ -13,16 +13,17 @@ bool toQuikServerConnectionStatusDto(lua_State *luaState, QuikConnectionStatusDt
     return true;
 }
 
-string toQuikServerConnectionStatusJson(Option<QuikConnectionStatusDto> *quikConnectionStatusOption) {
-    if (quikConnectionStatusOption->isEmpty()) {
-        return "{}";
-    }
+json toQuikServerConnectionStatusJson(Option<QuikConnectionStatusDto> *quikConnectionStatusOption) {
     json jsonObject;
+
+    if (quikConnectionStatusOption->isEmpty()) {
+        return jsonObject;
+    }
     QuikConnectionStatusDto quikConnectionStatus = quikConnectionStatusOption->get();
 
     jsonObject["isConnected"] = quikConnectionStatus.isConnected;
 
-    return jsonObject.dump();
+    return jsonObject;
 }
 
 bool toQuikUserInfoDto(lua_State *luaState, QuikUserInfoDto *quikUserInfo) {
@@ -31,14 +32,15 @@ bool toQuikUserInfoDto(lua_State *luaState, QuikUserInfoDto *quikUserInfo) {
     return isSuccess;
 }
 
-string toQuikUserInfoJson(Option<QuikUserInfoDto> *quikUserInfoOption) {
-    if (quikUserInfoOption->isEmpty()) {
-        return "{}";
-    }
+json toQuikUserInfoJson(Option<QuikUserInfoDto> *quikUserInfoOption) {
     json jsonObject;
+
+    if (quikUserInfoOption->isEmpty()) {
+        return jsonObject;
+    }
     QuikUserInfoDto quikUserInfo = quikUserInfoOption->get();
 
     jsonObject["name"] = quikUserInfo.name;
 
-    return jsonObject.dump();
+    return jsonObject;
 }

@@ -60,6 +60,40 @@ void luaGcCollect(lua_State *luaState) {
     lua_gc(luaState, LUA_GCCOLLECT, 0);
 }
 
+bool luaCallFunctionWithTableArg(lua_State *luaState,
+                                 const char *name,
+                                 int numArgs,
+                                 uint8_t numReturns,
+                                 map<string, string>& argTable) {
+    lua_getglobal(luaState, name);
+
+    if (!lua_isfunction(luaState, -1)) {
+        LOGGER->error("Could not call lua function: {} and map args! Current stack value type is: <<{}>> but required function!",
+            name, luaGetType(luaState, -1));
+
+        return false;
+    }
+    lua_newtable(luaState);
+
+    for(map<string, string>::iterator argIterator = argTable.begin(); argIterator != argTable.end(); ++argIterator) {
+        lua_pushstring(luaState, argIterator->first.c_str());
+        lua_pushstring(luaState, argIterator->second.c_str());
+        lua_settable(luaState, -3);
+    }
+    int result = lua_pcall(luaState, numArgs, numReturns, 0);
+
+    if (LUA_OK != result) {
+        string errorMessage;
+
+        luaGetString(luaState, &errorMessage);
+
+        LOGGER->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
+
+        return false;
+    }
+    return true;
+}
+
 bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numReturns, FunctionArgDto *functionArgs) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
@@ -75,53 +109,60 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 
         return false;
     }
-    FunctionArgDto arg;
 
-    for (int i = 0; i < numArgs; ++i) {
-        arg = functionArgs[i];
+    if (functionArgs != nullptr) {
+        FunctionArgDto arg;
 
-        switch (arg.type) {
-            case STRING_TYPE:
-                lua_pushstring(L, arg.valueString.c_str());
-                break;
-            case INTEGER_TYPE:
-                lua_pushinteger(L, arg.valueInt);
-                break;
-            case DOUBLE_TYPE:
-                lua_pushnumber(L, arg.valueDouble);
-                break;
-            case BOOLEAN_TYPE:
-                lua_pushboolean(L, arg.valueBoolean);
-                break;
-            default:
-                LOGGER->error("Could not call ticker function: {} because argument: #{} has unknown type: {}",
-                     name, i + 1, arg.type);
+        for (int i = 0; i < numArgs; ++i) {
+            arg = functionArgs[i];
 
-                return false;
+            switch (arg.type) {
+                case STRING_TYPE:
+                    lua_pushstring(L, arg.valueString.c_str());
+                    break;
+                case INTEGER_TYPE:
+                    lua_pushinteger(L, arg.valueInt);
+                    break;
+                case DOUBLE_TYPE:
+                    lua_pushnumber(L, arg.valueDouble);
+                    break;
+                case BOOLEAN_TYPE:
+                    lua_pushboolean(L, arg.valueBoolean);
+                    break;
+                default:
+                    LOGGER->error("Could not call ticker function: {} because argument: #{} has unknown type: {}",
+                        name, i + 1, arg.type);
+
+                    return false;
+            }
         }
     }
     int result = lua_pcall(L, numArgs, numReturns, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not call lua function!");
+        string errorMessage;
+
+        luaGetString(L, &errorMessage);
+
+        LOGGER->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
 
         return false;
     }
     return true;
 }
 
-bool luaGetPlainBooleanField(lua_State *L, const char *fieldName, bool *buffer) {
-    LOGGER->debug("Get lua plain boolean field for: {}", fieldName);
+bool luaGetTableBooleanField(lua_State *L, const char *key, bool *buffer) {
+    LOGGER->debug("Get lua table boolean field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
-    //int intBuffer;
+    double value;
 
-    //bool isSuccess = luaGetPlainNumberField(L, functionName, &intBuffer);
+    bool isSuccess = luaGetTableNumberField(L, key, &value);
 
-    //if (isSuccess) {
-    //    *buffer = (intBuffer == 1 ? true : false);
-    //}
+    if (isSuccess) {
+        *buffer = ((int)value > 0 ? true : false);
+    }
     return true;
 }
 

@@ -53,19 +53,23 @@ void QueueService::startCheckResponsesThread() {
         CommandResponseDto commandResponse = responseQueue.front();
         responseQueue.pop();
 
+        const string requestId = commandResponse.commandId;
+
         try {
             if (QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND == commandResponse.command) {
                 auto quikConnectionStatus = quik->getServerConnectionStatus(luaGetState());
 
                 if (quikConnectionStatus.isPresent()) {
-                    pubSubPublish(QUIK_CONNECTION_STATUS_TOPIC,
-                                  toQuikServerConnectionStatusJson(&quikConnectionStatus));
+                    pubSubPublish(
+                        QUIK_CONNECTION_STATUS_TOPIC,
+                        toQuikServerConnectionStatusJson(&quikConnectionStatus).dump()
+                    );
                 }
             } else if (QUIK_GET_USER_INFO_COMMAND == commandResponse.command) {
                 auto quikUserInfo = quik->getUserName(luaGetState());
 
                 if (quikUserInfo.isPresent()) {
-                    pubSubPublish(QUIK_USER_TOPIC, toQuikUserInfoJson(&quikUserInfo));
+                    pubSubPublish(QUIK_USER_TOPIC, toQuikUserInfoJson(&quikUserInfo).dump());
                 }
             } else if (QUIK_GET_ORDERS_COMMAND == commandResponse.command) {
                 auto orders = quik->getOrders(luaGetState());
@@ -91,11 +95,11 @@ void QueueService::startCheckResponsesThread() {
                     auto lastCandle = quik->getLastCandle(luaGetState(), &lastCandleRequest);
                     auto candleJson = toCandleJson(&lastCandle);
 
-                    addRequestIdToResponse(commandResponse.commandId, &candleJson);
-
                     LOGGER->info("Candle JSON: {}", candleJson.dump());
 
                     if (true) {
+                        addRequestIdToResponse(candleJson, requestId);
+
                         pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
                     }
                 }
@@ -185,20 +189,17 @@ void QueueService::subscribe() {
     redisSubscriber.commit();
 }
 
-bool QueueService::addRequestIdToResponse(const string& commandId, json *jsonData) {
-    try {
-        json requestIdJsonData;
-        requestIdJsonData["requestId"] = commandId;
-
-        jsonData->push_back(requestIdJsonData);
-
-        LOGGER->info("JSON: %s", jsonData->dump().c_str());
-
+bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestId) {
+    if (jsonData == nullptr) {
+        LOGGER->error("[Redis] Could not add request id to response data because json data is empty!");
+        return false;
+    } else if (requestId.empty()) {
+        // Skip add request id if not present
         return true;
-    } catch (json::parse_error& exception) {
-        LOGGER->error("Could not add request id response json! Reason: {}!", exception.what());
     }
-    return false;
+    jsonData.value("requestId", requestId);
+
+    return true;
 }
 
 void QueueService::publish(const string& channel, const string& message) {

@@ -17,6 +17,7 @@
 #include "../../../dto/order/StopOrderDto.h"
 #include "../Quik.h"
 #include "../../../component/redis/Redis.h"
+#include "../../../component/validator/order/OrderValidator.h"
 
 using namespace std;
 
@@ -38,6 +39,8 @@ public:
     list<OrderDto> getOrders(lua_State *luaState);
 
     list<StopOrderDto> getStopOrders(lua_State *luaState);
+
+    bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
 private:
     recursive_mutex *mutexLock;

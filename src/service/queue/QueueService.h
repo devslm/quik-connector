@@ -81,7 +81,7 @@ private:
 
     void publishOrders(list<OrderDto>& orders);
 
-    bool addRequestIdToResponse(const string& commandId, json* jsonData);
+    bool addRequestIdToResponse(json& jsonData, const string& requestId);
 
     void startCheckResponsesThread();
 };

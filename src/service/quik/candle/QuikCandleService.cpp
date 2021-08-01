@@ -51,10 +51,7 @@ void QuikCandleService::startCheckCandlesThread() {
                 if (candleOption.isPresent()) {
                     Option<ChangedCandleDto> changedCandle = toChangedCandleDto(&candleOption);
 
-                    queueService->publish(
-                        QueueService::QUIK_CANDLE_CHANGE_QUEUE,
-                        toChangedCandleJson(&changedCandle).dump()
-                    );
+                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(&changedCandle));
                 }
             } else {
                 LOGGER->error("No candles size!");

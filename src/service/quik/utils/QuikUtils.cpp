@@ -229,6 +229,10 @@ void QuikUtils::decodeFlags(double flags) {
     LOGGER->info("<--------------- End dump flags for: {} --------------->", flags);
 }
 
+uint64_t QuikUtils::newTransactionId() {
+    return chrono::system_clock::to_time_t(chrono::system_clock::now());
+}
+
 bool QuikUtils::bitTest(double number, int bitNumber) {
     uint64_t mask =  1 << bitNumber;
     uint64_t maskedN = (uint64_t)number & mask;

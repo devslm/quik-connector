@@ -46,6 +46,7 @@ const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
 const char QUIK_STOP_ORDERS_TABLE_NAME[] = "stop_orders";
+const char QUIK_SEND_TRANSACTION_TABLE_NAME[] = "sendTransaction";
 
 class ConfigService;
 class QuikCandleService;
@@ -68,17 +69,19 @@ public:
         lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
         allTradeLock.lock();
+        changedTradeQueueLock.lock();
 
         TradeDto trade;
         bool isSuccess = toAllTradeDto(L, &trade);
-
-        allTradeLock.unlock();
 
         if (isSuccess) {
             trades.push(trade);
         } else {
             LOGGER->error("Could not handle all trade changes!");
         }
+        allTradeLock.unlock();
+        changedTradeQueueLock.unlock();
+
         return 0;
     }
 
@@ -87,6 +90,8 @@ public:
     void gcCollect(lua_State *luaState);
 
     int onQuote(lua_State *luaState);
+
+    int onTransReply(lua_State *luaState);
 
     void message(lua_State *luaState, string text);
 
@@ -114,6 +119,8 @@ public:
 
     list<StopOrderDto> getStopOrders(lua_State *luaState);
 
+    bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
+
     Option<TickerDto> getTickerById(lua_State *luaState, string classCode, string tickerCode);
 
 private:
@@ -125,6 +132,7 @@ private:
     mutex orderLock;
     mutex changedQuoteMapLock;
     mutex changedOrderListLock;
+    mutex changedTradeQueueLock;
     thread checkAllTradesThread;
     thread checkQuotesThread;
     thread checkNewOrdersThread;

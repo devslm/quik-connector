@@ -68,7 +68,9 @@ void Quik::startCheckAllTradesThread() {
         if (trades.empty()) {
             continue;
         }
-        list<string> tradeStrList;
+        list<json> tradeStrList;
+
+        changedTradeQueueLock.lock();
 
         while (!trades.empty()) {
             TradeDto trade = trades.front();
@@ -77,11 +79,12 @@ void Quik::startCheckAllTradesThread() {
 
             Option<TradeDto> tradeOption(trade);
 
-            tradeStrList.push_back(toAllTradeJson(&tradeOption).dump());
+            tradeStrList.push_back(toAllTradeJson(&tradeOption));
         }
+        changedTradeQueueLock.unlock();
 
-        for (const auto& tradeString : tradeStrList) {
-            queueService->pubSubPublish(QueueService::QUIK_ALL_TRADES_QUEUE, tradeString);
+        for (auto& tradeJson : tradeStrList) {
+            queueService->pubSubPublish(QueueService::QUIK_ALL_TRADES_QUEUE, tradeJson);
         }
         tradeStrList.clear();
     }
@@ -159,6 +162,25 @@ int Quik::onOrder(lua_State *luaState) {
         LOGGER->error("Could not get new order from callback!");
     }
     changedOrderListLock.unlock();
+
+    return 0;
+}
+
+int Quik::onTransReply(lua_State *luaState) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    if (!lua_istable(luaState, -1)) {
+        LOGGER->error("Could not get table for trans reply data! Current stack value type is: <<{}>> but required table!",
+            luaGetType(luaState, -1));
+
+        return false;
+    }
+    string message;
+
+    if (!luaGetTableStringField(luaState, "result_msg", &message)) {
+        return false;
+    }
+    LOGGER->info("Trans reply: {}", message);
 
     return 0;
 }
@@ -367,6 +389,10 @@ list<OrderDto> Quik::getOrders(lua_State *luaState) {
 
 list<StopOrderDto> Quik::getStopOrders(lua_State *luaState) {
     return quikOrderService->getStopOrders(luaState);
+}
+
+bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest) {
+    return quikOrderService->cancelStopOrderById(luaState, cancelStopOrderRequest);
 }
 
 Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, string tickerCode) {

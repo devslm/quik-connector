@@ -72,6 +72,8 @@ public:
 
     static void decodeFlags(double flags);
 
+    static uint64_t newTransactionId();
+
     static bool bitTest(double number, int bitNumber);
 
 private:
