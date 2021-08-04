@@ -1,0 +1,39 @@
+//
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
+//
+
+#include <winres.h>
+#include "version.h"
+
+#define __TO_VERSION_STRING(s) #s
+#define _TO_VERSION_STRING(s) __TO_VERSION_STRING(s)
+
+#define APP_VERSION _TO_VERSION_STRING(VERSION_MAJOR) \
+    "." _TO_VERSION_STRING(VERSION_MINOR) \
+    "." _TO_VERSION_STRING(VERSION_PATCH))
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION        VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH
+    PRODUCTVERSION     VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH
+    FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
+    FILETYPE           VFT_DLL
+    FILESUBTYPE        VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "FileDescription",  "C++ Quik Connector" "\0"
+            VALUE "FileVersion",      APP_VERSION "\0"
+            VALUE "InternalName",     "C++ Quik Connector (SLM)" "\0"
+            VALUE "LegalCopyright",   "Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>" "\0"
+            VALUE "OriginalFilename", "quik_connector.dll" "\0"
+            VALUE "ProductName",      "C++ Quik Connector" "\0"
+            VALUE "ProductVersion",   APP_VERSION "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1251
+    END
+END

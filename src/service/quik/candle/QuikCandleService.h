@@ -6,6 +6,7 @@
 #define QUIK_CONNECTOR_QUIKCANDLESERVICE_H
 
 #include <string>
+#include <list>
 #include <unordered_map>
 #include <atomic>
 #include "../utils/QuikUtils.h"
@@ -38,7 +39,9 @@ public:
 
     bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
 
-    Option<CandleDto> getLastCandle(lua_State *luaState, const LastCandleRequestDto *lastCandleRequest);
+    Option<CandleDto> getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest);
+
+    Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
 
 private:
     thread checkCandlesThread;

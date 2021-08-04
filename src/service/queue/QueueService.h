@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 12.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUEUESERVICE_H

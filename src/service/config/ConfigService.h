@@ -31,6 +31,10 @@ private:
     Option<string> loadRedisConfig();
 
     Option<string> loadOrderConfig();
+
+    Option<string> loadDbConfig();
+
+    Option<string> loadDebugConfig();
 };
 
 #endif //QUIK_CONNECTOR_CONFIGSERVICE_H

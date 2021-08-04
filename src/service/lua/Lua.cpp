@@ -9,12 +9,14 @@ using namespace std;
 
 static lua_State *luaMainThreadState;
 static recursive_mutex mutexLock;
+static ConfigDto config;
 
 void luaInit(lua_State *L) {
     if (luaMainThreadState != nullptr) {
         free(luaMainThreadState);
     }
     luaMainThreadState = L;
+    config = configService->getConfig();
 }
 
 lua_State* luaGetState() {
@@ -296,12 +298,37 @@ bool luaGetNumber(lua_State *L, double *buffer) {
     return true;
 }
 
+bool luaGetBoolean(lua_State *L, bool *buffer) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    int fieldIndexInStack = -1;
+
+    if (!lua_isboolean(L, fieldIndexInStack)) {
+        LOGGER->error("Could not get plain boolean value! Current stack value type is: <<{}>> but required boolean!",
+            luaGetType(L, fieldIndexInStack));
+
+        return false;
+    }
+    int value = lua_toboolean(L, fieldIndexInStack);
+
+    *buffer = (value > 0 ? true : false);
+
+    return true;
+}
+
 int luaLoadReference(lua_State *luaState, int index) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     // Push reference onto the stack
     lua_rawgeti(luaState, LUA_REGISTRYINDEX, index);
     // Get reference
-
     return lua_gettop(luaState);
+}
+
+void luaPrintStackSize(lua_State *luaState, const string& functionName) {
+    if (config.debug.printLuaStack) {
+        lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+        LOGGER->info("Stack size for <<{}>> is: {}", functionName, lua_gettop(luaState));
+    }
 }

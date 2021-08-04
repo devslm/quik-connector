@@ -17,81 +17,44 @@ typedef enum FunctionArgType {
 } FunctionArgType;
 
 typedef struct FunctionArgDto {
-    FunctionArgType type;
-    std::string valueString;
-    int valueInt;
-    double valueDouble;
-    bool valueBoolean;
-} FunctionArgDto;
+    FunctionArgDto() {
 
-class FunctionArgDtos {
-public:
-    FunctionArgType getType() {
-        return this->type;
     }
 
-protected:
-    FunctionArgType type;
-};
-
-class StringFunctionArgDto: public FunctionArgDtos {
-public:
-    StringFunctionArgDto(string value) : FunctionArgDtos() {
+    FunctionArgDto(string& value) {
         this->type = STRING_TYPE;
-        this->value = value;
+        this->valueString = value;
     }
 
-    string getValue() {
-        return this->value;
+    FunctionArgDto(char value[]) {
+        this->type = STRING_TYPE;
+        this->valueString = string(value);
     }
 
-private:
-    string value;
-};
-
-class NumberFunctionArgDto: public FunctionArgDtos {
-public:
-    NumberFunctionArgDto(double value) : FunctionArgDtos() {
-        this->type = DOUBLE_TYPE;
-        this->value = value;
+    FunctionArgDto(const char value[]) {
+        this->type = STRING_TYPE;
+        this->valueString = string(value);
     }
 
-    double getValue() {
-        return this->value;
-    }
-
-private:
-    double value;
-};
-
-class IntegerFunctionArgDto: public FunctionArgDtos {
-public:
-    IntegerFunctionArgDto(int value) : FunctionArgDtos() {
+    FunctionArgDto(int value) {
         this->type = INTEGER_TYPE;
-        this->value = value;
+        this->valueInt = value;
     }
 
-    int getValue() {
-        return this->value;
+    FunctionArgDto(double value) {
+        this->type = DOUBLE_TYPE;
+        this->valueDouble = value;
     }
 
-private:
-    int value;
-};
-
-class BooleanFunctionArgDto: public FunctionArgDtos {
-public:
-    BooleanFunctionArgDto(bool value) : FunctionArgDtos() {
+    FunctionArgDto(bool value) {
         this->type = BOOLEAN_TYPE;
-        this->value = value;
+        this->valueBoolean = value;
     }
-
-    bool getValue() {
-        return this->value;
-    }
-
-private:
-    bool value;
-};
+    FunctionArgType type;
+    string valueString;
+    int valueInt = 0;
+    double valueDouble = 0.0;
+    bool valueBoolean = false;
+} FunctionArgDto;
 
 #endif //TEST_FUNCTION_ARG_DTO_H

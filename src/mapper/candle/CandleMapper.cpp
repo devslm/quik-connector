@@ -8,9 +8,9 @@ static const int CANDLE_FIRST_INDEX = 1;
 
 static void validateCandleStartIndex(int *candleFirstIndex, int candleLastIndex);
 
-static json toCandleValueJson(const CandleValueDto *candleValue);
+static json toCandleValueJson(const CandleValueDto& candleValue);
 
-bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex) {
+bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int candleFirstIndex, int candleLastIndex) {
     validateCandleStartIndex(&candleFirstIndex, candleLastIndex);
 
     candle->classCode = candleSubscription->classCode;
@@ -23,12 +23,16 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int
 
     int dataSource = luaLoadReference(candleSubscription->luaState, candleSubscription->dataSourceIndex);
 
+    LOGGER->debug("Convert lua candles data to dto with from index: {} and last index: {}",
+        candleFirstIndex, candleLastIndex);
+
     for (int candleCurrentIndex = candleFirstIndex; candleCurrentIndex <= candleLastIndex; ++candleCurrentIndex) {
         CandleValueDto candleValue;
 
         lua_getfield(candleSubscription->luaState, dataSource, "O");
         lua_pushvalue(candleSubscription->luaState, dataSource);
         lua_pushnumber(candleSubscription->luaState, candleCurrentIndex);
+
         bool result = lua_pcall(candleSubscription->luaState, 2, 1, 0);
 
         if (LUA_OK == result) {
@@ -103,6 +107,8 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int
     // Remove datasource structure from stack
     lua_pop(candleSubscription->luaState, 1);
 
+    luaPrintStackSize(candleSubscription->luaState, (string)__FUNCTION__);
+
     return isSuccess;
 }
 
@@ -122,13 +128,13 @@ static void validateCandleStartIndex(int *candleFirstIndex, const int candleLast
     }
 }
 
-json toCandleJson(Option<CandleDto> *candleOption) {
+json toCandleJson(Option<CandleDto>& candleOption) {
     json jsonObject;
 
-    if (candleOption->isEmpty()) {
+    if (candleOption.isEmpty()) {
         return jsonObject;
     }
-    const auto candle = candleOption->get();
+    const auto candle = candleOption.get();
 
     jsonObject["classCode"] = candle.classCode;
     jsonObject["ticker"] = candle.ticker;
@@ -138,19 +144,19 @@ json toCandleJson(Option<CandleDto> *candleOption) {
 
     for (const auto& candleValue : candle.values) {
         jsonObject["values"].push_back(
-            toCandleValueJson(&candleValue)
+            toCandleValueJson(candleValue)
         );
     }
     return jsonObject;
 }
 
-Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto> *candleOption) {
+Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto>& candleOption) {
     ChangedCandleDto changedCandle;
 
-    if (candleOption->isEmpty()) {
+    if (candleOption.isEmpty()) {
         return Option<ChangedCandleDto>();
     }
-    CandleDto candle = candleOption->get();
+    CandleDto candle = candleOption.get();
     changedCandle.classCode = candle.classCode;
     changedCandle.ticker = candle.ticker;
     changedCandle.interval = candle.interval;
@@ -164,31 +170,31 @@ Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto> *candleOption) {
     return Option<ChangedCandleDto>(changedCandle);
 }
 
-json toChangedCandleJson(Option<ChangedCandleDto> *changedCandleOption) {
+json toChangedCandleJson(Option<ChangedCandleDto>& changedCandleOption) {
     json jsonObject;
 
-    if (changedCandleOption->isEmpty()) {
+    if (changedCandleOption.isEmpty()) {
         return jsonObject;
     }
-    const auto changedCandle = changedCandleOption->get();
+    const auto changedCandle = changedCandleOption.get();
 
     jsonObject["classCode"] = changedCandle.classCode;
     jsonObject["ticker"] = changedCandle.ticker;
     jsonObject["interval"] = changedCandle.interval;
-    jsonObject["previousCandle"] = toCandleValueJson(&changedCandle.previousCandle);
-    jsonObject["currentCandle"] = toCandleValueJson(&changedCandle.currentCandle);
+    jsonObject["previousCandle"] = toCandleValueJson(changedCandle.previousCandle);
+    jsonObject["currentCandle"] = toCandleValueJson(changedCandle.currentCandle);
 
     return jsonObject;
 }
 
-static json toCandleValueJson(const CandleValueDto *candleValue) {
+static json toCandleValueJson(const CandleValueDto& candleValue) {
     json candleValuesJson;
-    candleValuesJson["open"] = candleValue->open;
-    candleValuesJson["close"] = candleValue->close;
-    candleValuesJson["high"] = candleValue->high;
-    candleValuesJson["low"] = candleValue->low;
-    candleValuesJson["volume"] = candleValue->volume;
-    candleValuesJson["date"] = candleValue->date;
+    candleValuesJson["open"] = candleValue.open;
+    candleValuesJson["close"] = candleValue.close;
+    candleValuesJson["high"] = candleValue.high;
+    candleValuesJson["low"] = candleValue.low;
+    candleValuesJson["volume"] = candleValue.volume;
+    candleValuesJson["date"] = candleValue.date;
 
     return candleValuesJson;
 }

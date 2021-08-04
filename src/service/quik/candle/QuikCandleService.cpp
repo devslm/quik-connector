@@ -49,9 +49,9 @@ void QuikCandleService::startCheckCandlesThread() {
                 Option<CandleDto> candleOption(candle);
 
                 if (candleOption.isPresent()) {
-                    Option<ChangedCandleDto> changedCandle = toChangedCandleDto(&candleOption);
+                    Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
 
-                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(&changedCandle));
+                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(changedCandle));
                 }
             } else {
                 LOGGER->error("No candles size!");
@@ -90,10 +90,13 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string classCode
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
+    // Wait while data will be loaded
+    this_thread::sleep_for(chrono::milliseconds(200));
+
     // Save reference to avoid GC remove
     int dataSourceIndex = luaL_ref(luaState, LUA_REGISTRYINDEX);
     // Push reference onto the stack
-    lua_rawgeti(luaState, LUA_REGISTRYINDEX, dataSourceIndex);
+    //lua_rawgeti(luaState, LUA_REGISTRYINDEX, dataSourceIndex);
 
     QuikSubscriptionDto candleSubscription;
     candleSubscription.luaState = luaState;
@@ -115,15 +118,21 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string classCode
     return true;
 }
 
-Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const LastCandleRequestDto *lastCandleRequest) {
-    string intervalName = QuikUtils::getIntervalName(lastCandleRequest->interval);
-    string classCode = lastCandleRequest->classCode;
-    string ticker = lastCandleRequest->ticker;
-    Interval interval = lastCandleRequest->interval;
+Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
+    return Option<CandleDto>();
+}
 
-    LOGGER->debug("Get last candle with class code: {}, ticker: {} and interval: {}", classCode, ticker, intervalName);
+Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
+    string intervalName = QuikUtils::getIntervalName(candlesRequest.interval);
+    string classCode = candlesRequest.classCode;
+    string ticker = candlesRequest.ticker;
+    Interval interval = candlesRequest.interval;
+
+    LOGGER->debug("Get candles with class code: {}, ticker: {} and interval: {}", classCode, ticker, intervalName);
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    list<CandleDto> candles;
 
     lua_getglobal(luaState, "CreateDataSource");
     lua_pushstring(luaState, classCode.c_str());
@@ -132,14 +141,42 @@ Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const La
     int result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not get last candle with class code: {}, ticker: {} and interval: {}",
+        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return Option<CandleDto>();
     }
     // Save reference to avoid GC remove
     int dataSourceIndex = luaL_ref(luaState, LUA_REGISTRYINDEX);
     // Push reference onto the stack
-    lua_rawgeti(luaState, LUA_REGISTRYINDEX, dataSourceIndex);
+    int dataSource = luaLoadReference(luaState, dataSourceIndex);
+
+    // Tell QUIK to load and update candles data
+    lua_getfield(luaState, dataSource, "SetEmptyCallback");
+    lua_pushvalue(luaState, dataSource);
+    result = lua_pcall(luaState, 1, 1, 0);
+
+    if (LUA_OK != result) {
+        LOGGER->error("Could not set empty callback in get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
+            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+        lua_pop(luaState, 1);
+
+        return Option<CandleDto>();
+    }
+    bool isEmptyCallbackApplied = false;
+
+    if (!luaGetBoolean(luaState, &isEmptyCallbackApplied)
+            || !isEmptyCallbackApplied) {
+        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: empty callback not applied",
+            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+
+        lua_pop(luaState, 1);
+
+        return Option<CandleDto>();
+    }
+    lua_pop(luaState, 1);
+
+    // Wait while data will be loaded
+    this_thread::sleep_for(chrono::milliseconds(200));
 
     QuikSubscriptionDto candleSubscription;
     candleSubscription.luaState = luaState;
@@ -151,16 +188,14 @@ Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const La
 
     bool isSuccess = getCandlesSize(&candleSubscription, &candleSubscription.dataSourceSize);
 
-    if (isSuccess) {
+    if (isSuccess && candleSubscription.dataSourceSize > 0) {
         CandleDto candle;
 
-        if (candleSubscription.dataSourceSize > 0) {
-            /*if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize)) {
-                LOGGER->error("Could not get last candle data with class code: {}, ticker: {} and interval: {}",
-                     candleSubscription.classCode, candleSubscription.ticker, intervalName);
-            } else {
-                return Option<CandleDto>(candle);
-            }*/
+        if (toCandleDto(&candleSubscription, &candle, 1, candleSubscription.dataSourceSize)) {
+            return Option<CandleDto>(candle);
+        } else {
+            LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+                candleSubscription.classCode, candleSubscription.ticker, intervalName);
         }
     }
     return Option<CandleDto>();
@@ -184,14 +219,18 @@ bool QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscription, 
 
     if (LUA_OK != result) {
         LOGGER->error("Could not get candles size with class code: {}, ticker: {} and interval: {}! Reason: {}",
-             candleSubscription->classCode, candleSubscription->ticker, intervalName, luaGetErrorMessage(luaState));
+            candleSubscription->classCode, candleSubscription->ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
-    *buffer = (int)lua_tonumber(luaState, -1);
+    double dataSourceSize = 0.0;
+    bool isSuccess = luaGetNumber(luaState, &dataSourceSize);
 
+    if (isSuccess && dataSourceSize > 10) {
+        *buffer = (int)dataSourceSize;
+    }
     lua_pop(luaState, 2);
 
-    LOGGER->debug("Stack size for <<getCandlesSize>> is: {}", lua_gettop(luaState));
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }

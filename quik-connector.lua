@@ -11,10 +11,10 @@ RUN_MODE = PROD_MODE
 WORKING_DIRECTORY = getScriptPath()
 
 if RUN_MODE == PROD_MODE then
-    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\?.dll;"
     package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-release\\?.dll;"
 else
-    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\?.dll;"
     package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-debug\\?.dll;"
 end
 

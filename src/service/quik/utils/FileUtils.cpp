@@ -31,3 +31,35 @@ void FileUtils::createdDirs(const string& path) {
     }
     createdDir(pathItems);
 }
+
+set<string> FileUtils::getFiles(string& directory) {
+    HANDLE dir;
+    WIN32_FIND_DATA fileData;
+    set<string> files;
+
+    if ((dir = FindFirstFile((directory + "/*").c_str(), &fileData)) == INVALID_HANDLE_VALUE) {
+        return files;
+    }
+
+    while (FindNextFile(dir, &fileData)) {
+        if (strcmp(fileData.cFileName, ".") != 0 && strcmp(fileData.cFileName, "..") != 0) {
+            files.insert(fileData.cFileName);
+        }
+    }
+    return files;
+}
+
+string FileUtils::readFile(string& filePath) {
+    string line;
+    string fileData;
+
+    ifstream file(filePath);
+
+    if (file.is_open()) {
+        while ( getline (file, line) ) {
+            fileData += line + '\n';
+        }
+        file.close();
+    }
+    return fileData;
+}

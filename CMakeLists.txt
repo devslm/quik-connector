@@ -5,7 +5,27 @@ project(quik_connector)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+set(SQLITE_CPP_WRAPPER_VERSION 3.1.1)
+set(JSON_VERSION 3.9.1)
+
 include(FetchContent)
+
+# Include SQLITE3 C++ wrapper library (https://github.com/SRombauts/SQLiteCpp)
+FetchContent_Declare(
+    SQLiteCpp
+    GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp.git
+    GIT_TAG ${SQLITE_CPP_WRAPPER_VERSION}
+)
+
+FetchContent_GetProperties(SQLiteCpp)
+
+if(NOT SQLiteCpp_POPULATED)
+    FetchContent_Populate(SQLiteCpp)
+
+    message("---> ${SQLiteCpp_SOURCE_DIR}")
+
+    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/_deps/sqlitecpp-src ${CMAKE_CURRENT_BINARY_DIR}/_deps/sqlitecpp-build)
+endif()
 
 # Include JSON library (https://github.com/nlohmann/json)
 FetchContent_Declare(
@@ -64,12 +84,14 @@ endif()
 file(GLOB_RECURSE INCLUDE_QUIK_CONNECTOR "src/*.h")
 file(GLOB_RECURSE SRC_QUIK_CONNECTOR "src/*.cpp")
 
-add_library(quik_connector SHARED ${INCLUDE_QUIK_CONNECTOR} ${SRC_QUIK_CONNECTOR})
+add_library(quik_connector SHARED ${INCLUDE_QUIK_CONNECTOR} ${SRC_QUIK_CONNECTOR} src/version.rc)
 
-include_directories(lua-5.3.5/src)
+include_directories(lua-5.3.5/src ${SQLiteCpp_SOURCE_DIR}/include)
 
 target_link_libraries(
     quik_connector
+    sqlite3
+    SQLiteCpp
     spdlog
     nlohmann_json::nlohmann_json
     yaml-cpp
@@ -80,21 +102,13 @@ target_link_libraries(
 # Create quik connector output directory
 set(QUIK_CONNECTOR_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/quik-connector)
 
-add_custom_command(
-    TARGET quik_connector
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/quik-connector.lua ${QUIK_CONNECTOR_OUTPUT_DIR}/quik-connector.lua
-)
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../quik-connector.lua DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR})
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../config DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/config)
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../db/migrations DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/db)
 
 add_custom_command(
     TARGET quik_connector
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/quik_connector.dll ${QUIK_CONNECTOR_OUTPUT_DIR}/quik_connector.dll
-)
-
-add_custom_command(
-    TARGET quik_connector
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../config/config.yml ${QUIK_CONNECTOR_OUTPUT_DIR}/config/config.yml
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/quik_connector.dll ${QUIK_CONNECTOR_OUTPUT_DIR}/bin/quik_connector.dll
     COMMENT "\nNow you can copy quik connector directory to quik from: ${QUIK_CONNECTOR_OUTPUT_DIR} and use it\n\n"
 )

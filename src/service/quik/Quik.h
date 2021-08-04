@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 24.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIK_H
@@ -109,7 +109,9 @@ public:
 
     Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string classCode, string ticker);
 
-    Option<CandleDto> getLastCandle(lua_State *luaState, const LastCandleRequestDto* lastCandleRequest);
+    Option<CandleDto> getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest);
+
+    Option<CandleDto> getCandles(lua_State *luaState, CandlesRequestDto& candlesRequest);
 
     list<TradeDto> getTrades(lua_State *luaState);
 

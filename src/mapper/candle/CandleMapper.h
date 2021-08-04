@@ -20,10 +20,12 @@ using namespace std;
 
 bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex);
 
-Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto> *candle);
+Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto>& candle);
 
-json toCandleJson(Option<CandleDto> *candle);
+json toCandleJson(const list<CandleDto>& candles);
 
-json toChangedCandleJson(Option<ChangedCandleDto> *changedCandleOption);
+json toCandleJson(Option<CandleDto>& candle);
+
+json toChangedCandleJson(Option<ChangedCandleDto>& changedCandleOption);
 
 #endif //QUIK_CONNECTOR_CANDLEMAPPER_H

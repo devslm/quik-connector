@@ -1,5 +1,3 @@
-version: 1.0.0
-
 log:
   level: INFO # DEBUG | INFO | WARN | ERROR
   path: logs
@@ -15,3 +13,13 @@ redis:
 order:
   ignore:
     canceled: true # Remove canceled orders from the list
+
+db:
+  path: db
+  name: stocks.db
+  migrations:
+    path: migrations
+
+debug:
+  print:
+    lua-stack: true

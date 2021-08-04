@@ -61,10 +61,10 @@ typedef struct UnsubscribeFromCandlesRequestDto {
     Interval interval;
 } UnsubscribeFromCandlesRequestDto;
 
-typedef struct LastCandleRequestDto {
+typedef struct CandlesRequestDto {
     string ticker;
     string classCode;
     Interval interval;
-} LastCandleRequestDto;
+} CandlesRequestDto;
 
 #endif //QUIK_CONNECTOR_REQUESTDTO_H

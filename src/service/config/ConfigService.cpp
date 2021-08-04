@@ -15,6 +15,8 @@ ConfigService::ConfigService(const string& scriptPath) {
     errorList.push_back(loadLogConfig());
     errorList.push_back(loadRedisConfig());
     errorList.push_back(loadOrderConfig());
+    errorList.push_back(loadDbConfig());
+    errorList.push_back(loadDebugConfig());
 
     for (Option<string>& error : errorList) {
         if (error.isPresent()) {
@@ -32,11 +34,6 @@ ConfigService::~ConfigService() {
 }
 
 Option<string> ConfigService::loadCommonConfig() {
-    if (!configYaml["version"]) {
-        return Option<string>("Version required");
-    }
-    config.version = configYaml["version"].as<string>();
-
     return Option<string>();
 }
 
@@ -88,6 +85,36 @@ Option<string> ConfigService::loadOrderConfig() {
         return Option<string>("Order ignore canceled required");
     }
     config.order.ignoreCancelled = configYaml["order"]["ignore"]["canceled"].as<bool>();
+
+    return Option<string>();
+}
+
+Option<string> ConfigService::loadDbConfig() {
+    if (!configYaml["db"]) {
+        return Option<string>("Db section required");
+    } else if (!configYaml["db"]["path"]) {
+        return Option<string>("Db path required");
+    } else if (!configYaml["db"]["name"]) {
+        return Option<string>("Db name required");
+    } else if (!configYaml["db"]["migrations"]["path"]) {
+        return Option<string>("Db migrations path required");
+    }
+    config.db.path = configYaml["db"]["path"].as<string>();
+    config.db.name = configYaml["db"]["name"].as<string>();
+    config.db.migrationsPath = configYaml["db"]["migrations"]["path"].as<string>();
+
+    return Option<string>();
+}
+
+Option<string> ConfigService::loadDebugConfig() {
+    if (!configYaml["debug"]) {
+        return Option<string>("Debug section required");
+    } else if (!configYaml["debug"]["print"]) {
+        return Option<string>("Debug print required");
+    } else if (!configYaml["debug"]["print"]["lua-stack"]) {
+        return Option<string>("Debug print lua-stack required");
+    }
+    config.debug.printLuaStack = configYaml["debug"]["print"]["lua-stack"].as<bool>();
 
     return Option<string>();
 }

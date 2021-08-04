@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
+//
+
 #include "library.h"
 #include "repository/order/OrderRepository.h"
 
@@ -8,6 +12,7 @@ Quik* quik;
 Logger* logger;
 ConfigService *configService;
 Redis* redis;
+Db* db;
 
 static volatile bool isQuikStarted = false;
 
@@ -16,6 +21,7 @@ static int onStop(lua_State *luaState) {
     int returnCode = quik->onStop(luaState);
 
     delete quik;
+    delete db;
     delete redis;
     delete configService;
     delete logger;
@@ -71,6 +77,8 @@ static int onStart(lua_State *luaState) {
 
     quik = new Quik();
     quik->onStart(luaState);
+
+    db = new Db();
 
     isQuikStarted = true;
 

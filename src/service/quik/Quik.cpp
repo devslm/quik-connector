@@ -213,7 +213,7 @@ void Quik::gcCollect(lua_State *luaState) {
 void Quik::message(lua_State *luaState, string text) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, text, 0, 0.0, false}};
+    FunctionArgDto args[] = {{text}};
 
     if (!luaCallFunction(luaState, MESSAGE_FUNCTION_NAME, 1, 0, args)) {
         LOGGER->error("Could not call QUIK {} function!", MESSAGE_FUNCTION_NAME);
@@ -242,7 +242,7 @@ Option<QuikConnectionStatusDto> Quik::getServerConnectionStatus(lua_State *luaSt
 Option<QuikUserInfoDto> Quik::getUserName(lua_State *luaState) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, "USER", 0, 0.0, false}};
+    FunctionArgDto args[] = {{"USER"}};
 
     if (!luaCallFunction(luaState, GET_INFO_PARAM_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function to get user info!", GET_INFO_PARAM_FUNCTION_NAME);
@@ -277,7 +277,7 @@ set<string> Quik::getClassesList(lua_State *luaState) {
 Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string *className) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, *className, 0, 0.0, false}};
+    FunctionArgDto args[] = {{*className}};
 
     if (!luaCallFunction(luaState, GET_CLASS_INFO_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_CLASS_INFO_FUNCTION_NAME);
@@ -302,17 +302,18 @@ bool Quik::subscribeToCandles(lua_State *luaState, string classCode, string tick
     return quikCandleService->subscribeToCandles(luaState, classCode, ticker, interval);
 }
 
-Option<CandleDto> Quik::getLastCandle(lua_State *luaState, const LastCandleRequestDto* lastCandleRequest) {
-    return quikCandleService->getLastCandle(luaState, lastCandleRequest);
+Option<CandleDto> Quik::getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest) {
+    return quikCandleService->getLastCandle(luaState, candlesRequest);
+}
+
+Option<CandleDto> Quik::getCandles(lua_State *luaState, CandlesRequestDto& candlesRequest) {
+    return quikCandleService->getCandles(luaState, candlesRequest);
 }
 
 Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string classCode, string ticker) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {
-        {STRING_TYPE, classCode, 0, 0.0, false},
-        {STRING_TYPE, ticker, 0, 0.0, false}
-    };
+    FunctionArgDto args[] = {{classCode}, {ticker}};
 
     if (!luaCallFunction(luaState, GET_QUOTE_LEVEL_2_FUNCTION_NAME, 2, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_QUOTE_LEVEL_2_FUNCTION_NAME);
@@ -337,7 +338,7 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, QUIK_TRADES_TABLE_NAME, 0, 0.0, false}};
+    FunctionArgDto args[] = {{QUIK_TRADES_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
@@ -353,10 +354,7 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
     LOGGER->debug("Found: {} trades", totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
-        FunctionArgDto getItemArgs[] = {
-            {STRING_TYPE,  QUIK_TRADES_TABLE_NAME, 0, 0.0, false},
-            {INTEGER_TYPE, "",                     i, 0.0, false}
-        };
+        FunctionArgDto getItemArgs[] = {{QUIK_TRADES_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
@@ -398,10 +396,7 @@ bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& c
 Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, string tickerCode) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {
-        {STRING_TYPE, classCode, 0, 0.0, false},
-        {STRING_TYPE, tickerCode, 0, 0.0, false}
-    };
+    FunctionArgDto args[] = {{classCode}, {tickerCode}};
 
     if (!luaCallFunction(luaState, GET_SECURITY_INFO_FUNCTION_NAME, 2, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_SECURITY_INFO_FUNCTION_NAME);

@@ -12,10 +12,15 @@
 #endif
 
 #include <string>
+#include "../../version.h"
 
 using namespace std;
 
-const string APP_NAME = "Quik Connector";
+const string APP_VERSION = to_string(VERSION_MAJOR).append(".")
+    .append(to_string(VERSION_MINOR)).append(".")
+    .append(to_string(VERSION_PATCH));
+
+const string APP_NAME = string("Quik Connector (version: ").append(APP_VERSION).append(")");
 
 typedef struct LogConfigDto {
     string level;
@@ -34,14 +39,25 @@ typedef struct OrderConfigDto {
     bool ignoreCancelled;
 } OrderConfigDto;
 
+typedef struct DbConfigDto {
+    string path;
+    string name;
+    string migrationsPath;
+} DbConfigDto;
+
+typedef struct DebugConfigDto {
+    bool printLuaStack;
+} DebugConfigDto;
+
 typedef struct ConfigDto {
     ConfigDto(): directorySeparator(DIRECTORY_SEPARATOR) {};
     string directorySeparator;
-    string version;
     string scriptPath;
     LogConfigDto log;
     RedisConfigDto redis;
     OrderConfigDto order;
+    DbConfigDto db;
+    DebugConfigDto debug;
 } ConfigDto;
 
 #endif //QUIK_CONNECTOR_CONFIG_H

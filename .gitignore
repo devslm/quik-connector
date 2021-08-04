@@ -39,3 +39,6 @@
 /quik-connector
 
 /cmake-build-*/*
+
+/db/
+!/db/migrations

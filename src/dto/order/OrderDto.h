@@ -1,11 +1,12 @@
 //
-// Created by Sergey on 20.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_ORDERDTO_H
 #define QUIK_CONNECTOR_ORDERDTO_H
 
 #include <string>
+#include "OrderCommissionDto.h"
 
 using namespace std;
 

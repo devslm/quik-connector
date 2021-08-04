@@ -11,6 +11,7 @@
 #include "../utils/debug/DebugFunctions.h"
 #include "../utils/string/StringUtils.h"
 #include "../../dto/option/Option.h"
+#include "../config/ConfigService.h"
 
 extern "C" {
 #include "lua.h"
@@ -18,6 +19,8 @@ extern "C" {
 };
 
 using namespace std;
+
+extern ConfigService *configService;
 
 void luaInit(lua_State *L);
 
@@ -55,6 +58,10 @@ bool luaGetString(lua_State *L, string *buffer);
 
 bool luaGetNumber(lua_State *L, double *buffer);
 
+bool luaGetBoolean(lua_State *L, bool *buffer);
+
 int luaLoadReference(lua_State *luaState, int index);
+
+void luaPrintStackSize(lua_State *luaState, const string& functionName);
 
 #endif //QUIK_CONNECTOR_LUA_H

@@ -51,7 +51,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, QUIK_ORDERS_TABLE_NAME, 0, 0.0, false}};
+    FunctionArgDto args[] = {{QUIK_ORDERS_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
@@ -67,10 +67,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
     LOGGER->debug("Found: {} active orders", (int)totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
-        FunctionArgDto args[] = {
-            {STRING_TYPE, QUIK_ORDERS_TABLE_NAME, 0, 0.0, false},
-            {INTEGER_TYPE, "", i, 0.0, false}
-        };
+        FunctionArgDto args[] = {{QUIK_ORDERS_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
@@ -100,7 +97,7 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{STRING_TYPE, QUIK_STOP_ORDERS_TABLE_NAME, 0, 0.0, false}};
+    FunctionArgDto args[] = {{QUIK_STOP_ORDERS_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
@@ -116,10 +113,7 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
     LOGGER->debug("Found: {} active stop orders", (int)totalStopOrders);
 
     for (int i = 0; i < totalStopOrders; ++i) {
-        FunctionArgDto args[] = {
-            {STRING_TYPE, QUIK_STOP_ORDERS_TABLE_NAME, 0, 0.0, false},
-            {INTEGER_TYPE, "", i, 0.0, false}
-        };
+        FunctionArgDto args[] = {{QUIK_STOP_ORDERS_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
@@ -162,7 +156,7 @@ bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderR
     luaTable["TRANS_ID"] = to_string(QuikUtils::newTransactionId());
     luaTable["CLASSCODE"] = cancelStopOrderRequest.classCode;
     luaTable["SECCODE"] = cancelStopOrderRequest.ticker;
-    luaTable["STOP_ORDER_KEY"] = cancelStopOrderRequest.stopOrderId;
+    luaTable["STOP_ORDER_KEY"] = to_string(cancelStopOrderRequest.stopOrderId);
 
     return true;
 }

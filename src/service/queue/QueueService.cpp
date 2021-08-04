@@ -85,15 +85,28 @@ void QueueService::startCheckResponsesThread() {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
                 publishOrders(newOrders);
-            } else if (QUIK_GET_LAST_CANDLE_COMMAND == commandResponse.command) {
-                Option<LastCandleRequestDto> candlesRequest = toRequestDto<LastCandleRequestDto>(
-                    commandResponse.commandJsonData
-                );
+            } else if (QUIK_GET_CANDLES_COMMAND == commandResponse.command) {
+                auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
 
-                if (candlesRequest.isPresent()) {
-                    auto lastCandleRequest = candlesRequest.get();
-                    auto lastCandle = quik->getLastCandle(luaGetState(), &lastCandleRequest);
-                    auto candleJson = toCandleJson(&lastCandle);
+                if (candlesRequestOption.isPresent()) {
+                    auto candlesRequest = candlesRequestOption.get();
+                    auto candles = quik->getCandles(luaGetState(), candlesRequest);
+
+                    if (candles.isPresent()) {
+                        auto candlesJson = toCandleJson(candles);
+
+                        addRequestIdToResponse(candlesJson, requestId);
+
+                        pubSubPublish(QUIK_CANDLES_TOPIC, candlesJson.dump());
+                    }
+                }
+            } else if (QUIK_GET_LAST_CANDLE_COMMAND == commandResponse.command) {
+                auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
+
+                if (candlesRequestOption.isPresent()) {
+                    auto candlesRequest = candlesRequestOption.get();
+                    auto lastCandle = quik->getLastCandle(luaGetState(), candlesRequest);
+                    auto candleJson = toCandleJson(lastCandle);
 
                     LOGGER->info("Candle JSON: {}", candleJson.dump());
 
@@ -197,7 +210,7 @@ bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestI
         // Skip add request id if not present
         return true;
     }
-    jsonData.value("requestId", requestId);
+    jsonData["requestId"] = requestId;
 
     return true;
 }
