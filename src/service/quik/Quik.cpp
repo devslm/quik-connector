@@ -199,10 +199,6 @@ void Quik::startCheckNewOrdersThread() {
         newOrders.pop_front();
 
         changedOrderListLock.unlock();
-
-        Option<OrderDto> orderOption(order);
-
-        LOGGER->info("New order received: {}", toOrderJson(orderOption).dump());
     }
 }
 

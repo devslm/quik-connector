@@ -38,6 +38,10 @@ list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
             LOGGER->debug("Skipping order: {} because already exists with the same status...", order.orderNum);
             continue;
         }
+        Option<OrderDto> orderOption(order);
+
+        LOGGER->info("New order: {}", toOrderJson(orderOption).dump());
+
         redis->getConnection().setex(cacheKey, 2 * 24 * 60 * 60, cacheValue);
         redis->getConnection().sync_commit();
 
