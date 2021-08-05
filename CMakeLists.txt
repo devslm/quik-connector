@@ -22,9 +22,22 @@ FetchContent_GetProperties(SQLiteCpp)
 if(NOT SQLiteCpp_POPULATED)
     FetchContent_Populate(SQLiteCpp)
 
-    message("---> ${SQLiteCpp_SOURCE_DIR}")
-
     add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/_deps/sqlitecpp-src ${CMAKE_CURRENT_BINARY_DIR}/_deps/sqlitecpp-build)
+endif()
+
+# Include LZMA Compression library (https://git.tukaani.org/xz.git)
+FetchContent_Declare(
+    liblzma
+    GIT_REPOSITORY https://git.tukaani.org/xz.git
+    GIT_TAG v5.2.5
+)
+
+FetchContent_GetProperties(liblzma)
+
+if(NOT liblzma_POPULATED)
+    FetchContent_Populate(liblzma)
+
+    add_subdirectory(${liblzma_SOURCE_DIR} ${liblzma_BINARY_DIR})
 endif()
 
 # Include JSON library (https://github.com/nlohmann/json)
@@ -90,6 +103,7 @@ include_directories(lua-5.3.5/src ${SQLiteCpp_SOURCE_DIR}/include)
 
 target_link_libraries(
     quik_connector
+    liblzma
     sqlite3
     SQLiteCpp
     spdlog
@@ -100,15 +114,23 @@ target_link_libraries(
 )
 
 # Create quik connector output directory
-set(QUIK_CONNECTOR_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/quik-connector)
+set(QUIK_CONNECTOR_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/quik-connector)
 
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../quik-connector.lua DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR})
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../config DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/config)
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../db/migrations DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/db)
+file(REMOVE_RECURSE ${QUIK_CONNECTOR_OUTPUT_DIR})
+
+file(COPY ${PROJECT_SOURCE_DIR}/quik-connector.lua DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/config DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/db/migrations DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/db)
+
+set(QUIK_CONNECTOR_DLL_PATH ${PROJECT_BINARY_DIR})
+
+if (EXISTS ${QUIK_CONNECTOR_DLL_PATH}/${CMAKE_BUILD_TYPE})
+    set(QUIK_CONNECTOR_DLL_PATH ${QUIK_CONNECTOR_DLL_PATH}/${CMAKE_BUILD_TYPE})
+endif()
 
 add_custom_command(
     TARGET quik_connector
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/quik_connector.dll ${QUIK_CONNECTOR_OUTPUT_DIR}/bin/quik_connector.dll
+    COMMAND ${CMAKE_COMMAND} -E copy ${QUIK_CONNECTOR_DLL_PATH}/quik_connector.dll ${QUIK_CONNECTOR_OUTPUT_DIR}/bin/quik_connector.dll
     COMMENT "\nNow you can copy quik connector directory to quik from: ${QUIK_CONNECTOR_OUTPUT_DIR} and use it\n\n"
 )

@@ -42,11 +42,11 @@ const char GET_QUOTE_LEVEL_2_FUNCTION_NAME[] = "getQuoteLevel2";
 const char GET_NUMBER_OF_FUNCTION_NAME[] = "getNumberOf";
 const char GET_ITEM_FUNCTION_NAME[] = "getItem";
 const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
+const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
 
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
 const char QUIK_STOP_ORDERS_TABLE_NAME[] = "stop_orders";
-const char QUIK_SEND_TRANSACTION_TABLE_NAME[] = "sendTransaction";
 
 class ConfigService;
 class QuikCandleService;

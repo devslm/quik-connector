@@ -6,6 +6,7 @@
 #define QUIK_CONNECTOR_DB_H
 
 #include <string>
+#include <set>
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Transaction.h>
 #include "../../service/config/ConfigService.h"
@@ -34,6 +35,8 @@ public:
 
 private:
     Database* db;
+
+    set<string> getAppliedMigrations();
 };
 
 #endif //QUIK_CONNECTOR_DB_H

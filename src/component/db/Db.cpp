@@ -42,18 +42,8 @@ void Db::runMigrations(string& dbMigrationsPath) {
         }
         Transaction transaction(*db);
 
-        db->exec("CREATE TABLE IF NOT EXISTS schema_history (id INT NOT NULL PRIMARY KEY, script VARCHAR(256) NOT NULL, date_create TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-
-        Statement q(*db, "SELECT id, script FROM schema_history");
-
-        int lastHistoryId;
-        set<string> appliedMigrations;
-
-        while (q.executeStep()) {
-            lastHistoryId = q.getColumn(0);
-
-            appliedMigrations.insert(q.getColumn(1));
-        }
+        set<string> appliedMigrations = getAppliedMigrations();
+        int lastHistoryId = appliedMigrations.size() + 1;
         int totalAppliedMigrations = 0;
 
         for (const auto& migrationFile : migrations) {
@@ -84,4 +74,22 @@ void Db::runMigrations(string& dbMigrationsPath) {
     } catch (Exception& exception) {
         LOGGER->error("Could not apply DB migrations! Reason: {}", exception.what());
     }
+}
+
+set<string> Db::getAppliedMigrations() {
+    db->exec(
+        "CREATE TABLE IF NOT EXISTS schema_history ("
+            "id INT NOT NULL PRIMARY KEY, "
+            "script VARCHAR(256) NOT NULL, "
+            "date_create TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        ")");
+
+    Statement query(*db, "SELECT id, script FROM schema_history");
+
+    set<string> appliedMigrations;
+
+    while (query.executeStep()) {
+        appliedMigrations.insert(query.getColumn(1));
+    }
+    return appliedMigrations;
 }

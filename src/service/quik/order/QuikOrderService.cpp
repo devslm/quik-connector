@@ -9,10 +9,6 @@ QuikOrderService::QuikOrderService(Quik *quik) {
     this->mutexLock = luaGetMutex();
 }
 
-QuikOrderService::~QuikOrderService() {
-
-}
-
 static string buildOrderCacheKey(uint64_t orderId) {
     return "order:new:" + to_string(orderId);
 }
@@ -162,5 +158,11 @@ bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderR
     luaTable["SECCODE"] = cancelStopOrderRequest.ticker;
     luaTable["STOP_ORDER_KEY"] = to_string(cancelStopOrderRequest.stopOrderId);
 
+    if (!luaCallFunctionWithTableArg(luaState, SEND_TRANSACTION_FUNCTION_NAME, 1, 1, luaTable)) {
+        LOGGER->error(
+            "Could not cancel stop order: {} because error on send transaction to QUIK!", cancelStopOrderRequest.stopOrderId
+        );
+        return false;
+    }
     return true;
 }

@@ -24,15 +24,11 @@ using namespace std;
 class ConfigService;
 class Redis;
 
-extern ConfigService *configService;
-extern Redis* redis;
-extern shared_ptr<spdlog::logger> LOGGER;
-
 class QuikOrderService {
 public:
     QuikOrderService(Quik *quik);
 
-    virtual ~QuikOrderService();
+    ~QuikOrderService() = default;
 
     list<OrderDto> getNewOrders(lua_State *luaState);
 

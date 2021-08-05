@@ -40,7 +40,7 @@ bool luaCallFunctionWithTableArg(lua_State *luaState,
 
 bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numReturns, FunctionArgDto *functionArgs);
 
-const char *luaGetErrorMessage(lua_State *luaState);
+string luaGetErrorMessage(lua_State *luaState);
 
 void luaGcCollect(lua_State *luaState);
 
@@ -60,7 +60,13 @@ bool luaGetNumber(lua_State *L, double *buffer);
 
 bool luaGetBoolean(lua_State *L, bool *buffer);
 
+// Save reference to avoid GC remove
+int luaSaveReference(lua_State *luaState);
+
+// Push saved reference onto the stack
 int luaLoadReference(lua_State *luaState, int index);
+
+void luaRemoveReference(lua_State *luaState, int index);
 
 void luaPrintStackSize(lua_State *luaState, const string& functionName);
 

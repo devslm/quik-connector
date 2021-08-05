@@ -13,6 +13,7 @@ redis:
 order:
   ignore:
     canceled: true # Remove canceled orders from the list
+  save: true # Save all orders to DB
 
 db:
   path: db
@@ -22,4 +23,4 @@ db:
 
 debug:
   print:
-    lua-stack: true
+    lua-stack: false

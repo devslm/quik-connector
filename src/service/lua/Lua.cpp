@@ -50,10 +50,15 @@ const char *luaGetType(lua_State *L, int index) {
     return lua_typename(L, lua_type(L, index));
 }
 
-const char *luaGetErrorMessage(lua_State *luaState) {
+string luaGetErrorMessage(lua_State *luaState) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
-    return lua_tostring(luaState, -1);
+    string errorMessage;
+
+    if (luaGetString(luaState, &errorMessage)) {
+        return errorMessage;
+    }
+    return "<<Can't read LUA error message>>";
 }
 
 void luaGcCollect(lua_State *luaState) {
@@ -316,6 +321,12 @@ bool luaGetBoolean(lua_State *L, bool *buffer) {
     return true;
 }
 
+int luaSaveReference(lua_State *luaState) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    return luaL_ref(luaState, LUA_REGISTRYINDEX);
+}
+
 int luaLoadReference(lua_State *luaState, int index) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
@@ -323,6 +334,12 @@ int luaLoadReference(lua_State *luaState, int index) {
     lua_rawgeti(luaState, LUA_REGISTRYINDEX, index);
     // Get reference
     return lua_gettop(luaState);
+}
+
+void luaRemoveReference(lua_State *luaState, int index) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    luaL_unref(luaState, LUA_REGISTRYINDEX, index);
 }
 
 void luaPrintStackSize(lua_State *luaState, const string& functionName) {
