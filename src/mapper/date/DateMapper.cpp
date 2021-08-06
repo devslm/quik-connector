@@ -33,15 +33,13 @@ bool toPlainDateMillis(lua_State *luaState, uint64_t *dateTime) {
     if (!luaGetTableNumberFieldAsInt(luaState, "day", &date.tm_mday)) {
         return false;
     }
-    if (!luaGetTableNumberFieldAsInt(luaState, "week_day", &date.tm_wday)) {
-        return false;
-    }
     if (!luaGetTableNumberFieldAsInt(luaState, "month", &date.tm_mon)) {
         return false;
     }
     if (!luaGetTableNumberFieldAsInt(luaState, "year", &date.tm_year)) {
         return false;
     }
+    date.tm_mon = date.tm_mon - 1;
     date.tm_year = date.tm_year - 1900;
 
     double milliseconds;
