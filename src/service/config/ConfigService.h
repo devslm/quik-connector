@@ -30,9 +30,9 @@ private:
 
     Option<string> loadRedisConfig();
 
-    Option<string> loadOrderConfig();
-
     Option<string> loadDbConfig();
+
+    Option<string> loadQuikConfig();
 
     Option<string> loadDebugConfig();
 };

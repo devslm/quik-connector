@@ -23,12 +23,12 @@ BEGIN
     BEGIN
         BLOCK "040904E4"
         BEGIN
-            VALUE "FileDescription",  "C++ Quik Connector" "\0"
+            VALUE "FileDescription",  VS_VERSION_INFO_PRODUCT_NAME "\0"
             VALUE "FileVersion",      APP_VERSION "\0"
-            VALUE "InternalName",     "C++ Quik Connector (SLM)" "\0"
-            VALUE "LegalCopyright",   "Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>" "\0"
-            VALUE "OriginalFilename", "quik_connector.dll" "\0"
-            VALUE "ProductName",      "C++ Quik Connector" "\0"
+            VALUE "InternalName",     VS_VERSION_INFO_PRODUCT_NAME "\0"
+            VALUE "LegalCopyright",   VS_VERSION_INFO_COPYRIGHT "\0"
+            VALUE "OriginalFilename", VS_VERSION_INFO_ORIGINAL_FILE_NAME "\0"
+            VALUE "ProductName",      VS_VERSION_INFO_PRODUCT_NAME "\0"
             VALUE "ProductVersion",   APP_VERSION "\0"
         END
     END

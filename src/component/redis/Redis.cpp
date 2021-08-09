@@ -55,7 +55,22 @@ void Redis::connect() {
             }
         }, 5000, 1000, redisReconnectAttempts
     );
+    authenticate();
+
     redisClient.sync_commit();
+}
+
+void Redis::authenticate() {
+    if (configService->getConfig().redis.password.isEmpty()) {
+        return;
+    }
+    redisClient.auth(configService->getConfig().redis.password.get(), [](const cpp_redis::reply& reply) {
+        if (reply.is_error()) {
+            LOGGER->error("[Redis] Could not authenticate client! Reason: {}", reply.as_string());
+        } else {
+            LOGGER->info("[Redis] Client authenticated successfully");
+        }
+    });
 }
 
 cpp_redis::client& Redis::getConnection() {

@@ -15,13 +15,13 @@ QuikCandleService::~QuikCandleService() {
 }
 
 void QuikCandleService::init() {
-    //checkCandlesThread = thread([this] {startCheckCandlesThread();});
+    checkCandlesThread = thread([this] {startCheckCandlesThread();});
 }
 
 void QuikCandleService::destroy() {
     this->isRunning = false;
 
-    //checkCandlesThread.join();
+    checkCandlesThread.join();
 }
 
 void QuikCandleService::startCheckCandlesThread() {

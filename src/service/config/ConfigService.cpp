@@ -14,8 +14,8 @@ ConfigService::ConfigService(const string& scriptPath) {
     errorList.push_back(loadCommonConfig());
     errorList.push_back(loadLogConfig());
     errorList.push_back(loadRedisConfig());
-    errorList.push_back(loadOrderConfig());
     errorList.push_back(loadDbConfig());
+    errorList.push_back(loadQuikConfig());
     errorList.push_back(loadDebugConfig());
 
     for (Option<string>& error : errorList) {
@@ -69,23 +69,17 @@ Option<string> ConfigService::loadRedisConfig() {
         return Option<string>("Redis host required");
     } else if (!configYaml["redis"]["port"]) {
         return Option<string>("Redis port required");
+    } else if (!configYaml["redis"]["password"]) {
+        return Option<string>("Redis password required");
     }
     config.redis.host = configYaml["redis"]["host"].as<string>();
     config.redis.port = configYaml["redis"]["port"].as<int>();
 
-    return Option<string>();
-}
-
-Option<string> ConfigService::loadOrderConfig() {
-    if (!configYaml["order"]) {
-        return Option<string>("Order section required");
-    } else if (!configYaml["order"]["ignore"]) {
-        return Option<string>("Order ignore required");
-    } else if (!configYaml["order"]["ignore"]["canceled"]) {
-        return Option<string>("Order ignore canceled required");
+    if (!configYaml["redis"]["password"].as<string>().empty()) {
+        config.redis.password = Option<string>(configYaml["redis"]["password"].as<string>());
+    } else {
+        config.redis.password = Option<string>();
     }
-    config.order.ignoreCancelled = configYaml["order"]["ignore"]["canceled"].as<bool>();
-
     return Option<string>();
 }
 
@@ -105,6 +99,42 @@ Option<string> ConfigService::loadDbConfig() {
 
     return Option<string>();
 }
+
+Option<string> ConfigService::loadQuikConfig() {
+    if (!configYaml["quik"]) {
+        return Option<string>("Quik section required");
+    } else if (!configYaml["quik"]["callback"]) {
+        return Option<string>("Quik callback required");
+    } else if (!configYaml["quik"]["callback"]["enabled"]) {
+        return Option<string>("Quik callback enabled required");
+    } else if (!configYaml["quik"]["callback"]["enabled"]["all-trade"]) {
+        return Option<string>("Quik callback enabled all-trade required");
+    } else if (!configYaml["quik"]["callback"]["enabled"]["quote"]) {
+        return Option<string>("Quik callback enabled quote required");
+    } else if (!configYaml["quik"]["callback"]["enabled"]["order"]) {
+        return Option<string>("Quik callback enabled order required");
+    } else if (!configYaml["quik"]["callback"]["enabled"]["trans-reply"]) {
+        return Option<string>("Quik callback enabled trans-reply required");
+    }
+    config.quik.callback.onAllTradeEnabled = configYaml["quik"]["callback"]["enabled"]["all-trade"].as<bool>();
+    config.quik.callback.onQuoteEnabled = configYaml["quik"]["callback"]["enabled"]["quote"].as<bool>();
+    config.quik.callback.onOrderEnabled = configYaml["quik"]["callback"]["enabled"]["order"].as<bool>();
+    config.quik.callback.onTransReplyEnabled = configYaml["quik"]["callback"]["enabled"]["trans-reply"].as<bool>();
+
+    if (!configYaml["quik"]["order"]) {
+        return Option<string>("Quik order section required");
+    } else if (!configYaml["quik"]["order"]["ignore"]) {
+        return Option<string>("Order ignore required");
+    } else if (!configYaml["quik"]["order"]["ignore"]["canceled"]) {
+        return Option<string>("Order ignore canceled required");
+    } else if (!configYaml["quik"]["order"]["save"]) {
+        return Option<string>("Order save required");
+    }
+    config.quik.order.ignoreCancelled = configYaml["quik"]["order"]["ignore"]["canceled"].as<bool>();
+    config.quik.order.saveToDb = configYaml["quik"]["order"]["save"].as<bool>();
+
+    return Option<string>();
+};
 
 Option<string> ConfigService::loadDebugConfig() {
     if (!configYaml["debug"]) {

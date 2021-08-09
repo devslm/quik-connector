@@ -77,6 +77,8 @@ private:
     queue<CommandResponseDto> responseQueue;
     bool isRunning;
 
+    void authenticate();
+
     void subscribeToCommandQueue();
 
     void publishOrders(list<OrderDto>& orders);

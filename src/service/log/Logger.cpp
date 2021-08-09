@@ -17,7 +17,7 @@ shared_ptr<spdlog::logger> Logger::init(const ConfigDto& config) {
     logger->flush_on(
         getLogLevelByType(config.log.level)
     );
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%-5l] [%-5t]  %v");
+    spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%-7l] [%-5t]  %v");
 
     return logger;
 }

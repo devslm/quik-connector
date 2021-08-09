@@ -13,6 +13,7 @@
 
 #include <string>
 #include "../../version.h"
+#include "../../dto/option/Option.h"
 
 using namespace std;
 
@@ -33,17 +34,31 @@ typedef struct LogConfigDto {
 typedef struct RedisConfigDto {
     string host;
     int port;
+    Option<string> password;
 } RedisConfigDto;
-
-typedef struct OrderConfigDto {
-    bool ignoreCancelled;
-} OrderConfigDto;
 
 typedef struct DbConfigDto {
     string path;
     string name;
     string migrationsPath;
 } DbConfigDto;
+
+typedef struct QuikCallbackConfigDto {
+    bool onAllTradeEnabled;
+    bool onQuoteEnabled;
+    bool onOrderEnabled;
+    bool onTransReplyEnabled;
+} QuikCallbackConfigDto;
+
+typedef struct QuikOrderConfigDto {
+    bool ignoreCancelled;
+    bool saveToDb;
+} QuikOrderConfigDto;
+
+typedef struct QuikConfigDto {
+    QuikCallbackConfigDto callback;
+    QuikOrderConfigDto order;
+} QuikConfigDto;
 
 typedef struct DebugConfigDto {
     bool printLuaStack;
@@ -55,8 +70,8 @@ typedef struct ConfigDto {
     string scriptPath;
     LogConfigDto log;
     RedisConfigDto redis;
-    OrderConfigDto order;
     DbConfigDto db;
+    QuikConfigDto quik;
     DebugConfigDto debug;
 } ConfigDto;
 

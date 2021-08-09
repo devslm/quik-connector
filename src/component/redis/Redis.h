@@ -32,6 +32,8 @@ public:
 private:
     int32_t redisReconnectAttempts;
     cpp_redis::client redisClient;
+
+    void authenticate();
 };
 
 #endif //QUIK_CONNECTOR_REDIS_H

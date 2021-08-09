@@ -183,7 +183,7 @@ static Option<TradeDto> getTradeByOrderId(uint64_t orderId, list<TradeDto> trade
 }
 
 static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* order) {
-    if (configService->getConfig().order.ignoreCancelled
+    if (configService->getConfig().quik.order.ignoreCancelled
             && order->status == ORDER_STATUS_CANCELED) {
         LOGGER->debug("Skipping add commission data to order: {} because it status: {}", order->orderNum, order->status);
         return;

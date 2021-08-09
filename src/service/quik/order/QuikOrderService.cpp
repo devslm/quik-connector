@@ -82,7 +82,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
             continue;
         }
 
-        if (!configService->getConfig().order.ignoreCancelled
+        if (!configService->getConfig().quik.order.ignoreCancelled
                 || order.status != ORDER_STATUS_CANCELED) {
             orders.push_back(order);
         } else {

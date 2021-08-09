@@ -178,6 +178,7 @@ void QueueService::subscribe() {
 
             switch (status) {
                 case cpp_redis::subscriber::connect_state::ok:
+                    authenticate();
                     subscribeToCommandQueue();
                     message = "Subscriber connected to server";
                     break;
@@ -200,6 +201,19 @@ void QueueService::subscribe() {
         }, 5000, 1000, redisReconnectAttempts
     );
     redisSubscriber.commit();
+}
+
+void QueueService::authenticate() {
+    if (configService->getConfig().redis.password.isEmpty()) {
+        return;
+    }
+    redisSubscriber.auth(configService->getConfig().redis.password.get(), [](const cpp_redis::reply& reply) {
+        if (reply.is_error()) {
+            LOGGER->error("[Redis] Could not authenticate subscriber! Reason: {}", reply.as_string());
+        } else {
+            LOGGER->info("[Redis] Subscriber authenticated successfully");
+        }
+    });
 }
 
 bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestId) {
