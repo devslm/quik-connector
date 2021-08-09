@@ -21,6 +21,11 @@ typedef struct FunctionArgDto {
 
     }
 
+    FunctionArgDto(const string& value) {
+        this->type = STRING_TYPE;
+        this->valueString = value;
+    }
+
     FunctionArgDto(string& value) {
         this->type = STRING_TYPE;
         this->valueString = value;

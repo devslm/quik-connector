@@ -36,6 +36,8 @@ int Quik::onStart(lua_State *luaState) {
     this->isConnectorRunning = true;
 
     LOGGER->info(logMessage);
+    LOGGER->info("QUIK version: {}", getVersion(luaState).get());
+
     message(luaState, logMessage);
 
     return 0;
@@ -233,21 +235,48 @@ Option<QuikConnectionStatusDto> Quik::getServerConnectionStatus(lua_State *luaSt
 }
 
 Option<QuikUserInfoDto> Quik::getUserName(lua_State *luaState) {
-    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+    Option<string> userName = getInfoParam(luaState, "USER");
 
-    FunctionArgDto args[] = {{"USER"}};
+    if (userName.isPresent()) {
+        QuikUserInfoDto quikUserInfo;
+        quikUserInfo.name = userName.get();
 
-    if (!luaCallFunction(luaState, GET_INFO_PARAM_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function to get user info!", GET_INFO_PARAM_FUNCTION_NAME);
-        return Option<QuikUserInfoDto>();
-    }
-    QuikUserInfoDto quikUserInfo;
-    bool isSuccess = toQuikUserInfoDto(luaState, &quikUserInfo);
-
-    if (isSuccess) {
         return Option<QuikUserInfoDto>(quikUserInfo);
     }
-    return Option<QuikUserInfoDto>();
+    return {};
+}
+
+Option<string> Quik::getVersion(lua_State *luaState) {
+    return getInfoParam(luaState, "VERSION");
+}
+
+Option<string> Quik::getServerTime(lua_State *luaState) {
+    return getInfoParam(luaState, "SERVERTIME");
+}
+
+Option<string> Quik::getAvgPingDuration(lua_State *luaState) {
+    return getInfoParam(luaState, "AVGPINGDURATION");
+}
+
+Option<string> Quik::getInfoParam(lua_State *luaState, const string& paramName) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{paramName}};
+
+    if (!luaCallFunction(luaState, GET_INFO_PARAM_FUNCTION_NAME, 1, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function to get info param!", GET_INFO_PARAM_FUNCTION_NAME);
+        return {};
+    }
+    string paramValue;
+
+    bool isSuccess = luaGetString(luaState, &paramValue);
+
+    if (isSuccess) {
+        return {paramValue};
+    } else {
+        LOGGER->error("Could not get info param for param: {}", paramName);
+    }
+    return {};
 }
 
 set<string> Quik::getClassesList(lua_State *luaState) {

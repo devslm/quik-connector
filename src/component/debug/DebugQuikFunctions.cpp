@@ -21,4 +21,19 @@ void debugQuikFunctions(lua_State *luaState) {
     LOGGER->info("Money limit: {}", toMoneyLimitJson(quik->getMoney(luaState, (string)"OPEN88380", (string)"L01-00000F00", (string)"EQTV", (string)"SUR")).dump());
 
     OrderRepository orderRepository;
+
+    Option<string> serverTime = quik->getServerTime(luaState);
+
+    if (serverTime.isPresent()) {
+        LOGGER->info("QUIK server time: {}", serverTime.get());
+    } else {
+        throw runtime_error("Could not debug QUIK server time function!");
+    }
+    Option<string> avgPingDuration = quik->getAvgPingDuration(luaState);
+
+    if (avgPingDuration.isPresent()) {
+        LOGGER->info("QUIK AVG ping: {}", avgPingDuration.get());
+    } else {
+        throw runtime_error("Could not debug QUIK avg ping function!");
+    }
 }

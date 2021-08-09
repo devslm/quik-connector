@@ -5,10 +5,13 @@
 #ifndef QUIK_CONNECTOR_DEBUGQUIKFUNCTIONS_H
 #define QUIK_CONNECTOR_DEBUGQUIKFUNCTIONS_H
 
+#include "string"
 #include "../../service/quik/Quik.h"
 #include "../../service/log/Logger.h"
 #include "../../service/quik/utils/QuikUtils.h"
 #include "../../repository/order/OrderRepository.h"
+
+using namespace std;
 
 class Quik;
 

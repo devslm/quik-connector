@@ -108,6 +108,14 @@ public:
 
     Option<QuikUserInfoDto> getUserName(lua_State *luaState);
 
+    Option<string> getVersion(lua_State *luaState);
+
+    Option<string> getServerTime(lua_State *luaState);
+
+    Option<string> getAvgPingDuration(lua_State *luaState);
+
+    Option<string> getInfoParam(lua_State *luaState, const string& paramName);
+
     set<string> getClassesList(lua_State *luaState);
 
     Option<ClassInfoDto> getClassInfo(lua_State *luaState, string *className);
