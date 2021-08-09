@@ -19,6 +19,7 @@
 #include "../../mapper/trade/TradeMapper.h"
 #include "../../mapper/quik/QuikServerMapper.h"
 #include "../../mapper/quote/QuoteMapper.h"
+#include "../../mapper/transaction/TransactionMapper.h"
 #include "../utils/string/StringUtils.h"
 #include "../../dto/class/ClassInfoDto.h"
 #include "../../mapper/class/ClassInfoMapper.h"
@@ -30,6 +31,8 @@
 #include "../../dto/order/OrderDto.h"
 #include "../../dto/order/StopOrderDto.h"
 #include "../../mapper/ticker/TickerMapper.h"
+#include "../../dto/money/MoneyLimitDto.h"
+#include "../../mapper/money/MoneyLimitMapper.h"
 
 using namespace std;
 
@@ -42,6 +45,8 @@ const char GET_QUOTE_LEVEL_2_FUNCTION_NAME[] = "getQuoteLevel2";
 const char GET_NUMBER_OF_FUNCTION_NAME[] = "getNumberOf";
 const char GET_ITEM_FUNCTION_NAME[] = "getItem";
 const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
+const char GET_CLASS_SECURITIES_FUNCTION_NAME[] = "getClassSecurities";
+const char GET_MONEY_FUNCTION_NAME[] = "getMoney";
 const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
 
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
@@ -106,6 +111,10 @@ public:
     set<string> getClassesList(lua_State *luaState);
 
     Option<ClassInfoDto> getClassInfo(lua_State *luaState, string *className);
+
+    set<string> getClassSecurities(lua_State *luaState, string& className);
+
+    Option<MoneyLimitDto> getMoney(lua_State *luaState, string& clientCode, string& firmId, string& tag, string& currencyCode);
 
     Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string classCode, string ticker);
 

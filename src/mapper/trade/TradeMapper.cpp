@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 25.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #include "TradeMapper.h"
@@ -147,13 +147,13 @@ bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     return true;
 }
 
-json toAllTradeJson(Option<TradeDto> *tradeOption) {
+json toAllTradeJson(Option<TradeDto>& tradeOption) {
     json jsonObject;
 
-    if (tradeOption->isEmpty()) {
+    if (tradeOption.isEmpty()) {
         return jsonObject;
     }
-    TradeDto trade = tradeOption->get();
+    TradeDto trade = tradeOption.get();
     jsonObject["tradeNum"] = trade.tradeNum;
     jsonObject["flags"] = trade.flags;
     jsonObject["price"] = trade.price;
@@ -175,13 +175,13 @@ json toAllTradeJson(Option<TradeDto> *tradeOption) {
     return jsonObject;
 }
 
-json toTradeJson(Option<TradeDto> *tradeOption) {
-    TradeDto trade = tradeOption->get();
+json toTradeJson(Option<TradeDto>& tradeOption) {
     json jsonObject = toAllTradeJson(tradeOption);
 
-    if (tradeOption->isEmpty()) {
+    if (tradeOption.isEmpty()) {
         return jsonObject;
     }
+    TradeDto trade = tradeOption.get();
     jsonObject["orderNum"] = trade.orderNum;
     jsonObject["clearingComission"] = trade.clearingComission;
     jsonObject["exchangeComission"] = trade.exchangeComission;

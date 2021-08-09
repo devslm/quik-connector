@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 25.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_TRADEMAPPER_H
@@ -17,8 +17,8 @@ bool toAllTradeDto(lua_State *luaState, TradeDto *trade);
 
 bool toTradeDto(lua_State *L, TradeDto *trade);
 
-json toAllTradeJson(Option<TradeDto> *tradeOption);
+json toAllTradeJson(Option<TradeDto>& tradeOption);
 
-json toTradeJson(Option<TradeDto> *tradeOption);
+json toTradeJson(Option<TradeDto>& tradeOption);
 
 #endif //QUIK_CONNECTOR_TRADEMAPPER_H

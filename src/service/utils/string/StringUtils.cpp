@@ -26,18 +26,15 @@ static const short UTF_CHARS_TABLE[256] = {
     0x44a,0x44b,0x44c,0x44d,0x44e,0x44f
 };
 
-set<string> stringSplitByDelimeter(const char *str, const char delimiter) {
-    set<string> items;
-
-    if (str == nullptr) {
-        return items;
-    }
+set<string> stringSplitByDelimeter(const string& str, const char delimiter) {
     int i = 0;
     char value[VALUE_SIZE] = {0};
+    const char* strChars = str.c_str();
+    set<string> items;
 
-    while (*str++) {
-        if (*str != delimiter) {
-            value[i++] = *str;
+    while (*strChars++) {
+        if (*strChars != delimiter) {
+            value[i++] = *strChars;
         } else {
             items.insert(string(value));
 

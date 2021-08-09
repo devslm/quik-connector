@@ -68,25 +68,25 @@ void Quik::startCheckAllTradesThread() {
         if (trades.empty()) {
             continue;
         }
-        list<json> tradeStrList;
+        list<TradeDto> tradeList;
 
         changedTradeQueueLock.lock();
 
         while (!trades.empty()) {
-            TradeDto trade = trades.front();
+            tradeList.push_back(trades.front());
 
             trades.pop();
-
-            Option<TradeDto> tradeOption(trade);
-
-            tradeStrList.push_back(toAllTradeJson(&tradeOption));
         }
         changedTradeQueueLock.unlock();
 
-        for (auto& tradeJson : tradeStrList) {
-            queueService->pubSubPublish(QueueService::QUIK_ALL_TRADES_QUEUE, tradeJson);
+        for (const auto& trade : tradeList) {
+            Option<TradeDto> tradeOption(trade);
+
+            queueService->pubSubPublish(
+                QueueService::QUIK_ALL_TRADES_QUEUE,
+                toAllTradeJson(tradeOption).dump()
+            );
         }
-        tradeStrList.clear();
     }
 }
 
@@ -169,19 +169,16 @@ int Quik::onOrder(lua_State *luaState) {
 int Quik::onTransReply(lua_State *luaState) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for trans reply data! Current stack value type is: <<{}>> but required table!",
-            luaGetType(luaState, -1));
+    TransactionReplyDto transactionReply;
+    bool isSuccess = toTransactionReplyDto(luaState, &transactionReply);
 
-        return false;
+    if (isSuccess) {
+        Option<TransactionReplyDto> transactionReplyOption(transactionReply);
+
+        LOGGER->info("Trans reply: {}", toTransactionReplyJson(transactionReplyOption).dump());
+    } else {
+        LOGGER->info("Could not read trans reply!");
     }
-    string message;
-
-    if (!luaGetTableStringField(luaState, "result_msg", &message)) {
-        return false;
-    }
-    LOGGER->info("Trans reply: {}", message);
-
     return 0;
 }
 
@@ -262,11 +259,13 @@ set<string> Quik::getClassesList(lua_State *luaState) {
         LOGGER->error("Could not call QUIK {} function!", GET_CLASSES_LIST_FUNCTION_NAME);
         return classes;
     }
-    const char *classesStr = lua_tostring(luaState, -1);
-    lua_pop(luaState, 1);
+    string classesStr;
 
-    classes = stringSplitByDelimeter(classesStr, ',');
+    bool isSuccess = luaGetString(luaState, &classesStr);
 
+    if (isSuccess) {
+        classes = stringSplitByDelimeter(classesStr, ',');
+    }
     return classes;
 }
 
@@ -288,6 +287,54 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string *className) 
     LOGGER->error("Could not get class info for: {}!", *className);
 
     return Option<ClassInfoDto>();
+}
+
+set<string> Quik::getClassSecurities(lua_State *luaState, string& className) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    set<string> classSecurities;
+    FunctionArgDto args[] = {{className}};
+
+    if (!luaCallFunction(luaState, GET_CLASS_SECURITIES_FUNCTION_NAME, 1, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_CLASS_SECURITIES_FUNCTION_NAME);
+        return classSecurities;
+    }
+    string classSecuritiesStr;
+
+    bool isSuccess = luaGetString(luaState, &classSecuritiesStr);
+
+    if (isSuccess) {
+        classSecurities = stringSplitByDelimeter(classSecuritiesStr, ',');
+    } else {
+        LOGGER->error("Could not get class securities for class code: {}!", className);
+    }
+    return classSecurities;
+}
+
+Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
+                                     string& clientCode,
+                                     string& firmId,
+                                     string& tag,
+                                     string& currencyCode) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{clientCode}, {firmId}, {tag}, {currencyCode}};
+
+    if (!luaCallFunction(luaState, GET_MONEY_FUNCTION_NAME, 4, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_MONEY_FUNCTION_NAME);
+        return Option<MoneyLimitDto>();
+    }
+    MoneyLimitDto moneyLimit;
+
+    bool isSuccess = toMoneyLimitDto(luaState, &moneyLimit);
+
+    if (isSuccess) {
+        return Option<MoneyLimitDto>(moneyLimit);
+    }
+    LOGGER->error("Could not get money limit with client code: {}, firm: {}, tag: {} and currency code: {}!",
+        clientCode, firmId, tag, currencyCode);
+
+    return Option<MoneyLimitDto>();
 }
 
 bool Quik::isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
@@ -366,7 +413,7 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
         }
         Option<TradeDto> tradeOption(trade);
 
-        LOGGER->debug("Trade: {}", toTradeJson(&tradeOption));
+        LOGGER->debug("Trade: {}", toTradeJson(tradeOption));
 
         existsTrades.push_back(trade);
     }

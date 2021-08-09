@@ -9,7 +9,7 @@
 
 using namespace std;
 
-set<string> stringSplitByDelimeter(const char *str, const char delimiter);
+set<string> stringSplitByDelimeter(const string& str, const char delimiter);
 
 void convertToUtf8(const char *src, char *dst);
 
