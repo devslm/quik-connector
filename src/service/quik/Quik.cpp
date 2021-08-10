@@ -273,9 +273,36 @@ Option<string> Quik::getInfoParam(lua_State *luaState, const string& paramName) 
 
     if (isSuccess) {
         return {paramValue};
-    } else {
-        LOGGER->error("Could not get info param for param: {}", paramName);
     }
+    LOGGER->error("Could not get info param for param: {}", paramName);
+
+    return {};
+}
+
+Option<DepoLimitDto> Quik::getDepoLimit(lua_State *luaState,
+                                        string& clientCode,
+                                        string& firmId,
+                                        string& ticker,
+                                        string& account,
+                                        int limitKind) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{clientCode}, {firmId}, {ticker}, {account}, {limitKind}};
+
+    if (!luaCallFunction(luaState, GET_DEPO_EX_FUNCTION_NAME, 5, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_DEPO_EX_FUNCTION_NAME);
+        return {};
+    }
+    DepoLimitDto depoLimit;
+
+    bool isSuccess = toDepoLimitDto(luaState, &depoLimit);
+
+    if (isSuccess) {
+        return {depoLimit};
+    }
+    LOGGER->error("Could not get depo limit for client code: {}, firm: {}, ticker: {} and account: {}",
+        clientCode, firmId, ticker, account);
+
     return {};
 }
 

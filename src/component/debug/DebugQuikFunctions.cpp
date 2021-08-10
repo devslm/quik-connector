@@ -36,4 +36,11 @@ void debugQuikFunctions(lua_State *luaState) {
     } else {
         throw runtime_error("Could not debug QUIK avg ping function!");
     }
+    Option<DepoLimitDto> depoLimit = quik->getDepoLimit(luaState, (string)"MC013***", (string)"152***", (string)"AGRO", (string)"L01-0*******", 2);
+
+    if (depoLimit.isPresent()) {
+        LOGGER->info("QUIK depo limit: {}", toDepoLimitJson(depoLimit).dump());
+    } else {
+        throw runtime_error("Could not debug QUIK depo limit function!");
+    }
 }
