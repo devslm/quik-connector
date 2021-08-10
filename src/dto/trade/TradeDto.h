@@ -23,7 +23,7 @@ typedef struct TradeDto {
     double repoValue = 0.0;
     double repo2value = 0.0;
     double repoTerm = 0.0;
-    string secCode;
+    string ticker;
     string classCode;
     uint64_t date;
     double period = 0.0;

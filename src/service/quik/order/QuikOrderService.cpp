@@ -67,9 +67,9 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
     LOGGER->debug("Found: {} active orders", (int)totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
-        FunctionArgDto args[] = {{QUIK_ORDERS_TABLE_NAME}, {i}};
+        FunctionArgDto getItemFunctionArgs[] = {{QUIK_ORDERS_TABLE_NAME}, {i}};
 
-        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemFunctionArgs)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return orders;
         }
@@ -113,9 +113,9 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
     LOGGER->debug("Found: {} active stop orders", (int)totalStopOrders);
 
     for (int i = 0; i < totalStopOrders; ++i) {
-        FunctionArgDto args[] = {{QUIK_STOP_ORDERS_TABLE_NAME}, {i}};
+        FunctionArgDto getItemFunctionArgs[] = {{QUIK_STOP_ORDERS_TABLE_NAME}, {i}};
 
-        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, args)) {
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemFunctionArgs)) {
             LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return stopOrders;
         }

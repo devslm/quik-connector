@@ -49,7 +49,7 @@ bool toAllTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!luaGetTableNumberField(luaState, "repoterm", &trade->repoTerm)) {
         return false;
     }
-    if (!luaGetTableStringField(luaState, "sec_code", &trade->secCode)) {
+    if (!luaGetTableStringField(luaState, "sec_code", &trade->ticker)) {
         return false;
     }
     if (!luaGetTableStringField(luaState, "class_code", &trade->classCode)) {
@@ -115,7 +115,7 @@ bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!luaGetTableNumberField(luaState, "repoterm", &trade->repoTerm)) {
         return false;
     }
-    if (!luaGetTableStringField(luaState, "sec_code", &trade->secCode)) {
+    if (!luaGetTableStringField(luaState, "sec_code", &trade->ticker)) {
         return false;
     }
     if (!luaGetTableStringField(luaState, "class_code", &trade->classCode)) {
@@ -166,7 +166,7 @@ json toAllTradeJson(Option<TradeDto>& tradeOption) {
     jsonObject["repoValue"] = trade.repoValue;
     jsonObject["repo2value"] = trade.repo2value;
     jsonObject["repoTerm"] = trade.repoTerm;
-    jsonObject["secCode"] = trade.secCode;
+    jsonObject["ticker"] = trade.ticker;
     jsonObject["classCode"] = trade.classCode;
     jsonObject["date"] = trade.date;
     jsonObject["period"] = trade.period;

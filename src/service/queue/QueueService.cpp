@@ -11,10 +11,10 @@ const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
 const string QueueService::QUIK_STOP_ORDERS_TOPIC = "topic:quik:stop:orders";
 const string QueueService::QUIK_CANDLES_TOPIC = "topic:quik:candles";
 const string QueueService::QUIK_LAST_CANDLE_TOPIC = "topic:quik:candles:last";
+const string QueueService::QUIK_ALL_TRADES_TOPIC = "topic:quik:trades:all";
 
 const string QueueService::QUIK_CANDLE_CHANGE_QUEUE = "queue:quik:candle:change";
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
-const string QueueService::QUIK_ALL_TRADES_QUEUE = "queue:quik:trades:all";
 
 const string QueueService::QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
 const string QueueService::QUIK_GET_USER_INFO_COMMAND = "GET_USER";

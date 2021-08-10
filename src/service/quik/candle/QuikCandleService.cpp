@@ -36,6 +36,7 @@ void QuikCandleService::startCheckCandlesThread() {
 
             if (isSuccess) {
                 CandleDto candle;
+                Option<CandleDto> candleOption;
 
                 if (candlesSize > 1) {
                     if (!toCandleDto(&candleSubscription, &candle, candlesSize - 1, candlesSize)) {
@@ -45,8 +46,8 @@ void QuikCandleService::startCheckCandlesThread() {
                              candleSubscription.classCode, candleSubscription.ticker, intervalName);
                          continue;
                     }
+                    candleOption = Option<CandleDto>(candle);
                 }
-                Option<CandleDto> candleOption(candle);
 
                 if (candleOption.isPresent()) {
                     Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
@@ -119,7 +120,7 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string classCode
 }
 
 Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
-    return Option<CandleDto>();
+    return {};
 }
 
 Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
@@ -143,7 +144,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
     if (LUA_OK != result) {
         LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
-        return Option<CandleDto>();
+        return {};
     }
     int dataSourceIndex = luaSaveReference(luaState);
     int dataSource = luaLoadReference(luaState, dataSourceIndex);
@@ -157,7 +158,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
         LOGGER->error("Could not set empty callback in get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
 
-        return Option<CandleDto>();
+        return {};
     }
     bool isEmptyCallbackApplied = false;
     bool isSuccess = luaGetBoolean(luaState, &isEmptyCallbackApplied);
@@ -167,7 +168,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         lua_pop(luaState, 1);
 
-        return Option<CandleDto>();
+        return {};
     }
     lua_pop(luaState, 2);
 

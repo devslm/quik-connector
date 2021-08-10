@@ -85,7 +85,7 @@ void Quik::startCheckAllTradesThread() {
             Option<TradeDto> tradeOption(trade);
 
             queueService->pubSubPublish(
-                QueueService::QUIK_ALL_TRADES_QUEUE,
+                QueueService::QUIK_ALL_TRADES_TOPIC,
                 toAllTradeJson(tradeOption).dump()
             );
         }
@@ -222,16 +222,16 @@ Option<QuikConnectionStatusDto> Quik::getServerConnectionStatus(lua_State *luaSt
 
     if (!luaCallFunction(luaState, IS_CONNECTED_FUNCTION_NAME, 0, 1, nullptr)) {
         LOGGER->error("Could not call QUIK {} function!", IS_CONNECTED_FUNCTION_NAME);
-        return Option<QuikConnectionStatusDto>();
+        return {};
     }
     QuikConnectionStatusDto quikConnectionStatus;
 
     bool isSuccess = toQuikServerConnectionStatusDto(luaState, &quikConnectionStatus);
 
     if (isSuccess) {
-        return Option<QuikConnectionStatusDto>(quikConnectionStatus);
+        return {quikConnectionStatus};
     }
-    return Option<QuikConnectionStatusDto>();
+    return {};
 }
 
 Option<QuikUserInfoDto> Quik::getUserName(lua_State *luaState) {
@@ -241,7 +241,7 @@ Option<QuikUserInfoDto> Quik::getUserName(lua_State *luaState) {
         QuikUserInfoDto quikUserInfo;
         quikUserInfo.name = userName.get();
 
-        return Option<QuikUserInfoDto>(quikUserInfo);
+        return {quikUserInfo};
     }
     return {};
 }
@@ -305,17 +305,17 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string *className) 
 
     if (!luaCallFunction(luaState, GET_CLASS_INFO_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_CLASS_INFO_FUNCTION_NAME);
-        return Option<ClassInfoDto>();
+        return {};
     }
     ClassInfoDto classInfo;
     bool isSuccess = toClassInfoDto(luaState, &classInfo);
 
     if (isSuccess) {
-        return Option<ClassInfoDto>(classInfo);
+        return {classInfo};
     }
     LOGGER->error("Could not get class info for: {}!", *className);
 
-    return Option<ClassInfoDto>();
+    return {};
 }
 
 set<string> Quik::getClassSecurities(lua_State *luaState, string& className) {
@@ -351,19 +351,19 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
 
     if (!luaCallFunction(luaState, GET_MONEY_FUNCTION_NAME, 4, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_MONEY_FUNCTION_NAME);
-        return Option<MoneyLimitDto>();
+        return {};
     }
     MoneyLimitDto moneyLimit;
 
     bool isSuccess = toMoneyLimitDto(luaState, &moneyLimit);
 
     if (isSuccess) {
-        return Option<MoneyLimitDto>(moneyLimit);
+        return {moneyLimit};
     }
     LOGGER->error("Could not get money limit with client code: {}, firm: {}, tag: {} and currency code: {}!",
         clientCode, firmId, tag, currencyCode);
 
-    return Option<MoneyLimitDto>();
+    return {};
 }
 
 bool Quik::isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
@@ -389,7 +389,7 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string classCo
 
     if (!luaCallFunction(luaState, GET_QUOTE_LEVEL_2_FUNCTION_NAME, 2, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_QUOTE_LEVEL_2_FUNCTION_NAME);
-        return Option<TickerQuoteDto>();
+        return {};
     }
     TickerQuoteDto tickerQuote;
     tickerQuote.classCode = classCode;
@@ -398,11 +398,11 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string classCo
     bool isSuccess = toTickerQuoteDto(luaState, &tickerQuote);
 
     if (isSuccess) {
-        return Option<TickerQuoteDto>(tickerQuote);
+        return {tickerQuote};
     }
     LOGGER->error("Could not get ticker quotes for class: {} and ticker: {}!", classCode, ticker);
 
-    return Option<TickerQuoteDto>();
+    return {};
 }
 
 list<TradeDto> Quik::getTrades(lua_State *luaState) {
@@ -472,16 +472,16 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, str
 
     if (!luaCallFunction(luaState, GET_SECURITY_INFO_FUNCTION_NAME, 2, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_SECURITY_INFO_FUNCTION_NAME);
-        return Option<TickerDto>();
+        return {};
     }
     TickerDto ticker;
 
     bool isSuccess = toTickerDto(luaState, &ticker);
 
     if (isSuccess) {
-        return Option<TickerDto>(ticker);
+        return {ticker};
     }
     LOGGER->error("Could not get ticker info for class: {} and ticker: {}!", classCode, tickerCode);
 
-    return Option<TickerDto>();
+    return {};
 }
