@@ -156,7 +156,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
 
     Option<TickerDto> tickerOption = quik->getTickerById(luaState, order->classCode, order->ticker);
 
-    if (!tickerOption.isPresent()) {
+    if (tickerOption.isEmpty()) {
         LOGGER->error("Could not convert order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
             order->classCode, order->ticker);
         return false;
@@ -165,8 +165,18 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     order->currency = ticker.faceUnit;
     order->name = ticker.shortName;
     order->lotSize = ticker.lotSize;
+    Option<double> priceStepCostOption = quik->getTickerPriceStepCost(luaState, order->classCode, order->ticker);
+
+    if (priceStepCostOption.isEmpty()) {
+        LOGGER->error("Could not convert order data to dto! Reason: Can't get ticker price step cost with class code: {} and ticker: {}",
+            order->classCode, order->ticker);
+        return false;
+    }
+    order->priceStepCost = priceStepCostOption.get();
 
     lua_pop(luaState, 2);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }
@@ -420,6 +430,7 @@ json toOrderJson(Option<OrderDto>& orderOption) {
     jsonObject["capacity"] = order.capacity;
     jsonObject["passiveOnlyOrder"] = order.passiveOnlyOrder;
     jsonObject["visible"] = order.visible;
+    jsonObject["priceStepCost"] = order.priceStepCost;
 
     jsonObject["commission"] = json::object();
     jsonObject["commission"]["broker"] = order.commission.broker;

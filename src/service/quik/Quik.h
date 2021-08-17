@@ -21,6 +21,7 @@
 #include "../../mapper/quote/QuoteMapper.h"
 #include "../../mapper/transaction/TransactionMapper.h"
 #include "../../mapper/depo/DepoLimitMapper.h"
+#include "../../mapper/param/ParamMapper.h"
 #include "../utils/string/StringUtils.h"
 #include "../../dto/class/ClassInfoDto.h"
 #include "../../mapper/class/ClassInfoMapper.h"
@@ -49,6 +50,7 @@ const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
 const char GET_CLASS_SECURITIES_FUNCTION_NAME[] = "getClassSecurities";
 const char GET_MONEY_FUNCTION_NAME[] = "getMoney";
 const char GET_DEPO_EX_FUNCTION_NAME[] = "getDepoEx";
+const char GET_PARAM_EX_FUNCTION_NAME[] = "getParamEx";
 const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
 
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
@@ -118,6 +120,8 @@ public:
 
     Option<string> getInfoParam(lua_State *luaState, const string& paramName);
 
+    Option<ParamDto> getParamEx(lua_State *luaState, const string& classCode, const string& ticker, const string& paramName);
+
     Option<DepoLimitDto> getDepoLimit(lua_State *luaState,
                                       string& clientCode,
                                       string& firmId,
@@ -150,6 +154,10 @@ public:
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
     Option<TickerDto> getTickerById(lua_State *luaState, string classCode, string tickerCode);
+
+    Option<double> getTickerPriceStepCost(lua_State *luaState, const string& classCode, const string& tickerCode);
+
+    Option<double> getTickerPriceStep(lua_State *luaState, const string& classCode, const string& ticker);
 
 private:
     bool isConnectorRunning = false;

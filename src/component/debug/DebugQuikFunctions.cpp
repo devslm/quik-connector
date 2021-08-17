@@ -43,4 +43,12 @@ void debugQuikFunctions(lua_State *luaState) {
     } else {
         throw runtime_error("Could not debug QUIK depo limit function!");
     }
+    string futureName = "RIU1";
+    Option<double> stepCost = quik->getTickerPriceStepCost(luaState, "SPBFUT", futureName);
+
+    if (stepCost.isPresent()) {
+        LOGGER->info("Future: {} price step cost: {}", futureName, stepCost.get());
+    } else {
+        throw runtime_error("Could not debug QUIK price step cost function for: " + futureName);
+    }
 }

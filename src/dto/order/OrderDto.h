@@ -59,6 +59,7 @@ typedef struct OrderDto {
     double capacity = 0.0;
     double passiveOnlyOrder = 0.0;
     double visible = 0.0;
+    double priceStepCost = 0.0;
     OrderCommissionDto commission;
 } OrderDto;
 

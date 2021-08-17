@@ -512,3 +512,77 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, str
 
     return {};
 }
+
+Option<double> Quik::getTickerPriceStepCost(lua_State *luaState, const string& classCode, const string& ticker) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    auto paramOption = getParamEx(luaState, classCode, ticker, "STEPPRICE");
+
+    if (paramOption.isPresent()) {
+        ParamDto param = paramOption.get();
+
+        if (PARAM_DOUBLE_TYPE == param.paramType) {
+            Option<double> priceStep = getTickerPriceStep(luaState, classCode, ticker);
+
+            if (priceStep.isPresent()) {
+                return stod(param.paramValue) / priceStep.get();
+            } else {
+                LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {} because no price step value!",
+                    classCode, ticker, param.paramType + 1);
+                return {};
+            }
+        } else {
+            LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
+                classCode, ticker, param.paramType + 1);
+            return {};
+        }
+    }
+    LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {}!", classCode, ticker);
+
+    return {};
+}
+
+Option<double> Quik::getTickerPriceStep(lua_State *luaState, const string& classCode, const string& ticker) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    Option<ParamDto> paramOption = getParamEx(luaState, classCode, ticker, "SEC_PRICE_STEP");
+
+    if (paramOption.isPresent()) {
+        ParamDto param = paramOption.get();
+
+        if (PARAM_DOUBLE_TYPE == param.paramType) {
+            return stod(param.paramValue);
+        } else {
+            LOGGER->error("Could not get ticker price step for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
+                classCode, ticker, param.paramType + 1);
+            return {};
+        }
+    }
+    LOGGER->error("Could not get ticker price step for class code: {} and ticker: {}!", classCode, ticker);
+
+    return {};
+}
+
+Option<ParamDto> Quik::getParamEx(lua_State *luaState,
+                                  const string& classCode,
+                                  const string& ticker,
+                                  const string& paramName) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{classCode}, {ticker}, {paramName}};
+
+    if (!luaCallFunction(luaState, GET_PARAM_EX_FUNCTION_NAME, 3, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_PARAM_EX_FUNCTION_NAME);
+        return {};
+    }
+    ParamDto param;
+
+    auto isSuccess = toParamDto(luaState, &param);
+
+    if (isSuccess) {
+        return {param};
+    }
+    LOGGER->error("Could not get param ex value for class code: {}, ticker: {} and param: {}", classCode, ticker, paramName);
+
+    return {};
+}
