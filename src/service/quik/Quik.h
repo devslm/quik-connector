@@ -56,6 +56,7 @@ const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
 const char QUIK_STOP_ORDERS_TABLE_NAME[] = "stop_orders";
+const char QUIK_CLIENT_CODES_TABLE_NAME[] = "client_codes";
 
 class ConfigService;
 class QuikCandleService;
@@ -128,6 +129,10 @@ public:
                                       string& ticker,
                                       string& account,
                                       int limitKind);
+
+    set<string> getClientCodes(lua_State *luaState);
+
+    void getTableValues(lua_State *luaState, const string& tableName, function<void(string&)> const& callback);
 
     set<string> getClassesList(lua_State *luaState);
 

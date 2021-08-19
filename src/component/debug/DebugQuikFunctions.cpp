@@ -51,4 +51,13 @@ void debugQuikFunctions(lua_State *luaState) {
     } else {
         throw runtime_error("Could not debug QUIK price step cost function for: " + futureName);
     }
+    set<string> clientCodes = quik->getClientCodes(luaState);
+
+    if (clientCodes.empty()) {
+        throw runtime_error("Could not debug QUIK get client codes function for because result is empty!");
+    }
+
+    for (const auto& clientCode : clientCodes) {
+        LOGGER->info("Client code -> {}", clientCode);
+    }
 }

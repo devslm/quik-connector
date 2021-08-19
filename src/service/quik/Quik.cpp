@@ -306,6 +306,54 @@ Option<DepoLimitDto> Quik::getDepoLimit(lua_State *luaState,
     return {};
 }
 
+set<string> Quik::getClientCodes(lua_State *luaState) {
+    set<string> clientCodes;
+
+    getTableValues(luaState, QUIK_CLIENT_CODES_TABLE_NAME, [&clientCodes](string& clientCode) {
+        if (!clientCode.empty()) {
+            clientCodes.insert(clientCode);
+        }
+    });
+    return clientCodes;
+}
+
+void Quik::getTableValues(lua_State *luaState, const string& tableName, function<void(string&)> const& callback) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{tableName}};
+
+    if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function for: {}!", GET_NUMBER_OF_FUNCTION_NAME, tableName);
+        return;
+    }
+    double totalItems = 0.0;
+    bool isSuccess = luaGetNumber(luaState, &totalItems);
+
+    if (!isSuccess) {
+        LOGGER->error("Can't retrieve total items number for: {}!", tableName);
+        return;
+    }
+    LOGGER->debug("Found total items: {} for: {}", totalItems, tableName);
+
+    for (int i = 0; i < totalItems; ++i) {
+        FunctionArgDto getItemArgs[] = {{tableName}, {i}};
+
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
+            LOGGER->error("Could not call QUIK {} function for: {}!", GET_ITEM_FUNCTION_NAME, tableName);
+            return;
+        }
+        string clientCode;
+
+        isSuccess = luaGetString(luaState, &clientCode);
+
+        if (!isSuccess) {
+            LOGGER->error("Could not get item for: {}!", tableName);
+            continue;
+        }
+        callback(clientCode);
+    }
+}
+
 set<string> Quik::getClassesList(lua_State *luaState) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
