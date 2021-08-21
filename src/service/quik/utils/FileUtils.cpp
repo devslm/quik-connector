@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 23.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #include "FileUtils.h"

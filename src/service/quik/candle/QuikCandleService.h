@@ -11,10 +11,10 @@
 #include <atomic>
 #include "../utils/QuikUtils.h"
 #include "../../lua/Lua.h"
-#include "../../../dto/connector/subscription/QuikSubscriptionDto.h"
-#include "../../../dto/candle/CandleDto.h"
-#include "../../../dto/connector/request/RequestDto.h"
-#include "../../../mapper/candle/CandleMapper.h"
+#include "../../../dto/quik/connector/subscription/QuikSubscriptionDto.h"
+#include "../../../dto/quik/candle/CandleDto.h"
+#include "../../../dto/quik/connector/request/RequestDto.h"
+#include "../../../mapper/quik/candle/CandleMapper.h"
 #include "../../queue/QueueService.h"
 
 using namespace std;

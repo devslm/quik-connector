@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 26.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_DEBUGFUNCTIONS_H
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <ctime>
 #include <nlohmann/json.hpp>
-#include "../../../dto/lua/FunctionArgDto.h"
+#include "../../../dto/quik/lua/FunctionArgDto.h"
 #include "../../log/Logger.h"
 
 using namespace nlohmann;

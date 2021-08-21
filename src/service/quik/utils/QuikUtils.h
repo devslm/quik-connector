@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 26.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIKUTILS_H
@@ -10,8 +10,8 @@
 #include <map>
 #include "../../lua/Lua.h"
 #include "../../../dto/option/Option.h"
-#include "../../../dto/trade/TradeDto.h"
-#include "../../../dto/order/OrderCommissionDto.h"
+#include "../../../dto/quik/trade/TradeDto.h"
+#include "../../../dto/quik/order/OrderCommissionDto.h"
 
 using namespace std;
 

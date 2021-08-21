@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 25.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_LUA_H
@@ -7,7 +7,7 @@
 
 #include <string>
 #include <mutex>
-#include "../../dto/lua/FunctionArgDto.h"
+#include "../../dto/quik/lua/FunctionArgDto.h"
 #include "../utils/debug/DebugFunctions.h"
 #include "../utils/string/StringUtils.h"
 #include "../../dto/option/Option.h"

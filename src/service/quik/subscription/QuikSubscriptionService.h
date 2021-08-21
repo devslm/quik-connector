@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 27.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIKSUBSCRIPTIONSERVICE_H
@@ -8,7 +8,7 @@
 #include <string>
 #include <map>
 #include "../Quik.h"
-#include "../../../dto/connector/subscription/QuikSubscriptionDto.h"
+#include "../../../dto/quik/connector/subscription/QuikSubscriptionDto.h"
 
 using namespace std;
 

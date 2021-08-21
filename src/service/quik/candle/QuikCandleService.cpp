@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 29.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #include "QuikCandleService.h"

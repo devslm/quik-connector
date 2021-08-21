@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 21.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIKORDERSERVICE_H
@@ -12,12 +12,12 @@
 #include "../../../dto/config/Config.h"
 #include "../utils/QuikUtils.h"
 #include "../../lua/Lua.h"
-#include "../../../mapper/order/OrderMapper.h"
-#include "../../../dto/order/OrderDto.h"
-#include "../../../dto/order/StopOrderDto.h"
+#include "../../../mapper/quik/order/OrderMapper.h"
+#include "../../../dto/quik/order/OrderDto.h"
+#include "../../../dto/quik/order/StopOrderDto.h"
 #include "../Quik.h"
 #include "../../../component/redis/Redis.h"
-#include "../../../component/validator/order/OrderValidator.h"
+#include "../../../component/quik/validator/order/OrderValidator.h"
 
 using namespace std;
 

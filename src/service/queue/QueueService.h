@@ -11,8 +11,8 @@
 #include <cpp_redis/cpp_redis>
 #include "../log/Logger.h"
 #include "../../component/redis/Redis.h"
-#include "../../mapper/request/RequestMapper.h"
-#include "../../dto/order/OrderDto.h"
+#include "../../mapper/quik/request/RequestMapper.h"
+#include "../../dto/quik/order/OrderDto.h"
 #include "../quik/Quik.h"
 
 using namespace nlohmann;

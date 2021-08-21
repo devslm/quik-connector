@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 27.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #include "StringUtils.h"

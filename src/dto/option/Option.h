@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 25.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_OPTION_H

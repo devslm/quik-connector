@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 21.07.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #include "QuikOrderService.h"
