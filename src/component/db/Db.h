@@ -33,6 +33,8 @@ public:
 
     void runMigrations(string& dbMigrationsPath);
 
+    static double toSqlLiteBigInt(uint64_t value);
+
 private:
     Database* db;
 

@@ -6,7 +6,7 @@
 #define QUIK_CONNECTOR_ORDERREPOSITORY_H
 
 #include "../../../component/db/Db.h"
-#include "../../../dto/quik/order/OrderDto.h"
+#include "../../../mapper/quik/order/OrderMapper.h"
 
 class Db;
 
@@ -22,9 +22,9 @@ public:
 
     void save(const OrderDto& order);
 
-    list<OrderDto> getAll();
+    list<OrderEntity> getAll();
 
-    Option<OrderDto> getById(uint64_t orderId);
+    Option<OrderEntity> getById(uint64_t orderId);
 
 private:
     const string ORDERS_TABLE_NAME = "orders";

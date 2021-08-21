@@ -358,6 +358,73 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     return true;
 }
 
+OrderDto toOrderEntity(OrderEntity& orderEntity) {
+    OrderDto order;
+
+    return order;
+}
+
+OrderEntity toOrderEntity(SQLite::Statement& query) {
+    OrderEntity orderEntity;
+
+    int columnPosition = 0;
+    /*orderEntity.orderNum = query.getColumn(columnPosition++).getInt64();
+    orderEntity.flags = query.getColumn(columnPosition++).getDouble();
+    orderEntity.brokerRef = query.getColumn(columnPosition++).getString();
+    orderEntity.userId = query.getColumn(columnPosition++).getString();
+    orderEntity.firmId = query.getColumn(columnPosition++).getString();
+    orderEntity.account = query.getColumn(columnPosition++).getString();
+    orderEntity.price = query.getColumn(columnPosition++).getDouble();
+    orderEntity.qty = query.getColumn(columnPosition++).getDouble();
+    orderEntity.balance = query.getColumn(columnPosition++).getDouble();
+    orderEntity.value = query.getColumn(columnPosition++).getDouble();
+    orderEntity.accruedInt = query.getColumn(columnPosition++).getDouble();
+    orderEntity.yield = query.getColumn(columnPosition++).getDouble();
+    orderEntity.transId = query.getColumn(columnPosition++).getInt64();
+    orderEntity.clientCode = query.getColumn(columnPosition++).getString();
+    orderEntity.price2 = query.getColumn(columnPosition++).getDouble();
+    orderEntity.settleCode = query.getColumn(columnPosition++).getString();
+    orderEntity.uid = query.getColumn(columnPosition++).getInt64();
+    orderEntity.canceledUid = query.getColumn(columnPosition++).getInt64();
+    orderEntity.exchangeCode = query.getColumn(columnPosition++).getString();
+    orderEntity.activationTime = query.getColumn(columnPosition++).getDouble();
+    orderEntity.linkedOrder = query.getColumn(columnPosition++).getInt64();
+    orderEntity.expiry = query.getColumn(columnPosition++).getDouble();
+    orderEntity.ticker = query.getColumn(columnPosition++).getString();
+    orderEntity.name = query.getColumn(columnPosition++).getString();
+    orderEntity.classCode = query.getColumn(columnPosition++).getString();
+    orderEntity.classType = query.getColumn(columnPosition++).getString();
+    orderEntity.status = query.getColumn(columnPosition++).getString();
+    orderEntity.type = query.getColumn(columnPosition++).getString();
+    orderEntity.currency = query.getColumn(columnPosition++).getString();
+    orderEntity.lotSize = query.getColumn(columnPosition++).getDouble();
+    orderEntity.date = query.getColumn(columnPosition++).getInt64();
+    orderEntity.withdrawDate = query.getColumn(columnPosition++).getInt64();
+    orderEntity.bankAccId = query.getColumn(columnPosition++).getString();
+    orderEntity.valueEntryType = query.getColumn(columnPosition++).getInt64();
+    orderEntity.repoTerm = query.getColumn(columnPosition++).getDouble();
+    orderEntity.repoValue = query.getColumn(columnPosition++).getDouble();
+    orderEntity.repo2value = query.getColumn(columnPosition++).getDouble();
+    orderEntity.repoValueBalance = query.getColumn(columnPosition++).getDouble();
+    orderEntity.startDiscount = query.getColumn(columnPosition++).getDouble();
+    orderEntity.rejectReason = query.getColumn(columnPosition++).getString();
+    orderEntity.extOrderFlags = query.getColumn(columnPosition++).getDouble();
+    orderEntity.minQty = query.getColumn(columnPosition++).getDouble();
+    orderEntity.execType = query.getColumn(columnPosition++).getInt64();
+    orderEntity.sideQualifier = query.getColumn(columnPosition++).getDouble();
+    orderEntity.acntType = query.getColumn(columnPosition++).getDouble();
+    orderEntity.capacity = query.getColumn(columnPosition++).getDouble();
+    orderEntity.passiveOnlyOrder = query.getColumn(columnPosition++).getDouble();
+    orderEntity.visible = query.getColumn(columnPosition++).getDouble();
+    orderEntity.priceStepCost = query.getColumn(columnPosition++).getDouble();
+    orderEntity.commission.broker = query.getColumn(columnPosition++).getDouble();
+    orderEntity.commission.clearing = query.getColumn(columnPosition++).getDouble();
+    orderEntity.commission.techCenter = query.getColumn(columnPosition++).getDouble();
+    orderEntity.commission.exchange = query.getColumn(columnPosition++).getDouble();*/
+
+    return orderEntity;
+}
+
 json toOrderJson(list<OrderDto>& orders) {
     json jsonArray = json::array();
 

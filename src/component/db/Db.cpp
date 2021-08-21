@@ -25,6 +25,10 @@ Database* Db::getConnection() {
     return this->db;
 }
 
+double Db::toSqlLiteBigInt(uint64_t value) {
+    return static_cast<double>(value);
+}
+
 /**
  * Simple migrations implementation just for execute SQL queries from files.
  *

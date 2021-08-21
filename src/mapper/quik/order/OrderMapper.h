@@ -9,12 +9,14 @@
 #include <list>
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include "../../../component/db/Db.h"
 #include "../../../service/lua/Lua.h"
 #include "../../../service/quik/Quik.h"
 #include "../../../dto/quik/ticker/TickerDto.h"
 #include "../date/DateMapper.h"
 #include "../../../dto/option/Option.h"
 #include "../../../dto/quik/order/OrderDto.h"
+#include "../../../entity/quik/order/OrderEntity.h"
 #include "../../../dto/quik/order/StopOrderDto.h"
 
 using namespace nlohmann;
@@ -23,11 +25,13 @@ using namespace std;
 class Quik;
 class ConfigService;
 
-extern ConfigService *configService;
-
 bool toOrderDto(lua_State *luaState, Quik* quik, OrderDto* order);
 
 bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder);
+
+OrderDto toOrderEntity(OrderEntity& orderEntity);
+
+OrderEntity toOrderEntity(SQLite::Statement& query);
 
 json toOrderJson(list<OrderDto>& orders);
 
