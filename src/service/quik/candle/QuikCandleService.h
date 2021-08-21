@@ -33,9 +33,9 @@ public:
 
     void destroy();
 
-    bool isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval);
+    bool isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    bool subscribeToCandles(lua_State *luaState, string classCode, string ticker, Interval interval);
+    bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
 

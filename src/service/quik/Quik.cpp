@@ -205,7 +205,7 @@ void Quik::gcCollect(lua_State *luaState) {
     luaGcCollect(luaState);
 }
 
-void Quik::message(lua_State *luaState, string text) {
+void Quik::message(lua_State *luaState, string& text) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     FunctionArgDto args[] = {{text}};
@@ -373,10 +373,10 @@ set<string> Quik::getClassesList(lua_State *luaState) {
     return classes;
 }
 
-Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string *className) {
+Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string& className) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{*className}};
+    FunctionArgDto args[] = {{className}};
 
     if (!luaCallFunction(luaState, GET_CLASS_INFO_FUNCTION_NAME, 1, 1, args)) {
         LOGGER->error("Could not call QUIK {} function!", GET_CLASS_INFO_FUNCTION_NAME);
@@ -388,7 +388,7 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string *className) 
     if (isSuccess) {
         return {classInfo};
     }
-    LOGGER->error("Could not get class info for: {}!", *className);
+    LOGGER->error("Could not get class info for: {}!", className);
 
     return {};
 }
@@ -441,11 +441,11 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
     return {};
 }
 
-bool Quik::isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
+bool Quik::isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     return quikCandleService->isSubscribedToCandles(luaState, classCode, ticker, interval);
 }
 
-bool Quik::subscribeToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
+bool Quik::subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     return quikCandleService->subscribeToCandles(luaState, classCode, ticker, interval);
 }
 
@@ -457,7 +457,7 @@ Option<CandleDto> Quik::getCandles(lua_State *luaState, CandlesRequestDto& candl
     return quikCandleService->getCandles(luaState, candlesRequest);
 }
 
-Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string classCode, string ticker) {
+Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     FunctionArgDto args[] = {{classCode}, {ticker}};
@@ -540,7 +540,7 @@ bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& c
     return quikOrderService->cancelStopOrderById(luaState, cancelStopOrderRequest);
 }
 
-Option<TickerDto> Quik::getTickerById(lua_State *luaState, string classCode, string tickerCode) {
+Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, string& tickerCode) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     FunctionArgDto args[] = {{classCode}, {tickerCode}};

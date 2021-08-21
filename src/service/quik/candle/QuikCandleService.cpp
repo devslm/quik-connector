@@ -61,14 +61,14 @@ void QuikCandleService::startCheckCandlesThread() {
     }
 }
 
-bool QuikCandleService::isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
+bool QuikCandleService::isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     string intervalName = QuikUtils::getIntervalName(interval);
     string candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
 
     return (candlesSubscriptions.find(candlesSubscriptionsKey) != candlesSubscriptions.end());
 }
 
-bool QuikCandleService::subscribeToCandles(lua_State *luaState, string classCode, string ticker, Interval interval) {
+bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     string intervalName = QuikUtils::getIntervalName(interval);
 
     if (isSubscribedToCandles(luaState, classCode, ticker, interval)) {

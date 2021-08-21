@@ -103,13 +103,13 @@ public:
 
     int onTransReply(lua_State *luaState);
 
-    void message(lua_State *luaState, string text);
+    void message(lua_State *luaState, string& text);
 
     Option<QuikConnectionStatusDto> getServerConnectionStatus(lua_State *luaState);
 
-    bool isSubscribedToCandles(lua_State *luaState, string classCode, string ticker, Interval interval);
+    bool isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    bool subscribeToCandles(lua_State *luaState, string classCode, string ticker, Interval interval);
+    bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     Option<QuikUserInfoDto> getUserName(lua_State *luaState);
 
@@ -136,13 +136,13 @@ public:
 
     set<string> getClassesList(lua_State *luaState);
 
-    Option<ClassInfoDto> getClassInfo(lua_State *luaState, string *className);
+    Option<ClassInfoDto> getClassInfo(lua_State *luaState, string& className);
 
     set<string> getClassSecurities(lua_State *luaState, string& className);
 
     Option<MoneyLimitDto> getMoney(lua_State *luaState, string& clientCode, string& firmId, string& tag, string& currencyCode);
 
-    Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string classCode, string ticker);
+    Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
 
     Option<CandleDto> getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest);
 
@@ -158,7 +158,7 @@ public:
 
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
-    Option<TickerDto> getTickerById(lua_State *luaState, string classCode, string tickerCode);
+    Option<TickerDto> getTickerById(lua_State *luaState, string& classCode, string& tickerCode);
 
     Option<double> getTickerPriceStepCost(lua_State *luaState, const string& classCode, const string& tickerCode);
 
