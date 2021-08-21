@@ -29,7 +29,7 @@ bool toOrderDto(lua_State *luaState, Quik* quik, OrderDto* order);
 
 bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder);
 
-OrderDto toOrderEntity(OrderEntity& orderEntity);
+OrderDto toOrderDto(OrderEntity& orderEntity);
 
 OrderEntity toOrderEntity(SQLite::Statement& query);
 

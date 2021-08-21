@@ -4,7 +4,7 @@
 
 #include "OrderMapper.h"
 
-static Option<TradeDto> getTradeByOrderId(uint64_t orderId, list<TradeDto> trades);
+static Option<TradeDto> getTradeByOrderId(uint64_t orderId, const list<TradeDto>& trades);
 
 static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* order);
 
@@ -181,15 +181,15 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     return true;
 }
 
-static Option<TradeDto> getTradeByOrderId(uint64_t orderId, list<TradeDto> trades) {
+static Option<TradeDto> getTradeByOrderId(uint64_t orderId, const list<TradeDto>& trades) {
     LOGGER->debug("Get trade data with order: {}", orderId);
 
     for (const auto& trade : trades) {
         if (trade.orderNum == orderId) {
-            return Option<TradeDto>(trade);
+            return {trade};
         }
     }
-    return Option<TradeDto>();
+    return {};
 }
 
 static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* order) {
@@ -358,8 +358,61 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     return true;
 }
 
-OrderDto toOrderEntity(OrderEntity& orderEntity) {
+OrderDto toOrderDto(OrderEntity& orderEntity) {
     OrderDto order;
+    order.orderNum = orderEntity.orderNum;
+    order.flags = orderEntity.flags;
+    order.brokerRef = orderEntity.brokerRef;
+    order.userId = orderEntity.userId;
+    order.firmId = orderEntity.firmId;
+    order.account = orderEntity.account;
+    order.price = orderEntity.price;
+    order.qty = orderEntity.qty;
+    order.balance = orderEntity.balance;
+    order.value = orderEntity.value;
+    order.accruedInt = orderEntity.accruedInt;
+    order.yield = orderEntity.yield;
+    order.transId = orderEntity.transId;
+    order.clientCode = orderEntity.clientCode;
+    order.price2 = orderEntity.price2;
+    order.settleCode = orderEntity.settleCode;
+    order.uid = orderEntity.uid;
+    order.canceledUid = orderEntity.canceledUid;
+    order.exchangeCode = orderEntity.exchangeCode;
+    order.activationTime = orderEntity.activationTime;
+    order.linkedOrder = orderEntity.linkedOrder;
+    order.expiry = orderEntity.expiry;
+    order.ticker = orderEntity.ticker;
+    order.name = orderEntity.name;
+    order.classCode = orderEntity.classCode;
+    order.classType = orderEntity.classType;
+    order.status = orderEntity.status;
+    order.type = orderEntity.type;
+    order.currency = orderEntity.currency;
+    order.lotSize = orderEntity.lotSize;
+    order.date = orderEntity.date;
+    order.withdrawDate = orderEntity.withdrawDate;
+    order.bankAccId = orderEntity.bankAccId;
+    order.valueEntryType = orderEntity.valueEntryType;
+    order.repoTerm = orderEntity.repoTerm;
+    order.repoValue = orderEntity.repoValue;
+    order.repo2value = orderEntity.repo2value;
+    order.repoValueBalance = orderEntity.repoValueBalance;
+    order.startDiscount = orderEntity.startDiscount;
+    order.rejectReason = orderEntity.rejectReason;
+    order.extOrderFlags = orderEntity.extOrderFlags;
+    order.minQty = orderEntity.minQty;
+    order.execType = orderEntity.execType;
+    order.sideQualifier = orderEntity.sideQualifier;
+    order.acntType = orderEntity.acntType;
+    order.capacity = orderEntity.capacity;
+    order.passiveOnlyOrder = orderEntity.passiveOnlyOrder;
+    order.visible = orderEntity.visible;
+    order.priceStepCost = orderEntity.priceStepCost;
+    order.commission.broker = orderEntity.commission.broker;
+    order.commission.clearing = orderEntity.commission.clearing;
+    order.commission.techCenter = orderEntity.commission.techCenter;
+    order.commission.exchange = orderEntity.commission.exchange;
 
     return order;
 }
@@ -368,7 +421,7 @@ OrderEntity toOrderEntity(SQLite::Statement& query) {
     OrderEntity orderEntity;
 
     int columnPosition = 0;
-    /*orderEntity.orderNum = query.getColumn(columnPosition++).getInt64();
+    orderEntity.orderNum = query.getColumn(columnPosition++).getInt64();
     orderEntity.flags = query.getColumn(columnPosition++).getDouble();
     orderEntity.brokerRef = query.getColumn(columnPosition++).getString();
     orderEntity.userId = query.getColumn(columnPosition++).getString();
@@ -420,7 +473,7 @@ OrderEntity toOrderEntity(SQLite::Statement& query) {
     orderEntity.commission.broker = query.getColumn(columnPosition++).getDouble();
     orderEntity.commission.clearing = query.getColumn(columnPosition++).getDouble();
     orderEntity.commission.techCenter = query.getColumn(columnPosition++).getDouble();
-    orderEntity.commission.exchange = query.getColumn(columnPosition++).getDouble();*/
+    orderEntity.commission.exchange = query.getColumn(columnPosition++).getDouble();
 
     return orderEntity;
 }

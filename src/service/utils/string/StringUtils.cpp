@@ -26,6 +26,8 @@ static const short UTF_CHARS_TABLE[256] = {
     0x44a,0x44b,0x44c,0x44d,0x44e,0x44f
 };
 
+static string stringRepeat(const string& value, int numRepeat);
+
 set<string> stringSplitByDelimeter(const string& str, const char delimiter) {
     int i = 0;
     char value[VALUE_SIZE] = {0};
@@ -61,4 +63,26 @@ void convertToUtf8(const char *src, char *dst) {
         }
     }
     dst[j] = '\0';
+}
+
+string stringRepeatWithoutFirstNChars(string value, int numRepeat, int removeFirstNChars) {
+    string resultString = stringRepeat(value, numRepeat);
+
+    return resultString.substr(removeFirstNChars, resultString.length());
+}
+
+string stringRepeatWithoutLastNChars(string value, int numRepeat, int removeLastNChars) {
+    string resultString = stringRepeat(value, numRepeat);
+    int totalLength = (int)resultString.length();
+
+    return resultString.substr(0, totalLength - removeLastNChars);
+}
+
+static string stringRepeat(const string& value, int numRepeat) {
+    string resultString;
+
+    for (int i = 0; i < numRepeat; ++i) {
+        resultString += value;
+    }
+    return resultString;
 }

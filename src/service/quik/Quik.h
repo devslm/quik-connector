@@ -67,7 +67,7 @@ class Quik {
 public:
     Quik();
 
-    virtual ~Quik();
+    ~Quik() = default;
 
     bool isRunning() const;
 

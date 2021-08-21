@@ -16,12 +16,12 @@ Db::Db() {
     FileUtils::createdDirs(dbPath);
     FileUtils::createdDirs(dbMigrationsPath);
 
-    this->db = new Database(dbFilePath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    this->db = new SQLite::Database(dbFilePath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
     runMigrations(dbMigrationsPath);
 }
 
-Database* Db::getConnection() {
+SQLite::Database* Db::getConnection() {
     return this->db;
 }
 
@@ -44,10 +44,10 @@ void Db::runMigrations(string& dbMigrationsPath) {
             LOGGER->info("New migrations not found, skipping...");
             return;
         }
-        Transaction transaction(*db);
+        SQLite::Transaction transaction(*db);
 
         set<string> appliedMigrations = getAppliedMigrations();
-        int lastHistoryId = appliedMigrations.size() + 1;
+        int lastHistoryId = (int)(appliedMigrations.size() + 1);
         int totalAppliedMigrations = 0;
 
         for (const auto& migrationFile : migrations) {
@@ -57,11 +57,11 @@ void Db::runMigrations(string& dbMigrationsPath) {
             LOGGER->info("Apply new migration: {}", migrationFile);
 
             string migrationFilePath = dbMigrationsPath.append("/").append(migrationFile);
-            string sqlScript = FileUtils::readFile(dbMigrationsPath.append("/").append(migrationFile));
+            string sqlScript = FileUtils::readFile(migrationFilePath);
 
             db->exec(sqlScript);
 
-            Statement query(*db, "INSERT INTO schema_history (id, script) VALUES (?, ?)");
+            SQLite::Statement query(*db, "INSERT INTO schema_history (id, script) VALUES (?, ?)");
             query.bind(1, ++lastHistoryId);
             query.bind(2, migrationFile);
             query.exec();
@@ -75,7 +75,7 @@ void Db::runMigrations(string& dbMigrationsPath) {
         } else {
             LOGGER->info("New DB migrations applied successfully");
         }
-    } catch (Exception& exception) {
+    } catch (SQLite::Exception& exception) {
         LOGGER->error("Could not apply DB migrations! Reason: {}", exception.what());
     }
 }
@@ -88,7 +88,7 @@ set<string> Db::getAppliedMigrations() {
             "date_create TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
         ")");
 
-    Statement query(*db, "SELECT id, script FROM schema_history");
+    SQLite::Statement query(*db, "SELECT id, script FROM schema_history");
 
     set<string> appliedMigrations;
 

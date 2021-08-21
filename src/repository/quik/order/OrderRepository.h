@@ -12,6 +12,8 @@ class Db;
 
 extern Db* db;
 
+using namespace std;
+
 class OrderRepository {
 public:
     OrderRepository() = default;
@@ -27,7 +29,9 @@ public:
     Option<OrderEntity> getById(uint64_t orderId);
 
 private:
-    const string ORDERS_TABLE_NAME = "orders";
+    static const int ORDER_INSERT_TOTAL_COLUMNS = 53;
+    static const string ORDERS_TABLE_NAME;
+    static const string ORDER_INSERT_BIND_PATTERN;
 };
 
 #endif //QUIK_CONNECTOR_ORDERREPOSITORY_H

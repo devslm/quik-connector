@@ -7,8 +7,10 @@
 
 #include <string>
 #include <set>
-#include <SQLiteCpp/Database.h>
-#include <SQLiteCpp/Transaction.h>
+#include "../../../cmake-build-release/_deps/sqlitecpp-src/sqlite3/sqlite3.h"
+#include <SQLiteCpp/Column.h>
+#include <SQLiteCpp/SQLiteCpp.h>
+#include <SQLiteCpp/VariadicBind.h>
 #include "../../service/config/ConfigService.h"
 #include "../../service/quik/utils/FileUtils.h"
 #include "../../service/log/Logger.h"
@@ -16,7 +18,6 @@
 #include "../../dto/option/Option.h"
 
 using namespace std;
-using namespace SQLite;
 
 class ConfigService;
 
@@ -29,14 +30,14 @@ public:
 
     ~Db() = default;
 
-    Database* getConnection();
+    SQLite::Database* getConnection();
 
     void runMigrations(string& dbMigrationsPath);
 
     static double toSqlLiteBigInt(uint64_t value);
 
 private:
-    Database* db;
+    SQLite::Database* db;
 
     set<string> getAppliedMigrations();
 };

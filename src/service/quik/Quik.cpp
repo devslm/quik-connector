@@ -8,10 +8,6 @@ Quik::Quik() {
     this->mutexLock = luaGetMutex();
 }
 
-Quik::~Quik() {
-
-}
-
 bool Quik::isRunning() const {
     return isConnectorRunning;
 }
