@@ -33,6 +33,8 @@
 
 *.log
 
+.idea
+
 /logs/
 
 */build/
