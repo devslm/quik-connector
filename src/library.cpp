@@ -3,7 +3,6 @@
 //
 
 #include "library.h"
-#include "repository/quik/order/OrderRepository.h"
 
 #include <iostream>
 
@@ -62,17 +61,16 @@ static int onTransReply(lua_State *luaState) {
     return 0;
 }
 
-static int onStart(lua_State *luaState) {
-    Option<string> scriptPath = luaGetScriptPath(luaState);
-
-    if (scriptPath.isEmpty()) {
-        throw runtime_error("Could not start connector because can't retrieve script path!");
-    }
+static void initConfig(Option<string>& scriptPath) {
     configService = new ConfigService(scriptPath.get());
     config = configService->getConfig();
-    // Init logger before any other services otherwise we don't see any logs!
-    LOGGER = Logger::init(config);
+}
 
+static void initLogger() {
+    LOGGER = Logger::init(config);
+}
+
+static void initServices(lua_State *luaState) {
     redis = new Redis();
     redis->connect();
 
@@ -83,22 +81,11 @@ static int onStart(lua_State *luaState) {
 
     db = new Db();
 
-    isQuikStarted = true;
-
     #ifdef INCLUDE_QUIK_FUNCTIONS_TEST_CALL
     debugQuikFunctions(luaState);
     #endif
 
     printQuikDisabledCallbacks();
-
-    while (quik->isRunning()) {
-        quik->gcCollect(luaState);
-
-        this_thread::sleep_for(chrono::milliseconds(100));
-    }
-    isQuikStarted = false;
-
-    return 0;
 }
 
 static void printQuikDisabledCallbacks() {
@@ -117,6 +104,29 @@ static void printQuikDisabledCallbacks() {
     if (!config.quik.callback.onTransReplyEnabled) {
         LOGGER->warn("Quik OnTransReply callback disabled");
     }
+}
+
+static int onStart(lua_State *luaState) {
+    Option<string> scriptPath = luaGetScriptPath(luaState);
+
+    if (scriptPath.isEmpty()) {
+        throw runtime_error("Could not start connector because can't retrieve script path!");
+    }
+    initConfig(scriptPath);
+    // Init logger before any other services otherwise we don't see any logs!
+    initLogger();
+    initServices(luaState);
+
+    isQuikStarted = true;
+
+    while (quik->isRunning()) {
+        quik->gcCollect(luaState);
+
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+    isQuikStarted = false;
+
+    return 0;
 }
 
 // Library to be registered

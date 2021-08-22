@@ -1,5 +1,5 @@
 //
-// Created by Sergey on 29.06.2021.
+// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIKCANDLESERVICE_H
@@ -21,11 +21,9 @@ using namespace std;
 
 class QueueService;
 
-extern shared_ptr<spdlog::logger> LOGGER;
-
 class QuikCandleService {
 public:
-    QuikCandleService(QueueService *queueService);
+    explicit QuikCandleService(QueueService *queueService);
 
     virtual ~QuikCandleService();
 

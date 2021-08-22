@@ -27,7 +27,7 @@ quik:
   order:
     ignore:
       canceled: true # Remove canceled orders from the list
-    save: true # Save all orders to DB
+    save: false # Save all orders to DB
 
 debug:
   print:

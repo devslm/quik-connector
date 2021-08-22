@@ -417,6 +417,65 @@ OrderDto toOrderDto(OrderEntity& orderEntity) {
     return order;
 }
 
+OrderEntity toOrderEntity(OrderDto& order) {
+    OrderEntity orderEntity;
+    orderEntity.orderNum = order.orderNum;
+    orderEntity.flags = order.flags;
+    orderEntity.brokerRef = order.brokerRef;
+    orderEntity.userId = order.userId;
+    orderEntity.firmId = order.firmId;
+    orderEntity.account = order.account;
+    orderEntity.price = order.price;
+    orderEntity.qty = order.qty;
+    orderEntity.balance = order.balance;
+    orderEntity.value = order.value;
+    orderEntity.accruedInt = order.accruedInt;
+    orderEntity.yield = order.yield;
+    orderEntity.transId = order.transId;
+    orderEntity.clientCode = order.clientCode;
+    orderEntity.price2 = order.price2;
+    orderEntity.settleCode = order.settleCode;
+    orderEntity.uid = order.uid;
+    orderEntity.canceledUid = order.canceledUid;
+    orderEntity.exchangeCode = order.exchangeCode;
+    orderEntity.activationTime = order.activationTime;
+    orderEntity.linkedOrder = order.linkedOrder;
+    orderEntity.expiry = order.expiry;
+    orderEntity.ticker = order.ticker;
+    orderEntity.name = order.name;
+    orderEntity.classCode = order.classCode;
+    orderEntity.classType = order.classType;
+    orderEntity.status = order.status;
+    orderEntity.type = order.type;
+    orderEntity.currency = order.currency;
+    orderEntity.lotSize = order.lotSize;
+    orderEntity.date = order.date;
+    orderEntity.withdrawDate = order.withdrawDate;
+    orderEntity.bankAccId = order.bankAccId;
+    orderEntity.valueEntryType = order.valueEntryType;
+    orderEntity.repoTerm = order.repoTerm;
+    orderEntity.repoValue = order.repoValue;
+    orderEntity.repo2value = order.repo2value;
+    orderEntity.repoValueBalance = order.repoValueBalance;
+    orderEntity.startDiscount = order.startDiscount;
+    orderEntity.rejectReason = order.rejectReason;
+    orderEntity.extOrderFlags = order.extOrderFlags;
+    orderEntity.minQty = order.minQty;
+    orderEntity.execType = order.execType;
+    orderEntity.sideQualifier = order.sideQualifier;
+    orderEntity.acntType = order.acntType;
+    orderEntity.capacity = order.capacity;
+    orderEntity.passiveOnlyOrder = order.passiveOnlyOrder;
+    orderEntity.visible = order.visible;
+    orderEntity.priceStepCost = order.priceStepCost;
+    orderEntity.commission.broker = order.commission.broker;
+    orderEntity.commission.clearing = order.commission.clearing;
+    orderEntity.commission.techCenter = order.commission.techCenter;
+    orderEntity.commission.exchange = order.commission.exchange;
+
+    return orderEntity;
+}
+
 OrderEntity toOrderEntity(SQLite::Statement& query) {
     OrderEntity orderEntity;
 

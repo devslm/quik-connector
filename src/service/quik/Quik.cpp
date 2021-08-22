@@ -193,6 +193,10 @@ void Quik::startCheckNewOrdersThread() {
 
         newOrders.pop_front();
 
+        OrderEntity orderEntity = toOrderEntity(order);
+
+        quikOrderService->onNewOrder(order);
+
         changedOrderListLock.unlock();
     }
 }

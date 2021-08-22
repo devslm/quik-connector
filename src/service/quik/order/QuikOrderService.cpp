@@ -13,6 +13,16 @@ static string buildOrderCacheKey(uint64_t orderId) {
     return "order:new:" + to_string(orderId);
 }
 
+void QuikOrderService::onNewOrder(OrderDto& order) {
+    if (isOrderExistsInCache(order)) {
+        LOGGER->warn("Skipping save new order in onNewOrder callback because order: {} already exists!", order.orderNum);
+        return;
+    }
+    list<OrderDto> orders = {order};
+
+    QuikOrderService::saveNewOrder(orders);
+}
+
 list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
     auto orders = getOrders(luaState);
     list<OrderDto> newOrders;
@@ -20,17 +30,9 @@ list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
     LOGGER->debug("Found: {} orders before filtering new orders", orders.size());
 
     for (const auto& order : orders) {
-        auto cacheKey = buildOrderCacheKey(order.orderNum);
-        auto cacheOrderData = redis->getConnection().get(cacheKey);
+        auto isOrderExists = isOrderExistsInCache(order);
 
-        redis->getConnection().sync_commit();
-
-        auto cacheOrderStatus = cacheOrderData.get();
-        string cacheValue = order.status + " > " + to_string(order.balance);
-
-        // If new order status and balance equals with cached value - skip it
-        if (cacheOrderStatus.is_string()
-                && cacheOrderStatus.as_string() == cacheValue) {
+        if (isOrderExists) {
             LOGGER->debug("Skipping order: {} because already exists with the same status...", order.orderNum);
             continue;
         }
@@ -38,12 +40,58 @@ list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
 
         LOGGER->info("New order: {}", toOrderJson(orderOption).dump());
 
-        redis->getConnection().setex(cacheKey, 2 * 24 * 60 * 60, cacheValue);
-        redis->getConnection().sync_commit();
+        addOrderToCache(order);
 
         newOrders.push_back(order);
     }
+    saveNewOrder(newOrders);
+
     return newOrders;
+}
+
+bool QuikOrderService::isOrderExistsInCache(const OrderDto& order) {
+    auto cacheKey = buildOrderCacheKey(order.orderNum);
+    auto cacheOrderData = redis->getConnection().get(cacheKey);
+
+    redis->getConnection().sync_commit();
+
+    auto cacheOrderStatus = cacheOrderData.get();
+    auto cacheValue = order.status + " > " + to_string(order.balance);
+
+    // If new order status and balance equals with cached value - skip it
+    if (cacheOrderStatus.is_string()
+            && cacheOrderStatus.as_string() == cacheValue) {
+        return true;
+    }
+    return false;
+}
+
+void QuikOrderService::addOrderToCache(const OrderDto& order) {
+    auto cacheKey = buildOrderCacheKey(order.orderNum);
+    auto cacheValue = order.status + " > " + to_string(order.balance);
+
+    redis->getConnection().setex(cacheKey, 2 * 24 * 60 * 60, cacheValue);
+    redis->getConnection().sync_commit();
+}
+
+void QuikOrderService::saveNewOrder(list<OrderDto>& orders) {
+    if (orders.empty()
+            || !configService->getConfig().quik.order.saveToDb) {
+        return;
+    }
+
+    try {
+        list<OrderEntity> orderEntities;
+
+        for (auto& order : orders) {
+            orderEntities.push_back(
+                toOrderEntity(order)
+            );
+        }
+        OrderRepository::saveAll(orderEntities);
+    } catch (exception& exception) {
+        LOGGER->error("Could not save: {} new orders! Reason: {}", orders.size(), exception.what());
+    }
 }
 
 list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {

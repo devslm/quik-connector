@@ -11,13 +11,13 @@
 #include "../../lua/Lua.h"
 #include "../../../dto/config/Config.h"
 #include "../utils/QuikUtils.h"
-#include "../../lua/Lua.h"
 #include "../../../mapper/quik/order/OrderMapper.h"
 #include "../../../dto/quik/order/OrderDto.h"
 #include "../../../dto/quik/order/StopOrderDto.h"
 #include "../Quik.h"
 #include "../../../component/redis/Redis.h"
 #include "../../../component/quik/validator/order/OrderValidator.h"
+#include "../../../repository/quik/order/OrderRepository.h"
 
 using namespace std;
 
@@ -30,6 +30,8 @@ public:
 
     ~QuikOrderService() = default;
 
+    void onNewOrder(OrderDto& order);
+
     list<OrderDto> getNewOrders(lua_State *luaState);
 
     list<OrderDto> getOrders(lua_State *luaState);
@@ -41,6 +43,12 @@ public:
 private:
     recursive_mutex *mutexLock;
     Quik *quik;
+
+    bool isOrderExistsInCache(const OrderDto& order);
+
+    void addOrderToCache(const OrderDto& order);
+
+    void saveNewOrder(list<OrderDto>& orders);
 };
 
 #endif //QUIK_CONNECTOR_QUIKORDERSERVICE_H

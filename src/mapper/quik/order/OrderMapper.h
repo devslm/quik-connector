@@ -31,6 +31,8 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder);
 
 OrderDto toOrderDto(OrderEntity& orderEntity);
 
+OrderEntity toOrderEntity(OrderDto& order);
+
 OrderEntity toOrderEntity(SQLite::Statement& query);
 
 json toOrderJson(list<OrderDto>& orders);

@@ -7,7 +7,6 @@
 
 #include <string>
 #include <set>
-#include "../../../cmake-build-release/_deps/sqlitecpp-src/sqlite3/sqlite3.h"
 #include <SQLiteCpp/Column.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <SQLiteCpp/VariadicBind.h>

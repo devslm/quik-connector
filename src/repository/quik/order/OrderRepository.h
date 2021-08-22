@@ -7,6 +7,7 @@
 
 #include "../../../component/db/Db.h"
 #include "../../../mapper/quik/order/OrderMapper.h"
+#include "../../../entity/quik/order/OrderEntity.h"
 
 class Db;
 
@@ -14,19 +15,23 @@ extern Db* db;
 
 using namespace std;
 
+/**
+ * All methods static because this functionality is optional and simplicity
+ * and we don't need new instances for this class.
+ */
 class OrderRepository {
 public:
     OrderRepository() = default;
 
     ~OrderRepository() = default;
 
-    void saveAll(const list<OrderDto>& orders);
+    static void saveAll(list<OrderEntity>& orderEntities);
 
-    void save(const OrderDto& order);
+    static void save(OrderEntity& orderEntity);
 
-    list<OrderEntity> getAll();
+    static list<OrderEntity> getAll();
 
-    Option<OrderEntity> getById(uint64_t orderId);
+    static Option<OrderEntity> getById(uint64_t orderId);
 
 private:
     static const int ORDER_INSERT_TOTAL_COLUMNS = 53;
