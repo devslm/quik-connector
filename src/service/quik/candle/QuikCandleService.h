@@ -9,6 +9,7 @@
 #include <list>
 #include <unordered_map>
 #include <atomic>
+#include <nlohmann/json.hpp>
 #include "../utils/QuikUtils.h"
 #include "../../lua/Lua.h"
 #include "../../../dto/quik/connector/subscription/QuikSubscriptionDto.h"
@@ -18,8 +19,12 @@
 #include "../../queue/QueueService.h"
 
 using namespace std;
+using namespace nlohmann;
 
 class QueueService;
+class Redis;
+
+extern Redis* redis;
 
 class QuikCandleService {
 public:
@@ -42,6 +47,8 @@ public:
     Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
 
 private:
+    const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";
+
     thread checkCandlesThread;
     unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
     recursive_mutex *mutexLock;
@@ -49,6 +56,10 @@ private:
     QueueService *queueService;
 
     void startCheckCandlesThread();
+
+    void reloadSavedSubscriptions();
+
+    void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);
 };
 
 #endif //QUIK_CONNECTOR_QUIKCANDLESERVICE_H

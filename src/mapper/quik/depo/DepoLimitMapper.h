@@ -10,7 +10,7 @@
 #include <nlohmann/json.hpp>
 #include "../../../service/lua/Lua.h"
 #include "../../../dto/option/Option.h"
-#include "../../../dto/quik/depo/DepoLimitDto.h"
+#include "../../../dto/quik/limit/DepoLimitDto.h"
 
 using namespace nlohmann;
 using namespace std;

@@ -60,4 +60,11 @@ void debugQuikFunctions(lua_State *luaState) {
     for (const auto& clientCode : clientCodes) {
         LOGGER->info("Client code -> {}", clientCode);
     }
+    Option<FutureLimitDto> futureLimit = quik->getFuturesLimit(luaState, (string)"MC013***", (string)"410***", 0, (string)"SUR");
+
+    if (futureLimit.isPresent()) {
+        LOGGER->info("Futures limits: {}", toFutureLimitJson(futureLimit).dump());
+    } else {
+        throw runtime_error("Could not debug QUIK get futures limits function for because result is empty!");
+    }
 }

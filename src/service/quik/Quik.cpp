@@ -441,6 +441,32 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
     return {};
 }
 
+Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
+                                             string& firmId,
+                                             string& account,
+                                             int limitType,
+                                             string& currencyCode) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{firmId}, {account}, {limitType}, {currencyCode}};
+
+    if (!luaCallFunction(luaState, GET_FUTURES_LIMIT_FUNCTION_NAME, 4, 1, args)) {
+        LOGGER->error("Could not call QUIK {} function!", GET_FUTURES_LIMIT_FUNCTION_NAME);
+        return {};
+    }
+    FutureLimitDto futureLimit;
+
+    bool isSuccess = toFutureLimitDto(luaState, &futureLimit);
+
+    if (isSuccess) {
+        return {futureLimit};
+    }
+    LOGGER->error("Could not get futures limit with firm: {}, account: {}, limit type: {} and currency code: {}!",
+        firmId, account, limitType, currencyCode);
+
+    return {};
+}
+
 bool Quik::isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     return quikCandleService->isSubscribedToCandles(luaState, classCode, ticker, interval);
 }
