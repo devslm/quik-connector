@@ -135,7 +135,6 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
     yaml-cpp
     cpp_redis
-    googletest
     ${CMAKE_CURRENT_BINARY_DIR}/../lua-5.3.5/build/lua53.lib
 )
 

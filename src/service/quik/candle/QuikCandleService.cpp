@@ -72,21 +72,28 @@ void QuikCandleService::startCheckCandlesThread() {
             CandleDto candle;
             Option<CandleDto> candleOption;
 
-            /*if (candleSubscription.dataSourceSize > 1) {
-                if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
-                    string intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
+            /*int candlesSize = 0;
+            bool isSuccess = getCandlesSize(&candleSubscription, &candlesSize);
 
-                    LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
-                        candleSubscription.classCode, candleSubscription.ticker, intervalName);
-                    continue;
+            if (isSuccess) {
+                CandleDto candle;
+
+                if (candlesSize > 1) {
+                    if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
+                        string intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
+
+                        LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+                            candleSubscription.classCode, candleSubscription.ticker, intervalName);
+                        continue;
+                    }
+                    candleOption = Option<CandleDto>(candle);
                 }
-                candleOption = Option<CandleDto>(candle);
-            }
 
-            if (candleOption.isPresent()) {
-                Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
+                if (candleOption.isPresent()) {
+                    Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
 
-                queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(changedCandle));
+                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(changedCandle));
+                }
             }*/
         }
     }
@@ -240,8 +247,6 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
                 candleSubscription.classCode, candleSubscription.ticker, intervalName);
         }
     }
-    luaRemoveReference(luaState, dataSourceIndex);
-
     return candleOption;
 }
 

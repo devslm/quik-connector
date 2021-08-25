@@ -127,6 +127,12 @@ static int onStart(lua_State *luaState) {
 
     isQuikStarted = true;
 
+    string classCode = "SPBFUT";
+    string ticker = "RIU1";
+    Interval interval = Interval::INTERVAL_H2;
+
+    quik->subscribeToCandles(luaState, classCode, ticker, interval);
+
     while (quik->isRunning()) {
         quik->gcCollect(luaState);
 
