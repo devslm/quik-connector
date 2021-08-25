@@ -44,6 +44,10 @@ string luaGetErrorMessage(lua_State *luaState);
 
 void luaGcCollect(lua_State *luaState);
 
+bool luaGetGlobal(lua_State *luaState, const string& key);
+
+bool luaGetField(lua_State *luaState, int index, const string& key);
+
 bool luaGetTableBooleanField(lua_State *L, const char *key, bool *buffer);
 
 bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer);

@@ -40,6 +40,8 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
+    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+
     bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
 
     Option<CandleDto> getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest);
@@ -60,6 +62,10 @@ private:
     void reloadSavedSubscriptions();
 
     void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);
+
+    vector<cpp_redis::reply> QuikCandleService::loadSubscriptionsFromCache();
+
+    string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
 };
 
 #endif //QUIK_CONNECTOR_QUIKCANDLESERVICE_H

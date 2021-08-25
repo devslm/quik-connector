@@ -34,14 +34,14 @@ Option<string> luaGetScriptPath(lua_State *luaState) {
     bool isSuccess = luaCallFunction(luaState, "getScriptPath", 0, 1, nullptr);
 
     if (!isSuccess) {
-        return Option<string>();
+        return {};
     }
     isSuccess = luaGetString(luaState, &path);
 
     if (isSuccess) {
-        return Option<string>(path);
+        return {path};
     }
-    return Option<string>();
+    return {};
 }
 
 const char *luaGetType(lua_State *L, int index) {
@@ -67,11 +67,35 @@ void luaGcCollect(lua_State *luaState) {
     lua_gc(luaState, LUA_GCCOLLECT, 0);
 }
 
+bool luaGetGlobal(lua_State *luaState, const string& key) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    lua_getglobal(luaState, key.c_str());
+
+    if (!lua_isnil(luaState, -1)) {
+        return true;
+    }
+    return false;
+}
+
+bool luaGetField(lua_State *luaState, int index, const string& key) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
+    lua_getfield(luaState, index, key.c_str());
+
+    if (!lua_isnil(luaState, -1)) {
+        return true;
+    }
+    return false;
+}
+
 bool luaCallFunctionWithTableArg(lua_State *luaState,
                                  const char *name,
                                  int numArgs,
                                  uint8_t numReturns,
                                  map<string, string>& argTable) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
     lua_getglobal(luaState, name);
 
     if (!lua_isfunction(luaState, -1)) {
@@ -82,7 +106,7 @@ bool luaCallFunctionWithTableArg(lua_State *luaState,
     }
     lua_newtable(luaState);
 
-    for(map<string, string>::iterator argIterator = argTable.begin(); argIterator != argTable.end(); ++argIterator) {
+    for(auto argIterator = argTable.begin(); argIterator != argTable.end(); ++argIterator) {
         lua_pushstring(luaState, argIterator->first.c_str());
         lua_pushstring(luaState, argIterator->second.c_str());
         lua_settable(luaState, -3);
@@ -174,6 +198,8 @@ bool luaGetTableBooleanField(lua_State *L, const char *key, bool *buffer) {
 }
 
 bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer) {
+    lock_guard<recursive_mutex> lockGuard(mutexLock);
+
     double value;
     auto isSuccess = luaGetTableNumberField(L, key, &value);
 

@@ -110,7 +110,7 @@ static void printQuikDisabledCallbacks() {
 
 static void printDbDisabledOptions() {
     if (!config.quik.order.saveToDb) {
-        LOGGER->warn("Quik save order to DB disabled");
+        LOGGER->warn("Quik save orders to DB disabled");
     }
 }
 
@@ -126,12 +126,6 @@ static int onStart(lua_State *luaState) {
     initServices(luaState);
 
     isQuikStarted = true;
-
-    string classCode = "SPBFUT";
-    string ticker = "RIU1";
-    Interval interval = Interval::INTERVAL_H2;
-
-    quik->subscribeToCandles(luaState, classCode, ticker, interval);
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);

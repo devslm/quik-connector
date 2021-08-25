@@ -113,6 +113,8 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
+    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+
     Option<QuikUserInfoDto> getUserName(lua_State *luaState);
 
     Option<string> getVersion(lua_State *luaState);

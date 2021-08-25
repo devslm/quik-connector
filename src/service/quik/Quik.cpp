@@ -475,6 +475,10 @@ bool Quik::subscribeToCandles(lua_State *luaState, string& classCode, string& ti
     return quikCandleService->subscribeToCandles(luaState, classCode, ticker, interval);
 }
 
+bool Quik::unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
+    return quikCandleService->unsubscribeFromCandles(luaState, classCode, ticker, interval);
+}
+
 Option<CandleDto> Quik::getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest) {
     return quikCandleService->getLastCandle(luaState, candlesRequest);
 }
