@@ -13,6 +13,7 @@ set(JSON_VERSION 3.9.1)
 set(YAML_CPP_VERSION 0.7.0)
 set(SPDLOG_VERSION 1.9.0)
 set(CPP_REDIS_VERSION 4.3.1)
+set(GOOGLE_TEST_FRAMEWORK_VERSION 1.11.0)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -106,6 +107,18 @@ if(NOT cpp_redis_POPULATED)
     target_include_directories(cpp_redis INTERFACE ${cpp_redis_SOURCE_DIR}/tacopie/includes)
 endif()
 
+# Include GoogleTest test framework (https://github.com/google/googletest)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-${GOOGLE_TEST_FRAMEWORK_VERSION}
+)
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googletest)
+
 file(GLOB_RECURSE INCLUDE_QUIK_CONNECTOR "src/*.h")
 file(GLOB_RECURSE SRC_QUIK_CONNECTOR "src/*.cpp")
 
@@ -122,6 +135,7 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
     yaml-cpp
     cpp_redis
+    googletest
     ${CMAKE_CURRENT_BINARY_DIR}/../lua-5.3.5/build/lua53.lib
 )
 
