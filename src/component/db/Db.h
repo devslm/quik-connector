@@ -33,7 +33,7 @@ public:
 
     void runMigrations(string& dbMigrationsPath);
 
-    static double toSqlLiteBigInt(uint64_t value);
+    static long long toSqlLiteBigInt(uint64_t value);
 
 private:
     SQLite::Database* db;

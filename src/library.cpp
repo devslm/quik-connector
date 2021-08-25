@@ -17,6 +17,7 @@ static ConfigDto config;
 static volatile bool isQuikStarted = false;
 
 static void printQuikDisabledCallbacks();
+static void printDbDisabledOptions();
 
 static int onStop(lua_State *luaState) {
     isQuikStarted = false;
@@ -86,6 +87,7 @@ static void initServices(lua_State *luaState) {
     #endif
 
     printQuikDisabledCallbacks();
+    printDbDisabledOptions();
 }
 
 static void printQuikDisabledCallbacks() {
@@ -103,6 +105,12 @@ static void printQuikDisabledCallbacks() {
 
     if (!config.quik.callback.onTransReplyEnabled) {
         LOGGER->warn("Quik OnTransReply callback disabled");
+    }
+}
+
+static void printDbDisabledOptions() {
+    if (!config.quik.order.saveToDb) {
+        LOGGER->warn("Quik save order to DB disabled");
     }
 }
 

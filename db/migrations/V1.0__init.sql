@@ -53,3 +53,10 @@ CREATE TABLE IF NOT EXISTS orders (
     commission_tech_center DECIMAL(9, 6) NOT NULL,
     commission_exchange DECIMAL(9, 6) NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS orders_order_num_idx ON orders(order_num);
+CREATE INDEX IF NOT EXISTS orders_firm_id_idx ON orders(firm_id);
+CREATE INDEX IF NOT EXISTS orders_account_idx ON orders(account);
+CREATE INDEX IF NOT EXISTS orders_ticker_idx ON orders(ticker);
+CREATE INDEX IF NOT EXISTS orders_status_idx ON orders(status);
+CREATE INDEX IF NOT EXISTS orders_date_idx ON orders(date);

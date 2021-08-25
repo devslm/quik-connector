@@ -18,9 +18,9 @@ void QuikOrderService::onNewOrder(OrderDto& order) {
         LOGGER->warn("Skipping save new order in onNewOrder callback because order: {} already exists!", order.orderNum);
         return;
     }
-    list<OrderDto> orders = {order};
+    list<OrderDto> newOrders = {order};
 
-    QuikOrderService::saveNewOrder(orders);
+    saveNewOrder(newOrders);
 }
 
 list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
@@ -88,9 +88,9 @@ void QuikOrderService::saveNewOrder(list<OrderDto>& orders) {
                 toOrderEntity(order)
             );
         }
-        OrderRepository::saveAll(orderEntities);
+        OrderRepository::upsertAll(orderEntities);
     } catch (exception& exception) {
-        LOGGER->error("Could not save: {} new orders! Reason: {}", orders.size(), exception.what());
+        LOGGER->error("Could not save: {} new orders to DB! Reason: {}", orders.size(), exception.what());
     }
 }
 

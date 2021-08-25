@@ -25,8 +25,8 @@ SQLite::Database* Db::getConnection() {
     return this->db;
 }
 
-double Db::toSqlLiteBigInt(uint64_t value) {
-    return static_cast<double>(value);
+long long Db::toSqlLiteBigInt(uint64_t value) {
+    return static_cast<long long>(value);
 }
 
 /**
