@@ -81,6 +81,10 @@ bool luaGetGlobal(lua_State *luaState, const string& key) {
 bool luaGetField(lua_State *luaState, int index, const string& key) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
+    if (lua_isnil(luaState, index)) {
+        LOGGER->error("Could not get lua field: {} with index: 0 because index 0 is null!", key);
+        return false;
+    }
     lua_getfield(luaState, index, key.c_str());
 
     if (!lua_isnil(luaState, -1)) {

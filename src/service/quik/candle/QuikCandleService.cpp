@@ -58,24 +58,25 @@ void QuikCandleService::reloadSavedSubscriptions() {
 
 void QuikCandleService::startCheckCandlesThread() {
     while (isRunning) {
-        this_thread::sleep_for(chrono::seconds(3));
+        this_thread::sleep_for(chrono::milliseconds (250));
 
         for (const auto& keyValue : candlesSubscriptions) {
             QuikSubscriptionDto candleSubscription = keyValue.second;
-            CandleDto candle;
-            Option<CandleDto> candleOption;
 
-            /*int candlesSize = 0;
+            // Get current data source size
+            int candlesSize = 0;
             bool isSuccess = getCandlesSize(&candleSubscription, &candlesSize);
 
             if (isSuccess) {
+                candleSubscription.dataSourceSize = candlesSize;
                 CandleDto candle;
+                Option<CandleDto> candleOption;
 
                 if (candlesSize > 1) {
                     if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
                         string intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
 
-                        LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+                        LOGGER->error("Could not get updated candle data with class code: {}, ticker: {} and interval: {}",
                             candleSubscription.classCode, candleSubscription.ticker, intervalName);
                         continue;
                     }
@@ -85,9 +86,12 @@ void QuikCandleService::startCheckCandlesThread() {
                 if (candleOption.isPresent()) {
                     Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
 
-                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(changedCandle));
+                    queueService->pubSubPublish(
+                        QueueService::QUIK_CANDLE_CHANGE_TOPIC,
+                        toChangedCandleJson(changedCandle).dump()
+                    );
                 }
-            }*/
+            }
         }
     }
 }
