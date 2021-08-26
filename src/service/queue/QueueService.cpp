@@ -23,6 +23,7 @@ const string QueueService::QUIK_GET_LAST_CANDLE_COMMAND = "GET_LAST_CANDLE";
 const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
 const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
+const string QueueService::SUBSCRIBE_TO_CANDLES_COMMAND = "SUBSCRIBE_TO_CANDLES";
 
 QueueService::QueueService(Quik *quik, string host, int port) {
     this->quik = quik;
@@ -108,12 +109,30 @@ void QueueService::startCheckResponsesThread() {
                     auto lastCandle = quik->getLastCandle(luaGetState(), candlesRequest);
                     auto candleJson = toCandleJson(lastCandle);
 
-                    LOGGER->info("Candle JSON: {}", candleJson.dump());
-
                     if (true) {
                         addRequestIdToResponse(candleJson, requestId);
 
                         pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
+                    }
+                }
+            } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandResponse.command) {
+                auto subscribeToCandlesRequest = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
+
+                if (subscribeToCandlesRequest.isPresent()) {
+                    LOGGER->info("New request to subscribe candles with data: {}", commandResponse.commandJsonData.dump());
+
+                    auto request = subscribeToCandlesRequest.get();
+                    auto isSubscribed = quik->subscribeToCandles(
+                        luaGetState(),
+                        request.classCode,
+                        request.ticker,
+                        request.interval
+                    );
+
+                    if (!isSubscribed) {
+                        //addRequestIdToResponse(candleJson, requestId);
+
+                        //pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
                     }
                 }
             }

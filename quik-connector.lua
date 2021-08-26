@@ -3,14 +3,14 @@
 ---
 
 local DEBUG_MODE = "DEBUG"
-local PROD_MODE = "PROD"
+local RELEASE_MODE = "RELEASE"
 
-RUN_MODE = PROD_MODE
+RUN_MODE = RELEASE_MODE
 WORKING_DIRECTORY = getScriptPath()
 
 package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\?.dll;"
 
-if RUN_MODE == PROD_MODE then
+if RUN_MODE == RELEASE_MODE then
     package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-release\\?.dll;"
 else
     package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-debug\\?.dll;"

@@ -40,13 +40,15 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+    void unsubscribeFromAllCandles(lua_State *luaState);
 
-    bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
+    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     Option<CandleDto> getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest);
 
     Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
+
+    Option<int> getCandlesSize(QuikSubscriptionDto *candleSubscription);
 
 private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";

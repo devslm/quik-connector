@@ -56,6 +56,7 @@ public:
     static const string QUIK_GET_ORDERS_COMMAND;
     static const string QUIK_GET_NEW_ORDERS_COMMAND;
     static const string QUIK_GET_STOP_ORDERS_COMMAND;
+    static const string SUBSCRIBE_TO_CANDLES_COMMAND;
 
     QueueService(Quik *quik, string host, int port);
 
