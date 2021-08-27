@@ -18,28 +18,28 @@ void debugQuikFunctions(lua_State *luaState) {
 
     //quik->cancelStopOrderById(luaState, cancelStopOrderRequest);
 
-    LOGGER->info("Money limit: {}", toMoneyLimitJson(quik->getMoney(luaState, (string)"OPEN88380", (string)"L01-00000F00", (string)"EQTV", (string)"SUR")).dump());
+    logger->info("Money limit: {}", toMoneyLimitJson(quik->getMoney(luaState, (string)"OPEN88380", (string)"L01-00000F00", (string)"EQTV", (string)"SUR")).dump());
 
     OrderRepository orderRepository;
 
     Option<string> serverTime = quik->getServerTime(luaState);
 
     if (serverTime.isPresent()) {
-        LOGGER->info("QUIK server time: {}", serverTime.get());
+        logger->info("QUIK server time: {}", serverTime.get());
     } else {
         throw runtime_error("Could not debug QUIK server time function!");
     }
     Option<string> avgPingDuration = quik->getAvgPingDuration(luaState);
 
     if (avgPingDuration.isPresent()) {
-        LOGGER->info("QUIK AVG ping: {}", avgPingDuration.get());
+        logger->info("QUIK AVG ping: {}", avgPingDuration.get());
     } else {
         throw runtime_error("Could not debug QUIK avg ping function!");
     }
     Option<DepoLimitDto> depoLimit = quik->getDepoLimit(luaState, (string)"MC013***", (string)"152***", (string)"AGRO", (string)"L01-0*******", 2);
 
     if (depoLimit.isPresent()) {
-        LOGGER->info("QUIK depo limit: {}", toDepoLimitJson(depoLimit).dump());
+        logger->info("QUIK depo limit: {}", toDepoLimitJson(depoLimit).dump());
     } else {
         throw runtime_error("Could not debug QUIK depo limit function!");
     }
@@ -47,7 +47,7 @@ void debugQuikFunctions(lua_State *luaState) {
     Option<double> stepCost = quik->getTickerPriceStepCost(luaState, "SPBFUT", futureName);
 
     if (stepCost.isPresent()) {
-        LOGGER->info("Future: {} price step cost: {}", futureName, stepCost.get());
+        logger->info("Future: {} price step cost: {}", futureName, stepCost.get());
     } else {
         throw runtime_error("Could not debug QUIK price step cost function for: " + futureName);
     }
@@ -58,12 +58,12 @@ void debugQuikFunctions(lua_State *luaState) {
     }
 
     for (const auto& clientCode : clientCodes) {
-        LOGGER->info("Client code -> {}", clientCode);
+        logger->info("Client code -> {}", clientCode);
     }
     Option<FutureLimitDto> futureLimit = quik->getFuturesLimit(luaState, (string)"MC013***", (string)"410***", 0, (string)"SUR");
 
     if (futureLimit.isPresent()) {
-        LOGGER->info("Futures limits: {}", toFutureLimitJson(futureLimit).dump());
+        logger->info("Futures limits: {}", toFutureLimitJson(futureLimit).dump());
     } else {
         throw runtime_error("Could not debug QUIK get futures limits function for because result is empty!");
     }

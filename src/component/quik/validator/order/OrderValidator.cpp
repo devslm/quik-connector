@@ -28,7 +28,7 @@ Option<string> validateCancelStopOrderData(CancelStopOrderRequestDto& cancelStop
     }
 
     if (!errorMessage.empty()) {
-        return Option<string>(errorMessage);
+        return {errorMessage};
     }
-    return Option<string>();
+    return {};
 }

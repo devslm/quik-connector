@@ -9,7 +9,7 @@ Redis::Redis() {
 }
 
 Redis::~Redis() {
-    LOGGER->info("[Redis] Close all connections");
+    logger->info("[Redis] Close all connections");
 
     redisClient.disconnect(true);
 
@@ -25,7 +25,7 @@ void Redis::connect() {
     WSADATA data;
 
     if (WSAStartup(version, &data) != 0) {
-        LOGGER->error("WSAStartup() failure");
+        logger->error("WSAStartup() failure");
     }
     redisClient.connect(
         configService->getConfig().redis.host,
@@ -51,7 +51,7 @@ void Redis::connect() {
             }
 
             if (!message.empty()) {
-                LOGGER->info("[Redis] {}", message);
+                logger->info("[Redis] {}", message);
             }
         }, 5000, 1000, redisReconnectAttempts
     );
@@ -66,9 +66,9 @@ void Redis::authenticate() {
     }
     redisClient.auth(configService->getConfig().redis.password.get(), [](const cpp_redis::reply& reply) {
         if (reply.is_error()) {
-            LOGGER->error("[Redis] Could not authenticate client! Reason: {}", reply.as_string());
+            logger->error("[Redis] Could not authenticate client! Reason: {}", reply.as_string());
         } else {
-            LOGGER->info("[Redis] Client authenticated successfully");
+            logger->info("[Redis] Client authenticated successfully");
         }
     });
 }

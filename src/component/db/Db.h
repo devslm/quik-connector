@@ -21,7 +21,7 @@ using namespace std;
 class ConfigService;
 
 extern ConfigService *configService;
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 class Db {
 public:

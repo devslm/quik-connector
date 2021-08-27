@@ -6,7 +6,7 @@
 
 bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for ticker quotes data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for ticker quotes data! Current stack value type is: <<{}>> but required table!",
              luaGetType(luaState, -1));
 
         return false;
