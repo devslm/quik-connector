@@ -10,7 +10,7 @@ static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* or
 
 bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for order data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for order data! Current stack value type is: <<{}>> but required table!",
              luaGetType(luaState, -1));
 
         return false;
@@ -147,7 +147,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     Option<string> classType = QuikUtils::getClassTypeByCode(order->classCode);
 
     if (!classType.isPresent()) {
-        LOGGER->error("Could not get order class type with class code: {}", order->classCode);
+        logger->error("Could not get order class type with class code: {}", order->classCode);
         return false;
     }
     order->classType = classType.get();
@@ -157,7 +157,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     Option<TickerDto> tickerOption = quik->getTickerById(luaState, order->classCode, order->ticker);
 
     if (tickerOption.isEmpty()) {
-        LOGGER->error("Could not convert order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
+        logger->error("Could not convert order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
             order->classCode, order->ticker);
         return false;
     }
@@ -168,7 +168,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     Option<double> priceStepCostOption = quik->getTickerPriceStepCost(luaState, order->classCode, order->ticker);
 
     if (priceStepCostOption.isEmpty()) {
-        LOGGER->error("Could not convert order data to dto! Reason: Can't get ticker price step cost with class code: {} and ticker: {}",
+        logger->error("Could not convert order data to dto! Reason: Can't get ticker price step cost with class code: {} and ticker: {}",
             order->classCode, order->ticker);
         return false;
     }
@@ -182,7 +182,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
 }
 
 static Option<TradeDto> getTradeByOrderId(uint64_t orderId, const list<TradeDto>& trades) {
-    LOGGER->debug("Get trade data with order: {}", orderId);
+    logger->debug("Get trade data with order: {}", orderId);
 
     for (const auto& trade : trades) {
         if (trade.orderNum == orderId) {
@@ -195,7 +195,7 @@ static Option<TradeDto> getTradeByOrderId(uint64_t orderId, const list<TradeDto>
 static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* order) {
     if (configService->getConfig().quik.order.ignoreCancelled
             && order->status == ORDER_STATUS_CANCELED) {
-        LOGGER->debug("Skipping add commission data to order: {} because it status: {}", order->orderNum, order->status);
+        logger->debug("Skipping add commission data to order: {} because it status: {}", order->orderNum, order->status);
         return;
     }
     list<TradeDto> trades = quik->getTrades(luaState);
@@ -212,7 +212,7 @@ static void addOrderCommissionData(lua_State *luaState, Quik *quik, OrderDto* or
 
 bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for stop order data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for stop order data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
         return false;
@@ -336,7 +336,7 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     Option<string> classType = QuikUtils::getClassTypeByCode(stopOrder->classCode);
 
     if (!classType.isPresent()) {
-        LOGGER->error("Could not get stop order class type with class code: {}", stopOrder->classCode);
+        logger->error("Could not get stop order class type with class code: {}", stopOrder->classCode);
         return false;
     }
     stopOrder->classType = classType.get();
@@ -344,7 +344,7 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     Option<TickerDto> tickerOption = quik->getTickerById(luaState, stopOrder->classCode, stopOrder->ticker);
 
     if (!tickerOption.isPresent()) {
-        LOGGER->error("Could not convert stop order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
+        logger->error("Could not convert stop order data to dto! Reason: Can't get ticker data with class code: {} and ticker: {}",
             stopOrder->classCode, stopOrder->ticker);
         return false;
     }

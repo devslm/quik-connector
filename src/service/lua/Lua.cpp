@@ -82,7 +82,7 @@ bool luaGetField(lua_State *luaState, int index, const string& key) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     if (lua_isnil(luaState, index)) {
-        LOGGER->error("Could not get lua field: {} with index: 0 because index 0 is null!", key);
+        logger->error("Could not get lua field: {} with index: 0 because index 0 is null!", key);
         return false;
     }
     lua_getfield(luaState, index, key.c_str());
@@ -103,7 +103,7 @@ bool luaCallFunctionWithTableArg(lua_State *luaState,
     lua_getglobal(luaState, name);
 
     if (!lua_isfunction(luaState, -1)) {
-        LOGGER->error("Could not call lua function: {} and map args! Current stack value type is: <<{}>> but required function!",
+        logger->error("Could not call lua function: {} and map args! Current stack value type is: <<{}>> but required function!",
             name, luaGetType(luaState, -1));
 
         return false;
@@ -122,7 +122,7 @@ bool luaCallFunctionWithTableArg(lua_State *luaState,
 
         luaGetString(luaState, &errorMessage);
 
-        LOGGER->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
+        logger->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
 
         return false;
     }
@@ -139,7 +139,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 
         debugLuaFunctionArgsToString(functionArgs, numArgs, argsString, 512);
 
-        LOGGER->error("Could not call lua function: {} and args: {}! Current stack value type is: <<{}>> but required function!",
+        logger->error("Could not call lua function: {} and args: {}! Current stack value type is: <<{}>> but required function!",
              name, argsString, luaGetType(L, -1));
 
         return false;
@@ -165,7 +165,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
                     lua_pushboolean(L, arg.valueBoolean);
                     break;
                 default:
-                    LOGGER->error("Could not call ticker function: {} because argument: #{} has unknown type: {}",
+                    logger->error("Could not call ticker function: {} because argument: #{} has unknown type: {}",
                         name, i + 1, arg.type);
 
                     return false;
@@ -179,7 +179,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 
         luaGetString(L, &errorMessage);
 
-        LOGGER->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
+        logger->error("Could not call lua function: {}! Reason: {}!", name, errorMessage);
 
         return false;
     }
@@ -187,7 +187,7 @@ bool luaCallFunction(lua_State *L, const char *name, int numArgs, uint8_t numRet
 }
 
 bool luaGetTableBooleanField(lua_State *L, const char *key, bool *buffer) {
-    LOGGER->debug("Get lua table boolean field with key: {} from table", key);
+    logger->debug("Get lua table boolean field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
@@ -216,14 +216,14 @@ bool luaGetTableNumberFieldAsInt(lua_State *L, const char *key, int *buffer) {
 }
 
 bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
-    LOGGER->debug("Get lua table number field with key: {} from table", key);
+    logger->debug("Get lua table number field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get table number field with key: {}! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table number field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         *buffer = 0.0;
@@ -233,7 +233,7 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
     lua_getfield(L, fieldIndexInStack, key);
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get table number field with key: {} from table! Current stack value type is: <<{}>> but required number!",
+        logger->error("Could not get table number field with key: {} from table! Current stack value type is: <<{}>> but required number!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -246,14 +246,14 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
 }
 
 bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
-    LOGGER->debug("Get lua table integer field with key: {} from table", key);
+    logger->debug("Get lua table integer field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get table integer field with key: {}! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table integer field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         *buffer = 0.0;
@@ -263,7 +263,7 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
     lua_getfield(L, fieldIndexInStack, key);
 
     if (!lua_isinteger(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get table integer field with key: {} from table! Current stack value type is: <<{}>> but required integer!",
+        logger->error("Could not get table integer field with key: {} from table! Current stack value type is: <<{}>> but required integer!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -276,14 +276,14 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
 }
 
 bool luaGetTableStringField(lua_State *L, const char *key, string *buffer) {
-    LOGGER->debug("Get lua table string field with key: {} from table", key);
+    logger->debug("Get lua table string field with key: {} from table", key);
 
     lock_guard<recursive_mutex> lockGuard(mutexLock);
 
     int fieldIndexInStack = -1;
 
     if (!lua_istable(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get table string field with key: {}! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table string field with key: {}! Current stack value type is: <<{}>> but required table!",
              key, luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -299,7 +299,7 @@ bool luaGetString(lua_State *L, string *buffer) {
     int fieldIndexInStack = -1;
 
     if (!lua_isstring(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get plain string value! Current stack value type is: <<{}>> but required string!",
+        logger->error("Could not get plain string value! Current stack value type is: <<{}>> but required string!",
              luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -321,7 +321,7 @@ bool luaGetNumber(lua_State *L, double *buffer) {
     int fieldIndexInStack = -1;
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get plain number value! Current stack value type is: <<{}>> but required number!",
+        logger->error("Could not get plain number value! Current stack value type is: <<{}>> but required number!",
              luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -339,7 +339,7 @@ bool luaGetBoolean(lua_State *L, bool *buffer) {
     int fieldIndexInStack = -1;
 
     if (!lua_isboolean(L, fieldIndexInStack)) {
-        LOGGER->error("Could not get plain boolean value! Current stack value type is: <<{}>> but required boolean!",
+        logger->error("Could not get plain boolean value! Current stack value type is: <<{}>> but required boolean!",
             luaGetType(L, fieldIndexInStack));
 
         return false;
@@ -376,6 +376,6 @@ void luaPrintStackSize(lua_State *luaState, const string& functionName) {
     if (config.debug.printLuaStack) {
         lock_guard<recursive_mutex> lockGuard(mutexLock);
 
-        LOGGER->info("Stack size for <<{}>> is: {}", functionName, lua_gettop(luaState));
+        logger->info("Stack size for <<{}>> is: {}", functionName, lua_gettop(luaState));
     }
 }

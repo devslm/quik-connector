@@ -44,7 +44,7 @@ void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumA
                 }
                 break;
             default:
-                LOGGER->error("Could not debug function arguments because argument: #{} has unknown type: {}", i + 1, arg.type);
+                logger->error("Could not debug function arguments because argument: #{} has unknown type: {}", i + 1, arg.type);
 
                 strcpy(argType, "UNKNOWN");
                 strcpy(argValue, "UNKNOWN");
@@ -74,5 +74,5 @@ void debugDateTimeStructure(const tm& date) {
     jsonObject["seconds"] = date.tm_sec;
 
 
-    LOGGER->info("Date structure fields: {}", jsonObject.dump());
+    logger->info("Date structure fields: {}", jsonObject.dump());
 }

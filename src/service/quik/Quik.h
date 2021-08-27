@@ -92,7 +92,7 @@ public:
         if (isSuccess) {
             trades.push(trade);
         } else {
-            LOGGER->error("Could not handle all trade changes!");
+            logger->error("Could not handle all trade changes!");
         }
         allTradeLock.unlock();
         changedTradeQueueLock.unlock();

@@ -6,7 +6,7 @@
 
 bool toMoneyLimitDto(lua_State *luaState, MoneyLimitDto* moneyLimit) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for money limit data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for money limit data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
         return false;

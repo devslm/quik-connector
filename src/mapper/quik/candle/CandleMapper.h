@@ -18,6 +18,8 @@
 using namespace nlohmann;
 using namespace std;
 
+extern shared_ptr<spdlog::logger> logger;
+
 bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex);
 
 Option<ChangedCandleDto> toChangedCandleDto(Option<CandleDto>& candle);

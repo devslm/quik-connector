@@ -15,7 +15,7 @@
 
 using namespace nlohmann;
 
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumArgs, char *resultBuffer, int bufferSize);
 

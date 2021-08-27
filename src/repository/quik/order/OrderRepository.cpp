@@ -59,10 +59,10 @@ void OrderRepository::saveAll(list<OrderEntity>& orderEntities) {
 
 void OrderRepository::save(OrderEntity& orderEntity) {
     if (isExists(orderEntity.orderNum)) {
-        LOGGER->info("Skipping save order: {} because already exists....", orderEntity.orderNum);
+        logger->info("Skipping save order: {} because already exists....", orderEntity.orderNum);
         return;
     }
-    LOGGER->info("Save order: {} to DB", orderEntity.orderNum);
+    logger->info("Save order: {} to DB", orderEntity.orderNum);
 
     SQLite::Statement query(
         *db->getConnection(),
@@ -75,10 +75,10 @@ void OrderRepository::save(OrderEntity& orderEntity) {
 
 void OrderRepository::update(OrderEntity& orderEntity) {
     if (!isExists(orderEntity.orderNum)) {
-        LOGGER->info("Skipping update order: {} in DB because not found....", orderEntity.orderNum);
+        logger->info("Skipping update order: {} in DB because not found....", orderEntity.orderNum);
         return;
     }
-    LOGGER->info("Update order: {} in DB", orderEntity.orderNum);
+    logger->info("Update order: {} in DB", orderEntity.orderNum);
 
     SQLite::Statement query(
         *db->getConnection(),

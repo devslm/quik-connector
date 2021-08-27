@@ -14,6 +14,8 @@
 using namespace nlohmann;
 using namespace std;
 
+extern shared_ptr<spdlog::logger> logger;
+
 bool toClassInfoDto(lua_State *L, ClassInfoDto *classInfo);
 
 string toClassInfoJson(Option<ClassInfoDto> *classInfo);

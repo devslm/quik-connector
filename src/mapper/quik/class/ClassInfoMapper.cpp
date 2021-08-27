@@ -6,7 +6,7 @@
 
 bool toClassInfoDto(lua_State *luaState, ClassInfoDto *classInfo) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for class info data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
+        logger->error("Could not get table for class info data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }

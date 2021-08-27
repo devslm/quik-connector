@@ -12,7 +12,7 @@
 class Db;
 
 extern Db* db;
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 using namespace std;
 

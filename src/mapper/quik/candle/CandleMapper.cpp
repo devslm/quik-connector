@@ -23,14 +23,14 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
 
     int dataSource = luaLoadReference(candleSubscription->luaState, candleSubscription->dataSourceIndex);
 
-    LOGGER->debug("Convert lua candles data to dto with from index: {} and last index: {}",
+    logger->debug("Convert lua candles data to dto with from index: {} and last index: {}",
         candleFirstIndex, candleLastIndex);
 
     for (int candleCurrentIndex = candleFirstIndex; candleCurrentIndex <= candleLastIndex; ++candleCurrentIndex) {
         CandleValueDto candleValue;
 
         if(!luaGetField(candleSubscription->luaState, dataSource, "O")) {
-            LOGGER->error("Could not get candle open price with class code: {}, ticker: {} and interval: {} because could not get lua field <<O>>",
+            logger->error("Could not get candle open price with class code: {}, ticker: {} and interval: {} because could not get lua field <<O>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -42,7 +42,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
             isSuccess = false;
         }
         if(!luaGetField(candleSubscription->luaState, dataSource, "C")) {
-            LOGGER->error("Could not get candle close price with class code: {}, ticker: {} and interval: {} because could not get lua field <<C>>",
+            logger->error("Could not get candle close price with class code: {}, ticker: {} and interval: {} because could not get lua field <<C>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -54,7 +54,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
         }
 
         if(!luaGetField(candleSubscription->luaState, dataSource, "H")) {
-            LOGGER->error("Could not get candle high price with class code: {}, ticker: {} and interval: {} because could not get lua field <<H>>",
+            logger->error("Could not get candle high price with class code: {}, ticker: {} and interval: {} because could not get lua field <<H>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -66,7 +66,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
         }
 
         if(!luaGetField(candleSubscription->luaState, dataSource, "L")) {
-            LOGGER->error("Could not get candle low price with class code: {}, ticker: {} and interval: {} because could not get lua field <<L>>",
+            logger->error("Could not get candle low price with class code: {}, ticker: {} and interval: {} because could not get lua field <<L>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -78,7 +78,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
         }
 
         if(!luaGetField(candleSubscription->luaState, dataSource, "V")) {
-            LOGGER->error("Could not get candle volume with class code: {}, ticker: {} and interval: {} because could not get lua field <<V>>",
+            logger->error("Could not get candle volume with class code: {}, ticker: {} and interval: {} because could not get lua field <<V>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -90,7 +90,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
         }
 
         if(!luaGetField(candleSubscription->luaState, dataSource, "T")) {
-            LOGGER->error("Could not get candle time with class code: {}, ticker: {} and interval: {} because could not get lua field <<T>>",
+            logger->error("Could not get candle time with class code: {}, ticker: {} and interval: {} because could not get lua field <<T>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);
         };
         lua_pushvalue(candleSubscription->luaState, dataSource);
@@ -116,14 +116,14 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
 
 static void validateCandleStartIndex(int *candleFirstIndex, const int candleLastIndex) {
     if (*candleFirstIndex < CANDLE_FIRST_INDEX) {
-        LOGGER->warn("Could not convert candles to dto with the first index: {} because candles list starts from: {} so use: {} as first index",
+        logger->warn("Could not convert candles to dto with the first index: {} because candles list starts from: {} so use: {} as first index",
             *candleFirstIndex, CANDLE_FIRST_INDEX, CANDLE_FIRST_INDEX);
 
         *candleFirstIndex = CANDLE_FIRST_INDEX;
     }
 
     if (*candleFirstIndex > candleLastIndex) {
-        LOGGER->warn("Could not convert candles to dto with the first index: {} because first index should be less or equal last index: {} so use last index as first index",
+        logger->warn("Could not convert candles to dto with the first index: {} because first index should be less or equal last index: {} so use last index as first index",
             *candleFirstIndex, candleLastIndex, candleLastIndex);
 
         *candleFirstIndex = candleLastIndex;
