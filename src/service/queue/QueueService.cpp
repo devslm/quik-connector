@@ -24,6 +24,7 @@ const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
 const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
 const string QueueService::SUBSCRIBE_TO_CANDLES_COMMAND = "SUBSCRIBE_TO_CANDLES";
+const string QueueService::UNSUBSCRIBE_FROM_CANDLES_COMMAND = "UNSUBSCRIBE_FROM_CANDLES";
 
 QueueService::QueueService(Quik *quik, string host, int port) {
     this->quik = quik;
@@ -116,12 +117,12 @@ void QueueService::startCheckResponsesThread() {
                     }
                 }
             } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandResponse.command) {
-                auto subscribeToCandlesRequest = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
+                auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
 
-                if (subscribeToCandlesRequest.isPresent()) {
+                if (requestOption.isPresent()) {
                     LOGGER->info("New request to subscribe candles with data: {}", commandResponse.commandJsonData.dump());
 
-                    auto request = subscribeToCandlesRequest.get();
+                    auto request = requestOption.get();
                     auto isSubscribed = quik->subscribeToCandles(
                         luaGetState(),
                         request.classCode,
@@ -130,9 +131,29 @@ void QueueService::startCheckResponsesThread() {
                     );
 
                     if (!isSubscribed) {
-                        //addRequestIdToResponse(candleJson, requestId);
+                        //addRequestIdToResponse(json, requestId);
 
-                        //pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
+                        //Send response to client
+                    }
+                }
+            } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandResponse.command) {
+                auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
+
+                if (requestOption.isPresent()) {
+                    LOGGER->info("New request to unsubscribe candles with data: {}", commandResponse.commandJsonData.dump());
+
+                    auto request = requestOption.get();
+                    auto isUnsubscribed = quik->unsubscribeFromCandles(
+                        luaGetState(),
+                        request.classCode,
+                        request.ticker,
+                        request.interval
+                    );
+
+                    if (!isUnsubscribed) {
+                        //addRequestIdToResponse(json, requestId);
+
+                        //Send response to client
                     }
                 }
             }

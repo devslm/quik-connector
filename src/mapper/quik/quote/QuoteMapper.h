@@ -17,6 +17,6 @@ using namespace std;
 
 bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote);
 
-json toTickerQuoteJson(Option<TickerQuoteDto> *tickerQuoteOption);
+json toTickerQuoteJson(Option<TickerQuoteDto>& tickerQuoteOption);
 
 #endif //QUIK_CONNECTOR_QUOTEMAPPER_H

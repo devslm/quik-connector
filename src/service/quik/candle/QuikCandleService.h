@@ -50,6 +50,12 @@ public:
 
     Option<int> getCandlesSize(QuikSubscriptionDto *candleSubscription);
 
+    bool isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
 private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";
 

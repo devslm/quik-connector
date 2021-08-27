@@ -6,8 +6,8 @@
 
 bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for ticker data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
-
+        LOGGER->error("Could not get table for ticker data! Current stack value type is: <<{}>> but required table!",
+            luaGetType(luaState, -1));
         return false;
     }
 
@@ -53,10 +53,11 @@ bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
 }
 
 json toTickerJson(Option<TickerDto>& tickerOption) {
-    if (tickerOption.isEmpty()) {
-        return "{}";
-    }
     json jsonObject;
+
+    if (tickerOption.isEmpty()) {
+        return jsonObject;
+    }
     TickerDto ticker = tickerOption.get();
     jsonObject["code"] = ticker.code;
     jsonObject["name"] = ticker.name;

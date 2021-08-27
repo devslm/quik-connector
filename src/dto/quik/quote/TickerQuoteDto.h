@@ -6,7 +6,7 @@
 #define QUIK_CONNECTOR_TICKERQUOTEDTO_H
 
 typedef struct TickerPriceDto {
-    double price;
+    double price = 0.0;
     int quantity;
 } TickerPriceDto;
 

@@ -137,7 +137,10 @@ void Quik::startCheckQuotesThread() {
             string classCode = entry.second;
             auto tickerQuotes = getTickerQuotes(luaGetState(), ticker, classCode);
 
-            //LOGGER->info("New quotes: {}", toTickerQuoteJson(&tickerQuotes).dump());
+            queueService->pubSubPublish(
+                QueueService::QUIK_TICKER_QUOTES_TOPIC,
+                toTickerQuoteJson(tickerQuotes).dump()
+            );
         }
     }
 }
@@ -477,6 +480,18 @@ bool Quik::subscribeToCandles(lua_State *luaState, string& classCode, string& ti
 
 bool Quik::unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     return quikCandleService->unsubscribeFromCandles(luaState, classCode, ticker, interval);
+}
+
+bool Quik::isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->isSubscribedToTickerQuotes(luaState, classCode, ticker);
+}
+
+bool Quik::subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->subscribeToTickerQuotes(luaState, classCode, ticker);
+}
+
+bool Quik::unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->unsubscribeFromTickerQuotes(luaState, classCode, ticker);
 }
 
 Option<CandleDto> Quik::getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest) {
