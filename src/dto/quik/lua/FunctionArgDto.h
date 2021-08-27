@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef TEST_FUNCTION_ARG_DTO_H

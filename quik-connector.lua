@@ -1,5 +1,5 @@
 ---
---- Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+--- Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 ---
 
 local DEBUG_MODE = "DEBUG"
