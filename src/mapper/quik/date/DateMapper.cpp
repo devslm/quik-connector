@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include <ctime>
@@ -9,7 +9,7 @@ using namespace std;
 
 bool toDateMillis(lua_State *luaState, const char *fieldName, uint64_t *dateTime) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for date data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
+        logger->error("Could not get table for date data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }

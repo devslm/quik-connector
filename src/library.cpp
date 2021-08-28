@@ -1,14 +1,15 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "library.h"
 
 #include <iostream>
 
-shared_ptr<spdlog::logger> LOGGER;
+static Logger* loggerWrapper;
+
+shared_ptr<spdlog::logger> logger;
 Quik* quik;
-Logger* logger;
 ConfigService *configService;
 Redis* redis;
 Db* db;
@@ -27,9 +28,9 @@ static int onStop(lua_State *luaState) {
     delete db;
     delete redis;
     delete configService;
-    delete logger;
+    delete loggerWrapper;
 
-    LOGGER.reset();
+    logger.reset();
 
     return returnCode;
 }
@@ -67,8 +68,25 @@ static void initConfig(Option<string>& scriptPath) {
     config = configService->getConfig();
 }
 
-static void initLogger() {
-    LOGGER = Logger::init(config);
+static void initlogger() {
+    logger = Logger::init(config);
+}
+
+// TODO Remove test subscriptions when release
+static void subscribeToCandles(lua_State *luaState) {
+    string classCode = "SPBFUT";
+    string ticker = "RIU1";
+    Interval interval = Interval::INTERVAL_TICK;
+
+    quik->subscribeToCandles(luaState, classCode, ticker, interval);
+
+    ticker = "BRU1";
+
+    quik->subscribeToCandles(luaState, classCode, ticker, interval);
+
+    ticker = "SiU1";
+
+    quik->subscribeToCandles(luaState, classCode, ticker, interval);
 }
 
 static void initServices(lua_State *luaState) {
@@ -92,25 +110,25 @@ static void initServices(lua_State *luaState) {
 
 static void printQuikDisabledCallbacks() {
     if (!config.quik.callback.onAllTradeEnabled) {
-        LOGGER->warn("Quik OnAllTrade callback disabled");
+        logger->warn("Quik OnAllTrade callback disabled");
     }
 
     if (!config.quik.callback.onQuoteEnabled) {
-        LOGGER->warn("Quik OnQuote callback disabled");
+        logger->warn("Quik OnQuote callback disabled");
     }
 
     if (!config.quik.callback.onOrderEnabled) {
-        LOGGER->warn("Quik OnOrder callback disabled");
+        logger->warn("Quik OnOrder callback disabled");
     }
 
     if (!config.quik.callback.onTransReplyEnabled) {
-        LOGGER->warn("Quik OnTransReply callback disabled");
+        logger->warn("Quik OnTransReply callback disabled");
     }
 }
 
 static void printDbDisabledOptions() {
     if (!config.quik.order.saveToDb) {
-        LOGGER->warn("Quik save orders to DB disabled");
+        logger->warn("Quik save orders to DB disabled");
     }
 }
 
@@ -122,10 +140,12 @@ static int onStart(lua_State *luaState) {
     }
     initConfig(scriptPath);
     // Init logger before any other services otherwise we don't see any logs!
-    initLogger();
+    initlogger();
     initServices(luaState);
 
     isQuikStarted = true;
+
+    subscribeToCandles(luaState);
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);

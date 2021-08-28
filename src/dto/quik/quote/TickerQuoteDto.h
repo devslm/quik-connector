@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_TICKERQUOTEDTO_H
 #define QUIK_CONNECTOR_TICKERQUOTEDTO_H
 
 typedef struct TickerPriceDto {
-    double price;
+    double price = 0.0;
     int quantity;
 } TickerPriceDto;
 

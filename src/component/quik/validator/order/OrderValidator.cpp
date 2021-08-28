@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "OrderValidator.h"
@@ -28,7 +28,7 @@ Option<string> validateCancelStopOrderData(CancelStopOrderRequestDto& cancelStop
     }
 
     if (!errorMessage.empty()) {
-        return Option<string>(errorMessage);
+        return {errorMessage};
     }
-    return Option<string>();
+    return {};
 }

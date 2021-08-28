@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuikSubscriptionService.h"
@@ -21,7 +21,7 @@ void QuikSubscriptionService::subscribeToImpersonalTransactions(lua_State *luaSt
     auto subscription = createDataSource(luaState, classCode, ticker, interval);
 
     if (subscription.isEmpty()) {
-        LOGGER->error("Could not subscribe to impersonal transactions because can't create datasource!");
+        logger->error("Could not subscribe to impersonal transactions because can't create datasource!");
         return;
     }
 }
@@ -32,7 +32,7 @@ void QuikSubscriptionService::subscribeToCandles(lua_State *luaState, string& cl
     auto subscription = createDataSource(luaState, classCode, ticker, interval);
 
     if (subscription.isEmpty()) {
-        LOGGER->error("Could not subscribe to candles because can't create datasource!");
+        logger->error("Could not subscribe to candles because can't create datasource!");
         return;
     }
 }
@@ -44,10 +44,10 @@ Option<QuikSubscriptionDto> QuikSubscriptionService::createDataSource(lua_State 
     string intervalName = QuikUtils::getIntervalName(interval);
 
     //if (isSubscribedToCandles(luaState, classCode, ticker, interval)) {
-    //    LOGGER->info("Skipping subscribe with ticker: {} and interval: {} because already subscribed...", ticker, intervalName);
+    //    logger->info("Skipping subscribe with ticker: {} and interval: {} because already subscribed...", ticker, intervalName);
     //    return true;
     //}
-    LOGGER->info("Subscribe to candles with class code: {}, ticker: {} and interval: {}",
+    logger->info("Subscribe to candles with class code: {}, ticker: {} and interval: {}",
         classCode, ticker, intervalName);
 
     lua_getglobal(luaState, "CreateDataSource");
@@ -57,7 +57,7 @@ Option<QuikSubscriptionDto> QuikSubscriptionService::createDataSource(lua_State 
     auto result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}",
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return Option<QuikSubscriptionDto>();
     }
@@ -82,7 +82,7 @@ Option<QuikSubscriptionDto> QuikSubscriptionService::createDataSource(lua_State 
 
 bool QuikSubscriptionService::getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer) {
     if (candleSubscription == nullptr) {
-        LOGGER->error("Could not get datasource size because subscription data is empty!");
+        logger->error("Could not get datasource size because subscription data is empty!");
         return false;
     }
     lua_State *luaState = candleSubscription->luaState;
@@ -97,7 +97,7 @@ bool QuikSubscriptionService::getCandlesSize(QuikSubscriptionDto *candleSubscrip
     int result = lua_pcall(luaState, 1, 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not get candles size with class code: {}, ticker: {} and interval: {}! Reason: {}",
+        logger->error("Could not get candles size with class code: {}, ticker: {} and interval: {}! Reason: {}",
                       candleSubscription->classCode, candleSubscription->ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
@@ -105,7 +105,7 @@ bool QuikSubscriptionService::getCandlesSize(QuikSubscriptionDto *candleSubscrip
 
     lua_pop(luaState, 2);
 
-    LOGGER->debug("Stack size for <<getCandlesSize>> is: {}", lua_gettop(luaState));
+    logger->debug("Stack size for <<getCandlesSize>> is: {}", lua_gettop(luaState));
 
     return true;
 }

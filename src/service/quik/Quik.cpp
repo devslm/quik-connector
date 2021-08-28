@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "Quik.h"
@@ -31,8 +31,8 @@ int Quik::onStart(lua_State *luaState) {
     this->checkNewOrdersThread = thread([this] {startCheckNewOrdersThread();});
     this->isConnectorRunning = true;
 
-    LOGGER->info(logMessage);
-    LOGGER->info("QUIK version: {}", getVersion(luaState).get());
+    logger->info(logMessage);
+    logger->info("QUIK version: {}", getVersion(luaState).get());
 
     message(luaState, logMessage);
 
@@ -52,7 +52,7 @@ int Quik::onStop(lua_State *luaState) {
     checkQuotesThread.join();
     checkNewOrdersThread.join();
 
-    LOGGER->info(logMessage);
+    logger->info(logMessage);
 
     message(luaState, logMessage);
 
@@ -100,13 +100,13 @@ int Quik::onQuote(lua_State *luaState) {
     bool isSuccess = luaGetString(luaState, &classCode);
 
     if (!isSuccess) {
-        LOGGER->error("Could not get changed quote class code");
+        logger->error("Could not get changed quote class code");
         return 0;
     }
     isSuccess = luaGetString(luaState, &ticker);
 
     if (!isSuccess) {
-        LOGGER->error("Could not get changed quote ticker");
+        logger->error("Could not get changed quote ticker");
         return 0;
     }
     changedQuotes[ticker] = classCode;
@@ -137,7 +137,10 @@ void Quik::startCheckQuotesThread() {
             string classCode = entry.second;
             auto tickerQuotes = getTickerQuotes(luaGetState(), ticker, classCode);
 
-            //LOGGER->info("New quotes: {}", toTickerQuoteJson(&tickerQuotes).dump());
+            queueService->pubSubPublish(
+                QueueService::QUIK_TICKER_QUOTES_TOPIC,
+                toTickerQuoteJson(tickerQuotes).dump()
+            );
         }
     }
 }
@@ -157,7 +160,7 @@ int Quik::onOrder(lua_State *luaState) {
     if (isSuccess) {
         newOrders.push_back(order);
     } else {
-        LOGGER->error("Could not get new order from callback!");
+        logger->error("Could not get new order from callback!");
     }
     changedOrderListLock.unlock();
 
@@ -173,9 +176,9 @@ int Quik::onTransReply(lua_State *luaState) {
     if (isSuccess) {
         Option<TransactionReplyDto> transactionReplyOption(transactionReply);
 
-        LOGGER->info("Trans reply: {}", toTransactionReplyJson(transactionReplyOption).dump());
+        logger->info("Trans reply: {}", toTransactionReplyJson(transactionReplyOption).dump());
     } else {
-        LOGGER->info("Could not read trans reply!");
+        logger->info("Could not read trans reply!");
     }
     return 0;
 }
@@ -211,7 +214,7 @@ void Quik::message(lua_State *luaState, string& text) {
     FunctionArgDto args[] = {{text}};
 
     if (!luaCallFunction(luaState, MESSAGE_FUNCTION_NAME, 1, 0, args)) {
-        LOGGER->error("Could not call QUIK {} function!", MESSAGE_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", MESSAGE_FUNCTION_NAME);
     } else {
         lua_pop(luaState, 1);
     }
@@ -221,7 +224,7 @@ Option<QuikConnectionStatusDto> Quik::getServerConnectionStatus(lua_State *luaSt
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     if (!luaCallFunction(luaState, IS_CONNECTED_FUNCTION_NAME, 0, 1, nullptr)) {
-        LOGGER->error("Could not call QUIK {} function!", IS_CONNECTED_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", IS_CONNECTED_FUNCTION_NAME);
         return {};
     }
     QuikConnectionStatusDto quikConnectionStatus;
@@ -264,7 +267,7 @@ Option<string> Quik::getInfoParam(lua_State *luaState, const string& paramName) 
     FunctionArgDto args[] = {{paramName}};
 
     if (!luaCallFunction(luaState, GET_INFO_PARAM_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function to get info param!", GET_INFO_PARAM_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function to get info param!", GET_INFO_PARAM_FUNCTION_NAME);
         return {};
     }
     string paramValue;
@@ -274,7 +277,7 @@ Option<string> Quik::getInfoParam(lua_State *luaState, const string& paramName) 
     if (isSuccess) {
         return {paramValue};
     }
-    LOGGER->error("Could not get info param for param: {}", paramName);
+    logger->error("Could not get info param for param: {}", paramName);
 
     return {};
 }
@@ -290,7 +293,7 @@ Option<DepoLimitDto> Quik::getDepoLimit(lua_State *luaState,
     FunctionArgDto args[] = {{clientCode}, {firmId}, {ticker}, {account}, {limitKind}};
 
     if (!luaCallFunction(luaState, GET_DEPO_EX_FUNCTION_NAME, 5, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_DEPO_EX_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_DEPO_EX_FUNCTION_NAME);
         return {};
     }
     DepoLimitDto depoLimit;
@@ -300,7 +303,7 @@ Option<DepoLimitDto> Quik::getDepoLimit(lua_State *luaState,
     if (isSuccess) {
         return {depoLimit};
     }
-    LOGGER->error("Could not get depo limit for client code: {}, firm: {}, ticker: {} and account: {}",
+    logger->error("Could not get depo limit for client code: {}, firm: {}, ticker: {} and account: {}",
         clientCode, firmId, ticker, account);
 
     return {};
@@ -323,23 +326,23 @@ void Quik::getTableValues(lua_State *luaState, const string& tableName, function
     FunctionArgDto args[] = {{tableName}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function for: {}!", GET_NUMBER_OF_FUNCTION_NAME, tableName);
+        logger->error("Could not call QUIK {} function for: {}!", GET_NUMBER_OF_FUNCTION_NAME, tableName);
         return;
     }
     double totalItems = 0.0;
     bool isSuccess = luaGetNumber(luaState, &totalItems);
 
     if (!isSuccess) {
-        LOGGER->error("Can't retrieve total items number for: {}!", tableName);
+        logger->error("Can't retrieve total items number for: {}!", tableName);
         return;
     }
-    LOGGER->debug("Found total items: {} for: {}", totalItems, tableName);
+    logger->debug("Found total items: {} for: {}", totalItems, tableName);
 
     for (int i = 0; i < totalItems; ++i) {
         FunctionArgDto getItemArgs[] = {{tableName}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
-            LOGGER->error("Could not call QUIK {} function for: {}!", GET_ITEM_FUNCTION_NAME, tableName);
+            logger->error("Could not call QUIK {} function for: {}!", GET_ITEM_FUNCTION_NAME, tableName);
             return;
         }
         string clientCode;
@@ -347,7 +350,7 @@ void Quik::getTableValues(lua_State *luaState, const string& tableName, function
         isSuccess = luaGetString(luaState, &clientCode);
 
         if (!isSuccess) {
-            LOGGER->error("Could not get item for: {}!", tableName);
+            logger->error("Could not get item for: {}!", tableName);
             continue;
         }
         callback(clientCode);
@@ -360,7 +363,7 @@ set<string> Quik::getClassesList(lua_State *luaState) {
     set<string> classes;
 
     if (!luaCallFunction(luaState, GET_CLASSES_LIST_FUNCTION_NAME, 0, 1, nullptr)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_CLASSES_LIST_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_CLASSES_LIST_FUNCTION_NAME);
         return classes;
     }
     string classesStr;
@@ -379,7 +382,7 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string& className) 
     FunctionArgDto args[] = {{className}};
 
     if (!luaCallFunction(luaState, GET_CLASS_INFO_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_CLASS_INFO_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_CLASS_INFO_FUNCTION_NAME);
         return {};
     }
     ClassInfoDto classInfo;
@@ -388,7 +391,7 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string& className) 
     if (isSuccess) {
         return {classInfo};
     }
-    LOGGER->error("Could not get class info for: {}!", className);
+    logger->error("Could not get class info for: {}!", className);
 
     return {};
 }
@@ -400,7 +403,7 @@ set<string> Quik::getClassSecurities(lua_State *luaState, string& className) {
     FunctionArgDto args[] = {{className}};
 
     if (!luaCallFunction(luaState, GET_CLASS_SECURITIES_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_CLASS_SECURITIES_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_CLASS_SECURITIES_FUNCTION_NAME);
         return classSecurities;
     }
     string classSecuritiesStr;
@@ -410,7 +413,7 @@ set<string> Quik::getClassSecurities(lua_State *luaState, string& className) {
     if (isSuccess) {
         classSecurities = stringSplitByDelimeter(classSecuritiesStr, ',');
     } else {
-        LOGGER->error("Could not get class securities for class code: {}!", className);
+        logger->error("Could not get class securities for class code: {}!", className);
     }
     return classSecurities;
 }
@@ -425,7 +428,7 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
     FunctionArgDto args[] = {{clientCode}, {firmId}, {tag}, {currencyCode}};
 
     if (!luaCallFunction(luaState, GET_MONEY_FUNCTION_NAME, 4, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_MONEY_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_MONEY_FUNCTION_NAME);
         return {};
     }
     MoneyLimitDto moneyLimit;
@@ -435,7 +438,7 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
     if (isSuccess) {
         return {moneyLimit};
     }
-    LOGGER->error("Could not get money limit with client code: {}, firm: {}, tag: {} and currency code: {}!",
+    logger->error("Could not get money limit with client code: {}, firm: {}, tag: {} and currency code: {}!",
         clientCode, firmId, tag, currencyCode);
 
     return {};
@@ -451,7 +454,7 @@ Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
     FunctionArgDto args[] = {{firmId}, {account}, {limitType}, {currencyCode}};
 
     if (!luaCallFunction(luaState, GET_FUTURES_LIMIT_FUNCTION_NAME, 4, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_FUTURES_LIMIT_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_FUTURES_LIMIT_FUNCTION_NAME);
         return {};
     }
     FutureLimitDto futureLimit;
@@ -461,7 +464,7 @@ Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
     if (isSuccess) {
         return {futureLimit};
     }
-    LOGGER->error("Could not get futures limit with firm: {}, account: {}, limit type: {} and currency code: {}!",
+    logger->error("Could not get futures limit with firm: {}, account: {}, limit type: {} and currency code: {}!",
         firmId, account, limitType, currencyCode);
 
     return {};
@@ -479,6 +482,18 @@ bool Quik::unsubscribeFromCandles(lua_State *luaState, string& classCode, string
     return quikCandleService->unsubscribeFromCandles(luaState, classCode, ticker, interval);
 }
 
+bool Quik::isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->isSubscribedToTickerQuotes(luaState, classCode, ticker);
+}
+
+bool Quik::subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->subscribeToTickerQuotes(luaState, classCode, ticker);
+}
+
+bool Quik::unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    return quikCandleService->unsubscribeFromTickerQuotes(luaState, classCode, ticker);
+}
+
 Option<CandleDto> Quik::getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest) {
     return quikCandleService->getLastCandle(luaState, candlesRequest);
 }
@@ -493,7 +508,7 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string& classC
     FunctionArgDto args[] = {{classCode}, {ticker}};
 
     if (!luaCallFunction(luaState, GET_QUOTE_LEVEL_2_FUNCTION_NAME, 2, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_QUOTE_LEVEL_2_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_QUOTE_LEVEL_2_FUNCTION_NAME);
         return {};
     }
     TickerQuoteDto tickerQuote;
@@ -505,7 +520,7 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string& classC
     if (isSuccess) {
         return {tickerQuote};
     }
-    LOGGER->error("Could not get ticker quotes for class: {} and ticker: {}!", classCode, ticker);
+    logger->error("Could not get ticker quotes for class: {} and ticker: {}!", classCode, ticker);
 
     return {};
 }
@@ -518,23 +533,23 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
     FunctionArgDto args[] = {{QUIK_TRADES_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
         return existsTrades;
     }
     double totalOrders = 0.0;
     bool isSuccess = luaGetNumber(luaState, &totalOrders);
 
     if (!isSuccess) {
-        LOGGER->error("Could not get trades because can't retrieve total trades number!");
+        logger->error("Could not get trades because can't retrieve total trades number!");
         return existsTrades;
     }
-    LOGGER->debug("Found: {} trades", totalOrders);
+    logger->debug("Found: {} trades", totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
         FunctionArgDto getItemArgs[] = {{QUIK_TRADES_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
-            LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
+            logger->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return existsTrades;
         }
         TradeDto trade;
@@ -542,12 +557,12 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
         isSuccess = toTradeDto(luaState, &trade);
 
         if (!isSuccess) {
-            LOGGER->error("Could not convert trade data to dto!");
+            logger->error("Could not convert trade data to dto!");
             continue;
         }
         Option<TradeDto> tradeOption(trade);
 
-        LOGGER->debug("Trade: {}", toTradeJson(tradeOption));
+        logger->debug("Trade: {}", toTradeJson(tradeOption));
 
         existsTrades.push_back(trade);
     }
@@ -592,7 +607,7 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, st
     FunctionArgDto args[] = {{classCode}, {tickerCode}};
 
     if (!luaCallFunction(luaState, GET_SECURITY_INFO_FUNCTION_NAME, 2, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_SECURITY_INFO_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_SECURITY_INFO_FUNCTION_NAME);
         return {};
     }
     TickerDto ticker;
@@ -602,7 +617,7 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, st
     if (isSuccess) {
         return {ticker};
     }
-    LOGGER->error("Could not get ticker info for class: {} and ticker: {}!", classCode, tickerCode);
+    logger->error("Could not get ticker info for class: {} and ticker: {}!", classCode, tickerCode);
 
     return {};
 }
@@ -621,17 +636,17 @@ Option<double> Quik::getTickerPriceStepCost(lua_State *luaState, const string& c
             if (priceStep.isPresent()) {
                 return stod(param.paramValue) / priceStep.get();
             } else {
-                LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {} because no price step value!",
+                logger->error("Could not get ticker price step cost for class code: {} and ticker: {} because no price step value!",
                     classCode, ticker, param.paramType + 1);
                 return {};
             }
         } else {
-            LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
+            logger->error("Could not get ticker price step cost for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
                 classCode, ticker, param.paramType + 1);
             return {};
         }
     }
-    LOGGER->error("Could not get ticker price step cost for class code: {} and ticker: {}!", classCode, ticker);
+    logger->error("Could not get ticker price step cost for class code: {} and ticker: {}!", classCode, ticker);
 
     return {};
 }
@@ -647,12 +662,12 @@ Option<double> Quik::getTickerPriceStep(lua_State *luaState, const string& class
         if (PARAM_DOUBLE_TYPE == param.paramType) {
             return stod(param.paramValue);
         } else {
-            LOGGER->error("Could not get ticker price step for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
+            logger->error("Could not get ticker price step for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
                 classCode, ticker, param.paramType + 1);
             return {};
         }
     }
-    LOGGER->error("Could not get ticker price step for class code: {} and ticker: {}!", classCode, ticker);
+    logger->error("Could not get ticker price step for class code: {} and ticker: {}!", classCode, ticker);
 
     return {};
 }
@@ -666,7 +681,7 @@ Option<ParamDto> Quik::getParamEx(lua_State *luaState,
     FunctionArgDto args[] = {{classCode}, {ticker}, {paramName}};
 
     if (!luaCallFunction(luaState, GET_PARAM_EX_FUNCTION_NAME, 3, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_PARAM_EX_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_PARAM_EX_FUNCTION_NAME);
         return {};
     }
     ParamDto param;
@@ -676,7 +691,7 @@ Option<ParamDto> Quik::getParamEx(lua_State *luaState,
     if (isSuccess) {
         return {param};
     }
-    LOGGER->error("Could not get param ex value for class code: {}, ticker: {} and param: {}", classCode, ticker, paramName);
+    logger->error("Could not get param ex value for class code: {}, ticker: {} and param: {}", classCode, ticker, paramName);
 
     return {};
 }

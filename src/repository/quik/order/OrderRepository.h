@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_ORDERREPOSITORY_H
@@ -12,7 +12,7 @@
 class Db;
 
 extern Db* db;
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 using namespace std;
 

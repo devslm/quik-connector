@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_REQUESTMAPPER_H
@@ -14,8 +14,10 @@ using namespace nlohmann;
 using namespace std;
 
 static const size_t CANDLE_REQUEST_DTO_TYPE = typeid(CandlesRequestDto).hash_code();
+static const size_t CANDLE_SUBSCRIBE_REQUEST_DTO_TYPE = typeid(SubscribeToCandlesRequestDto).hash_code();
 
 static Option<CandlesRequestDto> toCandlesRequestDto(const json& jsonData);
+static Option<SubscribeToCandlesRequestDto> toCandlesSubscribeRequestDto(const json& jsonData);
 
 template<class T> Option<T> toRequestDto(const json& jsonData) {
     try {
@@ -25,7 +27,7 @@ template<class T> Option<T> toRequestDto(const json& jsonData) {
             return toCandlesRequestDto(jsonData);
         }
     } catch (json::parse_error& exception) {
-        LOGGER->error("Could not convert queue command: {} to request dto! Reason: {}!", jsonData.dump().c_str(), exception.what());
+        logger->error("Could not convert queue command: {} to request dto! Reason: {}!", jsonData.dump().c_str(), exception.what());
     }
     return Option<T>();
 }
@@ -44,6 +46,16 @@ Option<CandlesRequestDto> toCandlesRequestDto(const json& jsonData) {
     candlesRequest.interval = QuikUtils::getIntervalByName(jsonData["interval"]);
 
     return {candlesRequest};
+    return {candlesRequest};
+}
+
+Option<SubscribeToCandlesRequestDto> toCandlesSubscribeRequestDto(const json& jsonData) {
+    SubscribeToCandlesRequestDto subscribeToCandlesRequest;
+    subscribeToCandlesRequest.classCode = jsonData["classCode"];
+    subscribeToCandlesRequest.ticker = jsonData["ticker"];
+    subscribeToCandlesRequest.interval = QuikUtils::getIntervalByName(jsonData["interval"]);
+
+    return {subscribeToCandlesRequest};
 }
 
 #endif //QUIK_CONNECTOR_REQUESTMAPPER_H

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuikCandleService.h"
@@ -35,10 +35,10 @@ void QuikCandleService::reloadSavedSubscriptions() {
         auto subscriptions = loadSubscriptionsFromCache();
 
         if (subscriptions.empty()) {
-            LOGGER->info("Skipping reload candles subscriptions from cache because no subscriptions....");
+            logger->info("Skipping reload candles subscriptions from cache because no subscriptions....");
             return;
         }
-        LOGGER->info("Found: {} candles subscriptions in cache", subscriptions.size());
+        logger->info("Found: {} candles subscriptions in cache", subscriptions.size());
 
         for (const auto& subscriptionString : subscriptions) {
             auto subscription = json::parse(subscriptionString.as_string());
@@ -46,36 +46,35 @@ void QuikCandleService::reloadSavedSubscriptions() {
             auto ticker = subscription["ticker"].get<string>();
             auto interval = QuikUtils::getIntervalByName(subscription["interval"].get<string>());
 
-            LOGGER->info("Reload candle subscription with class code: {}, ticker: {} and interval: {}",
+            logger->info("Reload candle subscription with class code: {}, ticker: {} and interval: {}",
                 classCode, ticker, subscription["interval"]);
 
             subscribeToCandles(luaGetState(), classCode, ticker, interval);
         }
     } catch (exception& exception) {
-        LOGGER->error("Could not reload candles subscriptions from cache! Reason: {}", exception.what());
+        logger->error("Could not reload candles subscriptions from cache! Reason: {}", exception.what());
     }
 }
 
 void QuikCandleService::startCheckCandlesThread() {
     while (isRunning) {
-        this_thread::sleep_for(chrono::seconds(3));
+        this_thread::sleep_for(chrono::milliseconds(250));
 
         for (const auto& keyValue : candlesSubscriptions) {
-            QuikSubscriptionDto candleSubscription = keyValue.second;
-            CandleDto candle;
-            Option<CandleDto> candleOption;
+            auto candleSubscription = keyValue.second;
+            // Get current data source size
+            auto candlesSize = getCandlesSize(&candleSubscription);
 
-            /*int candlesSize = 0;
-            bool isSuccess = getCandlesSize(&candleSubscription, &candlesSize);
-
-            if (isSuccess) {
+            if (candlesSize.isPresent()) {
+                candleSubscription.dataSourceSize = candlesSize.get();
                 CandleDto candle;
+                Option<CandleDto> candleOption;
 
-                if (candlesSize > 1) {
+                if (candleSubscription.dataSourceSize > 1) {
                     if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
-                        string intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
+                        auto intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
 
-                        LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+                        logger->error("Could not get updated candle data with class code: {}, ticker: {} and interval: {}",
                             candleSubscription.classCode, candleSubscription.ticker, intervalName);
                         continue;
                     }
@@ -83,79 +82,118 @@ void QuikCandleService::startCheckCandlesThread() {
                 }
 
                 if (candleOption.isPresent()) {
-                    Option<ChangedCandleDto> changedCandle = toChangedCandleDto(candleOption);
+                    auto changedCandle = toChangedCandleDto(candleOption);
 
-                    queueService->publish(QueueService::QUIK_CANDLE_CHANGE_QUEUE, toChangedCandleJson(changedCandle));
+                    queueService->pubSubPublish(
+                        QueueService::QUIK_CANDLE_CHANGE_TOPIC,
+                        toChangedCandleJson(changedCandle).dump()
+                    );
                 }
-            }*/
+            }
         }
     }
 }
 
 bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
-    string intervalName = QuikUtils::getIntervalName(interval);
+    auto intervalName = QuikUtils::getIntervalName(interval);
 
     if (isSubscribedToCandles(luaState, classCode, ticker, interval)) {
-        LOGGER->info("Skipping subscribe to candles with ticker: {} and interval: {} because already subscribed...",
+        logger->info("Skipping subscribe to candles with ticker: {} and interval: {} because already subscribed...",
             ticker, intervalName);
         return true;
     }
-    LOGGER->info("Subscribe to candles with class code: {}, ticker: {} and interval: {}",
+    logger->info("Subscribe to candles with class code: {}, ticker: {} and interval: {}",
         classCode, ticker, intervalName);
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     if (!luaGetGlobal(luaState, "CreateDataSource")) {
-        LOGGER->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return {};
     }
     lua_pushstring(luaState, classCode.c_str());
     lua_pushstring(luaState, ticker.c_str());
     lua_getglobal(luaState, intervalName.c_str());
-    int result = lua_pcall(luaState, 3 , 1, 0);
+    auto result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}",
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
+    auto dataSourceIndex = luaSaveReference(luaState);
+    luaLoadReference(luaState, dataSourceIndex);
+
     // Wait while data will be loaded
     this_thread::sleep_for(chrono::milliseconds(300));
-
-    int dataSourceIndex = luaSaveReference(luaState);
 
     QuikSubscriptionDto candleSubscription;
     candleSubscription.luaState = luaState;
     candleSubscription.mutexLock = mutexLock;
     candleSubscription.dataSourceIndex = dataSourceIndex;
+    candleSubscription.dataSourceSize = -1;
     candleSubscription.classCode = classCode;
     candleSubscription.ticker = ticker;
     candleSubscription.interval = interval;
 
-    getCandlesSize(&candleSubscription, &candleSubscription.dataSourceSize);
+    auto candlesSize = getCandlesSize(&candleSubscription);
 
-    string candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
+    if (candlesSize.isPresent()) {
+        candleSubscription.dataSourceSize = candlesSize.get();
+    } else {
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because class code or ticker may be invalid (data source is undefined)",
+            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+        return false;
+    }
 
-    candlesSubscriptions[candlesSubscriptionsKey] = candleSubscription;
+    // Don't save subscription for TICK interval (don't send candles to topic)
+    if (Interval::INTERVAL_TICK != interval) {
+        // Subscribe also to quotes otherwise we don't receive any events
+        subscribeToTickerQuotes(luaState, classCode, ticker);
 
-    saveCandleSubscriptionToCache(classCode, ticker, interval);
+        auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
 
-    LOGGER->info("Subscribed to candles with class code: {}, ticker: {} and interval: {} (size: {})",
+        candlesSubscriptions[candlesSubscriptionsKey] = candleSubscription;
+
+        saveCandleSubscriptionToCache(classCode, ticker, interval);
+    }
+    logger->info("Subscribed to candles with class code: {}, ticker: {} and interval: {} (size: {})",
         classCode, ticker, intervalName, candleSubscription.dataSourceSize);
 
     return true;
+}
+
+void QuikCandleService::unsubscribeFromAllCandles(lua_State *luaState) {
+    logger->info("Unsubscribe from all candles");
+
+    auto subscriptions = loadSubscriptionsFromCache();
+
+    if (subscriptions.empty()) {
+        logger->info("Skipping unsubscribe from all candles because no one subscriptions found....");
+        return;
+    }
+
+    for (const auto& subscriptionString : subscriptions) {
+        auto subscription = json::parse(subscriptionString.as_string());
+        auto classCode = subscription["classCode"].get<string>();
+        auto ticker = subscription["ticker"].get<string>();
+        auto interval = QuikUtils::getIntervalByName(subscription["interval"].get<string>());
+
+        unsubscribeFromCandles(luaState, classCode, ticker, interval);
+    }
+    logger->info("Successfully unsubscribed from: {} candles", subscriptions.size());
 }
 
 bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
     auto intervalName = QuikUtils::getIntervalName(interval);
 
     if (!isSubscribedToCandles(luaState, classCode, ticker, interval)) {
-        LOGGER->info("Skipping unsubscribe from candles with ticker: {} and interval: {} because already unsubscribed...",
+        logger->info("Skipping unsubscribe from candles with ticker: {} and interval: {} because already unsubscribed...",
             ticker, intervalName);
         return true;
     }
-    LOGGER->info("Unsubscribe from candles with class code: {}, ticker: {} and interval: {}",
+    logger->info("Unsubscribe from candles with class code: {}, ticker: {} and interval: {}",
         classCode, ticker, intervalName);
 
     auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
@@ -171,18 +209,20 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
     auto result = lua_pcall(luaState, 1, 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not close candles data source with class code: {}, ticker: {} and interval: {}! Reason: {}",
+        logger->error("Could not close candles data source with class code: {}, ticker: {} and interval: {}! Reason: {}",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
-    bool isUnsubscribed = false;
+    auto isUnsubscribed = false;
     auto isSuccess = luaGetBoolean(luaState, &isUnsubscribed);
 
     if (!isSuccess || !isUnsubscribed) {
-        LOGGER->error("Could not unsubscribe from candles data source with class code: {}, ticker: {} and interval: {} because QUIK return false value!",
+        logger->error("Could not unsubscribe from candles data source with class code: {}, ticker: {} and interval: {} because QUIK return false value!",
             classCode, ticker, intervalName);
         return false;
     }
+    unsubscribeFromTickerQuotes(luaState, classCode, ticker);
+
     // Remove subscription data from local cache from map
     candlesSubscriptions.erase(candlesSubscriptionsKey);
     // Remove subscription data from REDIS
@@ -229,7 +269,7 @@ vector<cpp_redis::reply> QuikCandleService::loadSubscriptionsFromCache() {
     auto subscriptionsObject = subscriptionsFuture.get();
 
     if (subscriptionsObject.is_error()) {
-        LOGGER->error("Could not load candles subscriptions from cache! Reason: {}", subscriptionsObject.error());
+        logger->error("Could not load candles subscriptions from cache! Reason: {}", subscriptionsObject.error());
         return {};
     } else if (!subscriptionsObject.is_array()) {
         return {};
@@ -242,36 +282,36 @@ Option<CandleDto> QuikCandleService::getLastCandle(lua_State *luaState, const Ca
 }
 
 Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
-    string intervalName = QuikUtils::getIntervalName(candlesRequest.interval);
-    string classCode = candlesRequest.classCode;
-    string ticker = candlesRequest.ticker;
-    Interval interval = candlesRequest.interval;
+    auto intervalName = QuikUtils::getIntervalName(candlesRequest.interval);
+    auto classCode = candlesRequest.classCode;
+    auto ticker = candlesRequest.ticker;
+    auto interval = candlesRequest.interval;
 
-    LOGGER->debug("Get candles with class code: {}, ticker: {} and interval: {}", classCode, ticker, intervalName);
+    logger->debug("Get candles with class code: {}, ticker: {} and interval: {}", classCode, ticker, intervalName);
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     if (!luaGetGlobal(luaState, "CreateDataSource")) {
-        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return {};
     }
     lua_pushstring(luaState, classCode.c_str());
     lua_pushstring(luaState, ticker.c_str());
     lua_getglobal(luaState, intervalName.c_str());
-    int result = lua_pcall(luaState, 3 , 1, 0);
+    auto result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {}",
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return {};
     }
-    int dataSourceIndex = luaSaveReference(luaState);
-    int dataSource = luaLoadReference(luaState, dataSourceIndex);
+    auto dataSourceIndex = luaSaveReference(luaState);
+    auto dataSource = luaLoadReference(luaState, dataSourceIndex);
 
     // Tell QUIK to load and update candles data
     if (!luaGetField(luaState, dataSource, "SetEmptyCallback")) {
-        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua field <<SetEmptyCallback>>",
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua field <<SetEmptyCallback>>",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return {};
     }
@@ -279,16 +319,16 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
     result = lua_pcall(luaState, 1, 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not set empty callback in get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
+        logger->error("Could not set empty callback in get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
 
         return {};
     }
-    bool isEmptyCallbackApplied = false;
-    bool isSuccess = luaGetBoolean(luaState, &isEmptyCallbackApplied);
+    auto isEmptyCallbackApplied = false;
+    auto isSuccess = luaGetBoolean(luaState, &isEmptyCallbackApplied);
 
     if (!isSuccess || !isEmptyCallbackApplied) {
-        LOGGER->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: empty callback not applied",
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: empty callback not applied",
             classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         lua_pop(luaState, 1);
 
@@ -303,61 +343,128 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
     candleSubscription.luaState = luaState;
     candleSubscription.mutexLock = mutexLock;
     candleSubscription.dataSourceIndex = dataSourceIndex;
+    candleSubscription.dataSourceSize = -1;
     candleSubscription.classCode = classCode;
     candleSubscription.ticker = ticker;
     candleSubscription.interval = interval;
 
-    isSuccess = getCandlesSize(&candleSubscription, &candleSubscription.dataSourceSize);
-
+    auto candlesSize = getCandlesSize(&candleSubscription);
     Option<CandleDto> candleOption;
 
-    if (isSuccess && candleSubscription.dataSourceSize > 0) {
+    if (candlesSize.isPresent()
+            && candlesSize.get() > 0) {
+        candleSubscription.dataSourceSize = candlesSize.get();
         CandleDto candle;
 
         if (toCandleDto(&candleSubscription, &candle, 1, candleSubscription.dataSourceSize)) {
             candleOption = Option<CandleDto>(candle);
         } else {
-            LOGGER->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+            logger->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
                 candleSubscription.classCode, candleSubscription.ticker, intervalName);
         }
     }
     return candleOption;
 }
 
-bool QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer) {
+Option<int> QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscription) {
+    Option<int> candlesSize;
+
     if (candleSubscription == nullptr) {
-        LOGGER->error("Could not get candles size because subscription data is empty!");
-        return false;
+        logger->error("Could not get candles size because subscription data is empty!");
+        return candlesSize;
     }
-    lua_State *luaState = candleSubscription->luaState;
-    string intervalName = QuikUtils::getIntervalName(candleSubscription->interval);
+    auto intervalName = QuikUtils::getIntervalName(candleSubscription->interval);
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    int dataSource = luaLoadReference(luaState, candleSubscription->dataSourceIndex);
+    lua_State *luaState = candleSubscription->luaState;
+    auto dataSource = luaLoadReference(luaState, candleSubscription->dataSourceIndex);
 
     if(!luaGetField(luaState, dataSource, "Size")) {
-        LOGGER->error("Could not get candles size with class code: {}, ticker: {} and interval: {} because could not get lua field <<Size>>",
-            candleSubscription->classCode, candleSubscription->ticker, intervalName, luaGetErrorMessage(luaState));
-        return false;
+        logger->error("Could not get candles size with class code: {}, ticker: {} and interval: {} because could not get lua field <<Size>>",
+            candleSubscription->classCode, candleSubscription->ticker, intervalName);
+        return candlesSize;
     }
     lua_pushvalue(luaState, dataSource);
-    int result = lua_pcall(luaState, 1, 1, 0);
+    auto result = lua_pcall(luaState, 1, 1, 0);
 
     if (LUA_OK != result) {
-        LOGGER->error("Could not get candles size with class code: {}, ticker: {} and interval: {}! Reason: {}",
+        logger->error("Could not get candles size with class code: {}, ticker: {} and interval: {}! Reason: {}",
             candleSubscription->classCode, candleSubscription->ticker, intervalName, luaGetErrorMessage(luaState));
-        return false;
+        return candlesSize;
     }
-    double dataSourceSize = 0.0;
-    bool isSuccess = luaGetNumber(luaState, &dataSourceSize);
+    auto dataSourceSize = 0.0;
 
-    if (isSuccess) {
-        *buffer = (int)dataSourceSize;
+    if (luaGetNumber(luaState, &dataSourceSize)) {
+        candlesSize = {(int)dataSourceSize};
     }
     lua_pop(luaState, 1);
 
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
-    return true;
+    return candlesSize;
+}
+
+bool QuikCandleService::isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{classCode}, {ticker}};
+
+    if (!luaCallFunction(luaState, IS_SUBSCRIBED_LEVEL_2_QUOTES_FUNCTION_NAME, 2, 1, args)) {
+        logger->error("Could not call QUIK {} function!", IS_SUBSCRIBED_LEVEL_2_QUOTES_FUNCTION_NAME);
+        return {};
+    }
+    auto isSubscribed = false;
+
+    if (!luaGetBoolean(luaState, &isSubscribed)) {
+        logger->error("Could not check if subscribed to quotes with class code: {} and ticker: {}", classCode, ticker);
+        return false;
+    }
+    return isSubscribed;
+}
+
+bool QuikCandleService::subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    if (isSubscribedToTickerQuotes(luaState, classCode, ticker)) {
+        return true;
+    }
+    logger->info("Subscribe to level 2 quotes with class code: {} and ticker: {}", classCode, ticker);
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{classCode}, {ticker}};
+
+    if (!luaCallFunction(luaState, SUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME, 2, 1, args)) {
+        logger->error("Could not call QUIK {} function!", SUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME);
+        return {};
+    }
+    auto isSubscribed = false;
+
+    if (!luaGetBoolean(luaState, &isSubscribed)) {
+        logger->error("Could not subscribe to quotes with class code: {} and ticker: {}", classCode, ticker);
+        return false;
+    }
+    return isSubscribed;
+}
+
+bool QuikCandleService::unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker) {
+    if (!isSubscribedToTickerQuotes(luaState, classCode, ticker)) {
+        return true;
+    }
+    logger->info("Unsubscribe from level 2 quotes with class code: {} and ticker: {}", classCode, ticker);
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{classCode}, {ticker}};
+
+    if (!luaCallFunction(luaState, UNSUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME, 2, 1, args)) {
+        logger->error("Could not call QUIK {} function!", UNSUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME);
+        return {};
+    }
+    auto isUnSubscribed = false;
+
+    if (!luaGetBoolean(luaState, &isUnSubscribed)) {
+        logger->error("Could not check unsubscribed from quotes with class code: {} and ticker: {}", classCode, ticker);
+        return false;
+    }
+    return isUnSubscribed;
 }

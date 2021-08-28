@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "Db.h"
@@ -10,7 +10,7 @@ Db::Db() {
     string dbMigrationsPath = dbPath + config.directorySeparator + config.db.migrationsPath;
     string dbFilePath = dbPath + config.directorySeparator + config.db.name;
 
-    LOGGER->info("Open DB with path: {}, name: {} and migrations sub path: {}",
+    logger->info("Open DB with path: {}, name: {} and migrations sub path: {}",
         config.db.path, config.db.name, config.db.migrationsPath);
 
     FileUtils::createdDirs(dbPath);
@@ -35,13 +35,13 @@ long long Db::toSqlLiteBigInt(uint64_t value) {
  * @param dbMigrationsPath the path with migration files
  */
 void Db::runMigrations(string& dbMigrationsPath) {
-    LOGGER->info("Apply DB migrations...");
+    logger->info("Apply DB migrations...");
 
     try {
         set<string> migrations = FileUtils::getFiles(dbMigrationsPath);
 
         if (migrations.empty()) {
-            LOGGER->info("New migrations not found, skipping...");
+            logger->info("New migrations not found, skipping...");
             return;
         }
         SQLite::Transaction transaction(*db);
@@ -54,7 +54,7 @@ void Db::runMigrations(string& dbMigrationsPath) {
             if (appliedMigrations.find(migrationFile) != appliedMigrations.end()) {
                 continue;
             }
-            LOGGER->info("Apply new migration: {}", migrationFile);
+            logger->info("Apply new migration: {}", migrationFile);
 
             string migrationFilePath = dbMigrationsPath.append("/").append(migrationFile);
             string sqlScript = FileUtils::readFile(migrationFilePath);
@@ -71,12 +71,12 @@ void Db::runMigrations(string& dbMigrationsPath) {
         transaction.commit();
 
         if (totalAppliedMigrations == 0) {
-            LOGGER->info("No one new DB migration found, skipping...");
+            logger->info("No one new DB migration found, skipping...");
         } else {
-            LOGGER->info("New DB migrations applied successfully");
+            logger->info("New DB migrations applied successfully");
         }
     } catch (SQLite::Exception& exception) {
-        LOGGER->error("Could not apply DB migrations! Reason: {}", exception.what());
+        logger->error("Could not apply DB migrations! Reason: {}", exception.what());
     }
 }
 

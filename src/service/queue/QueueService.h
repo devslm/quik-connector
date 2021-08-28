@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUEUESERVICE_H
@@ -22,7 +22,7 @@ class Quik;
 class Redis;
 
 extern Redis* redis;
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 typedef struct CommandResponseDto {
     CommandResponseDto(string command, string commandId, json commandJsonData) {
@@ -46,8 +46,8 @@ public:
     static const string QUIK_CANDLES_TOPIC;
     static const string QUIK_LAST_CANDLE_TOPIC;
     static const string QUIK_ALL_TRADES_TOPIC;
+    static const string QUIK_CANDLE_CHANGE_TOPIC;
 
-    static const string QUIK_CANDLE_CHANGE_QUEUE;
     static const string QUIK_ORDERS_QUEUE;
 
     static const string QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND;
@@ -58,6 +58,8 @@ public:
     static const string QUIK_GET_NEW_ORDERS_COMMAND;
     static const string QUIK_GET_STOP_ORDERS_COMMAND;
     static const string QUIK_GET_TICKERS_COMMAND;
+    static const string SUBSCRIBE_TO_CANDLES_COMMAND;
+    static const string UNSUBSCRIBE_FROM_CANDLES_COMMAND;
 
     QueueService(Quik *quik, string host, int port);
 

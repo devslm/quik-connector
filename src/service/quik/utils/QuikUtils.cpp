@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuikUtils.h"
@@ -31,7 +31,7 @@ string QuikUtils::getIntervalName(Interval interval) {
         case INTERVAL_D1:
             return "INTERVAL_D1";
         default:
-            LOGGER->error("Could not find interval name! Because interval: {} is undefined!", interval);
+            logger->error("Could not find interval name! Because interval: {} is undefined!", interval);
             return "INTERVAL_D1";
     }
 }
@@ -62,7 +62,7 @@ Interval QuikUtils::getIntervalByName(const string& interval) {
     } else if (interval == "INTERVAL_D1") {
         return INTERVAL_D1;
     }
-    LOGGER->error("Could not find interval type! Because interval name: {} is undefined!", interval.c_str());
+    logger->error("Could not find interval type! Because interval name: {} is undefined!", interval.c_str());
 
     return INTERVAL_D1;
 }
@@ -108,7 +108,7 @@ Option<string> QuikUtils::getClassTypeByCode(string& classCode) {
     if (classCodes.find(classCode) != end(classCodes)) {
         return Option<string>(classCodes.at(classCode));
     }
-    LOGGER->error("Could not get class type by code: {} because code is undefined!", classCode);
+    logger->error("Could not get class type by code: {} because code is undefined!", classCode);
 
     return Option<string>();
 }
@@ -169,64 +169,64 @@ string QuikUtils::getOrderType(double orderFlags) {
 }
 
 void QuikUtils::decodeFlags(double flags) {
-    LOGGER->info("<--------------- Dump flags for: {} --------------->", flags);
+    logger->info("<--------------- Dump flags for: {} --------------->", flags);
 
     if (QuikUtils::bitTest(flags, 0)) {
-        LOGGER->info("Bit 0: order is active");
+        logger->info("Bit 0: order is active");
     } else {
-        LOGGER->info("Bit 0: order is inactive");
+        logger->info("Bit 0: order is inactive");
     }
 
     if (QuikUtils::bitTest(flags, 1)) {
-        LOGGER->info("Bit 1: order is canceled");
+        logger->info("Bit 1: order is canceled");
     }
 
     if (QuikUtils::bitTest(flags, 2)) {
-        LOGGER->info("Bit 2: order type buy");
+        logger->info("Bit 2: order type buy");
     } else {
-        LOGGER->info("Bit 2: order type sell");
+        logger->info("Bit 2: order type sell");
     }
 
     if (QuikUtils::bitTest(flags, 3)) {
-        LOGGER->info("Bit 3: limit order");
+        logger->info("Bit 3: limit order");
     }
 
     if (QuikUtils::bitTest(flags, 5)) {
-        LOGGER->info("Bit 5: stop order waiting activation");
+        logger->info("Bit 5: stop order waiting activation");
     }
 
     if (QuikUtils::bitTest(flags, 6)) {
-        LOGGER->info("Bit 6: stop order from another server");
+        logger->info("Bit 6: stop order from another server");
     }
 
     if (QuikUtils::bitTest(flags, 8)) {
-        LOGGER->info("Bit 8: true");
+        logger->info("Bit 8: true");
     }
 
     if (QuikUtils::bitTest(flags, 9)) {
-        LOGGER->info("Bit 9: true");
+        logger->info("Bit 9: true");
     }
 
     if (QuikUtils::bitTest(flags, 10)) {
-        LOGGER->info("Bit 10: true");
+        logger->info("Bit 10: true");
     }
 
     if (QuikUtils::bitTest(flags, 11)) {
-        LOGGER->info("Bit 11: true");
+        logger->info("Bit 11: true");
     }
 
     if (QuikUtils::bitTest(flags, 12)) {
-        LOGGER->info("Bit 12: true");
+        logger->info("Bit 12: true");
     }
 
     if (QuikUtils::bitTest(flags, 13)) {
-        LOGGER->info("Bit 13: true");
+        logger->info("Bit 13: true");
     }
 
     if (QuikUtils::bitTest(flags, 15)) {
-        LOGGER->info("Bit 15: true");
+        logger->info("Bit 15: true");
     }
-    LOGGER->info("<--------------- End dump flags for: {} --------------->", flags);
+    logger->info("<--------------- End dump flags for: {} --------------->", flags);
 }
 
 uint64_t QuikUtils::newTransactionId() {

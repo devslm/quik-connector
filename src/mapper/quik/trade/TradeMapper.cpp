@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "TradeMapper.h"
@@ -8,7 +8,7 @@ using namespace std;
 
 bool toAllTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for all trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
+        logger->error("Could not get table for all trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }
@@ -71,7 +71,7 @@ bool toAllTradeDto(lua_State *luaState, TradeDto *trade) {
 
 bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
+        logger->error("Could not get table for trade data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
         return false;
     }

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_CANDLEMAPPER_H
@@ -17,6 +17,8 @@
 
 using namespace nlohmann;
 using namespace std;
+
+extern shared_ptr<spdlog::logger> logger;
 
 bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto *candle, int candleFirstIndex, int candleLastIndex);
 

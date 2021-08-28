@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_REDIS_H
@@ -17,7 +17,7 @@ using namespace nlohmann;
 class ConfigService;
 
 extern ConfigService* configService;
-extern shared_ptr<spdlog::logger> LOGGER;
+extern shared_ptr<spdlog::logger> logger;
 
 class Redis {
 public:

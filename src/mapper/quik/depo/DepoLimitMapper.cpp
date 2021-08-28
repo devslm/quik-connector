@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "DepoLimitMapper.h"
 
 bool toDepoLimitDto(lua_State *luaState, DepoLimitDto* depoLimit) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for depo limit data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for depo limit data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
         return false;

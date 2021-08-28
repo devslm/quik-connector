@@ -1,25 +1,32 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuoteMapper.h"
 
 bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for ticker quotes data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for ticker quotes data! Current stack value type is: <<{}>> but required table!",
              luaGetType(luaState, -1));
 
         return false;
     }
-    lua_getfield(luaState, -1, "bid_count");
+
+    if (!luaGetField(luaState, -1, "bid_count")) {
+        return false;
+    }
     tickerQuote->bidCount = lua_tonumber(luaState, -1);
     lua_pop(luaState, 1);
 
-    lua_getfield(luaState, -1, "offer_count");
+    if (!luaGetField(luaState, -1, "offer_count")) {
+        return false;
+    }
     tickerQuote->offerCount = lua_tonumber(luaState, -1);
     lua_pop(luaState, 1);
 
-    lua_getfield(luaState, -1, "bid");
+    if (!luaGetField(luaState, -1, "bid")) {
+        return false;
+    }
     size_t totalBids = lua_rawlen(luaState, -1);
 
     for (int currentIndex = 1; currentIndex <= totalBids; ++currentIndex) {
@@ -32,11 +39,15 @@ bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
         }
         TickerPriceDto tickerPrice;
 
-        lua_getfield(luaState, -1, "price");
+        if (!luaGetField(luaState, -1, "price")) {
+            return false;
+        }
         tickerPrice.price = lua_tonumber(luaState, -1);
         lua_pop(luaState, 1);
 
-        lua_getfield(luaState, -1, "quantity");
+        if (!luaGetField(luaState, -1, "quantity")) {
+            return false;
+        }
         tickerPrice.quantity = lua_tonumber(luaState, -1);
         lua_pop(luaState, 2);
 
@@ -44,7 +55,9 @@ bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
     }
     lua_pop(luaState, 1);
 
-    lua_getfield(luaState, -1, "offer");
+    if (!luaGetField(luaState, -1, "offer")) {
+        return false;
+    }
     size_t totalOffers = lua_rawlen(luaState, -1);
 
     for (int currentIndex = 1; currentIndex <= totalOffers; ++currentIndex) {
@@ -57,11 +70,15 @@ bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
         }
         TickerPriceDto tickerPrice;
 
-        lua_getfield(luaState, -1, "price");
+        if (!luaGetField(luaState, -1, "price")) {
+            return false;
+        }
         tickerPrice.price = lua_tonumber(luaState, -1);
         lua_pop(luaState, 1);
 
-        lua_getfield(luaState, -1, "quantity");
+        if (!luaGetField(luaState, -1, "quantity")) {
+            return false;
+        }
         tickerPrice.quantity = lua_tonumber(luaState, -1);
         lua_pop(luaState, 2);
 
@@ -72,13 +89,13 @@ bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
     return true;
 }
 
-json toTickerQuoteJson(Option<TickerQuoteDto> *tickerQuoteOption) {
+json toTickerQuoteJson(Option<TickerQuoteDto>& tickerQuoteOption) {
     json jsonObject;
 
-    if (tickerQuoteOption->isEmpty()) {
+    if (tickerQuoteOption.isEmpty()) {
         return jsonObject;
     }
-    const auto tickerQuote = tickerQuoteOption->get();
+    const auto tickerQuote = tickerQuoteOption.get();
 
     jsonObject["classCode"] = tickerQuote.classCode;
     jsonObject["ticker"] = tickerQuote.ticker;

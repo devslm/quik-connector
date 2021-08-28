@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIK_H
@@ -54,6 +54,9 @@ const char GET_FUTURES_LIMIT_FUNCTION_NAME[] = "getFuturesLimit";
 const char GET_DEPO_EX_FUNCTION_NAME[] = "getDepoEx";
 const char GET_PARAM_EX_FUNCTION_NAME[] = "getParamEx";
 const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
+const char SUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME[] = "Subscribe_Level_II_Quotes";
+const char UNSUBSCRIBE_LEVEL_2_QUOTES_FUNCTION_NAME[] = "Subscribe_Level_II_Quotes";
+const char IS_SUBSCRIBED_LEVEL_2_QUOTES_FUNCTION_NAME[] = "IsSubscribed_Level_II_Quotes";
 
 const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
@@ -89,7 +92,7 @@ public:
         if (isSuccess) {
             trades.push(trade);
         } else {
-            LOGGER->error("Could not handle all trade changes!");
+            logger->error("Could not handle all trade changes!");
         }
         allTradeLock.unlock();
         changedTradeQueueLock.unlock();
@@ -114,6 +117,12 @@ public:
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+
+    bool isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
 
     Option<QuikUserInfoDto> getUserName(lua_State *luaState);
 

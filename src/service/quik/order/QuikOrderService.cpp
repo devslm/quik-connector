@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuikOrderService.h"
@@ -15,7 +15,7 @@ static string buildOrderCacheKey(uint64_t orderId) {
 
 void QuikOrderService::onNewOrder(OrderDto& order) {
     if (isOrderExistsInCache(order)) {
-        LOGGER->warn("Skipping save new order in onNewOrder callback because order: {} already exists!", order.orderNum);
+        logger->warn("Skipping save new order in onNewOrder callback because order: {} already exists!", order.orderNum);
         return;
     }
     list<OrderDto> newOrders = {order};
@@ -27,18 +27,18 @@ list<OrderDto> QuikOrderService::getNewOrders(lua_State *luaState) {
     auto orders = getOrders(luaState);
     list<OrderDto> newOrders;
 
-    LOGGER->debug("Found: {} orders before filtering new orders", orders.size());
+    logger->debug("Found: {} orders before filtering new orders", orders.size());
 
     for (const auto& order : orders) {
         auto isOrderExists = isOrderExistsInCache(order);
 
         if (isOrderExists) {
-            LOGGER->debug("Skipping order: {} because already exists with the same status...", order.orderNum);
+            logger->debug("Skipping order: {} because already exists with the same status...", order.orderNum);
             continue;
         }
         Option<OrderDto> orderOption(order);
 
-        LOGGER->info("New order: {}", toOrderJson(orderOption).dump());
+        logger->info("New order: {}", toOrderJson(orderOption).dump());
 
         addOrderToCache(order);
 
@@ -90,7 +90,7 @@ void QuikOrderService::saveNewOrder(list<OrderDto>& orders) {
         }
         OrderRepository::upsertAll(orderEntities);
     } catch (exception& exception) {
-        LOGGER->error("Could not save: {} new orders to DB! Reason: {}", orders.size(), exception.what());
+        logger->error("Could not save: {} new orders to DB! Reason: {}", orders.size(), exception.what());
     }
 }
 
@@ -102,23 +102,23 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
     FunctionArgDto args[] = {{QUIK_ORDERS_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
         return orders;
     }
     double totalOrders = 0.0;
     bool isSuccess = luaGetNumber(luaState, &totalOrders);
 
     if (!isSuccess) {
-        LOGGER->error("Could not get orders because can't retrieve total orders number!");
+        logger->error("Could not get orders because can't retrieve total orders number!");
         return orders;
     }
-    LOGGER->debug("Found: {} active orders", (int)totalOrders);
+    logger->debug("Found: {} active orders", (int)totalOrders);
 
     for (int i = 0; i < totalOrders; ++i) {
         FunctionArgDto getItemFunctionArgs[] = {{QUIK_ORDERS_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemFunctionArgs)) {
-            LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
+            logger->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return orders;
         }
         OrderDto order;
@@ -126,7 +126,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
         isSuccess = toOrderDto(luaState, quik, &order);
 
         if (!isSuccess) {
-            LOGGER->error("Could not convert order data to dto!");
+            logger->error("Could not convert order data to dto!");
             continue;
         }
 
@@ -134,7 +134,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
                 || order.status != ORDER_STATUS_CANCELED) {
             orders.push_back(order);
         } else {
-            LOGGER->debug("Skipping add order: {} data to list because it status: {}", order.orderNum, order.status);
+            logger->debug("Skipping add order: {} data to list because it status: {}", order.orderNum, order.status);
         }
     }
     return orders;
@@ -148,23 +148,23 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
     FunctionArgDto args[] = {{QUIK_STOP_ORDERS_TABLE_NAME}};
 
     if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
-        LOGGER->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
+        logger->error("Could not call QUIK {} function!", GET_NUMBER_OF_FUNCTION_NAME);
         return stopOrders;
     }
     double totalStopOrders = 0.0;
     bool isSuccess = luaGetNumber(luaState, &totalStopOrders);
 
     if (!isSuccess) {
-        LOGGER->error("Could not get stop orders because can't retrieve total stop orders number!");
+        logger->error("Could not get stop orders because can't retrieve total stop orders number!");
         return stopOrders;
     }
-    LOGGER->debug("Found: {} active stop orders", (int)totalStopOrders);
+    logger->debug("Found: {} active stop orders", (int)totalStopOrders);
 
     for (int i = 0; i < totalStopOrders; ++i) {
         FunctionArgDto getItemFunctionArgs[] = {{QUIK_STOP_ORDERS_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemFunctionArgs)) {
-            LOGGER->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
+            logger->error("Could not call QUIK {} function!", GET_ITEM_FUNCTION_NAME);
             return stopOrders;
         }
         StopOrderDto stopOrder;
@@ -172,7 +172,7 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
         isSuccess = toStopOrderDto(luaState, quik, &stopOrder);
 
         if (!isSuccess) {
-            LOGGER->error("Could not convert stop order data to dto!");
+            logger->error("Could not convert stop order data to dto!");
             continue;
         }
         stopOrders.push_back(stopOrder);
@@ -181,7 +181,7 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
 }
 
 bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest) {
-    LOGGER->info(
+    logger->info(
         "Cancel stop order with id: {}, account: {}, clientCode: {}, class code: {} and ticker: {}",
          cancelStopOrderRequest.stopOrderId,
          cancelStopOrderRequest.account,
@@ -192,7 +192,7 @@ bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderR
     Option<string> validationError = validateCancelStopOrderData(cancelStopOrderRequest);
 
     if (validationError.isPresent()) {
-        LOGGER->info("Could not cancel stop order: {}! Reason: {}!", cancelStopOrderRequest.stopOrderId, validationError.get());
+        logger->info("Could not cancel stop order: {}! Reason: {}!", cancelStopOrderRequest.stopOrderId, validationError.get());
         return false;
     }
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
@@ -207,7 +207,7 @@ bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderR
     luaTable["STOP_ORDER_KEY"] = to_string(cancelStopOrderRequest.stopOrderId);
 
     if (!luaCallFunctionWithTableArg(luaState, SEND_TRANSACTION_FUNCTION_NAME, 1, 1, luaTable)) {
-        LOGGER->error(
+        logger->error(
             "Could not cancel stop order: {} because error on send transaction to QUIK!", cancelStopOrderRequest.stopOrderId
         );
         return false;

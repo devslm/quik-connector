@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUIKCANDLESERVICE_H
@@ -40,13 +40,21 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+    void unsubscribeFromAllCandles(lua_State *luaState);
 
-    bool getCandlesSize(QuikSubscriptionDto *candleSubscription, int *buffer);
+    bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     Option<CandleDto> getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest);
 
     Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
+
+    Option<int> getCandlesSize(QuikSubscriptionDto *candleSubscription);
+
+    bool isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool subscribeToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
+
+    bool unsubscribeFromTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
 
 private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "ParamMapper.h"
@@ -8,7 +8,7 @@ static ParamType getParamTypeById(const string& paramType);
 
 bool toParamDto(lua_State *luaState, ParamDto *param) {
     if (!lua_istable(luaState, -1)) {
-        LOGGER->error("Could not get table for param ex data! Current stack value type is: <<{}>> but required table!",
+        logger->error("Could not get table for param ex data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
         return false;

@@ -1,13 +1,15 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include "QuikServerMapper.h"
 
 bool toQuikServerConnectionStatusDto(lua_State *luaState, QuikConnectionStatusDto *quikConnectionStatus) {
-    double isConnected = lua_tonumber(luaState, -1);
-    lua_pop(luaState, 1);
+    double isConnected = 0.0;
 
+    if (!luaGetNumber(luaState, &isConnected)) {
+        return false;
+    }
     quikConnectionStatus->isConnected = (isConnected > 0.0 ? true : false);
 
     return true;

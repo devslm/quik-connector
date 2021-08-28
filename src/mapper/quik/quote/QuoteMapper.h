@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 SLM Dev <https://slm-dev.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #ifndef QUIK_CONNECTOR_QUOTEMAPPER_H
@@ -17,6 +17,6 @@ using namespace std;
 
 bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote);
 
-json toTickerQuoteJson(Option<TickerQuoteDto> *tickerQuoteOption);
+json toTickerQuoteJson(Option<TickerQuoteDto>& tickerQuoteOption);
 
 #endif //QUIK_CONNECTOR_QUOTEMAPPER_H
