@@ -52,11 +52,25 @@ bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
     return true;
 }
 
-json toTickerJson(Option<TickerDto>& tickerOption) {
-    if (tickerOption.isEmpty()) {
-        return "{}";
+json toTickerJson(const list<TickerDto>& tickers) {
+    json jsonArray = json::array();
+
+    for (auto& ticker : tickers) {
+        Option<TickerDto> tickerOption(ticker);
+
+        jsonArray.push_back(
+            toTickerJson(tickerOption)
+        );
     }
+    return jsonArray;
+}
+
+json toTickerJson(Option<TickerDto>& tickerOption) {
     json jsonObject;
+
+    if (tickerOption.isEmpty()) {
+        return jsonObject;
+    }
     TickerDto ticker = tickerOption.get();
     jsonObject["code"] = ticker.code;
     jsonObject["name"] = ticker.name;

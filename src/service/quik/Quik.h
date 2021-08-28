@@ -164,6 +164,8 @@ public:
 
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
+    list<TickerDto> getTickersByClassCode(lua_State *luaState, string& classCode);
+
     Option<TickerDto> getTickerById(lua_State *luaState, string& classCode, string& tickerCode);
 
     Option<double> getTickerPriceStepCost(lua_State *luaState, const string& classCode, const string& tickerCode);

@@ -39,6 +39,7 @@ class QueueService {
 public:
     static const string QUIK_COMMAND_TOPIC;
     static const string QUIK_CONNECTION_STATUS_TOPIC;
+    static const string QUIK_TICKERS_TOPIC;
     static const string QUIK_TICKER_QUOTES_TOPIC;
     static const string QUIK_USER_TOPIC;
     static const string QUIK_STOP_ORDERS_TOPIC;
@@ -56,6 +57,7 @@ public:
     static const string QUIK_GET_ORDERS_COMMAND;
     static const string QUIK_GET_NEW_ORDERS_COMMAND;
     static const string QUIK_GET_STOP_ORDERS_COMMAND;
+    static const string QUIK_GET_TICKERS_COMMAND;
 
     QueueService(Quik *quik, string host, int port);
 

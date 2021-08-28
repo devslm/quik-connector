@@ -17,6 +17,8 @@ using namespace std;
 
 bool toTickerDto(lua_State *luaState, TickerDto *ticker);
 
+json toTickerJson(const list<TickerDto>& tickers);
+
 json toTickerJson(Option<TickerDto>& tickerOption);
 
 #endif //QUIK_CONNECTOR_TICKERMAPPER_H

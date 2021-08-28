@@ -570,6 +570,22 @@ bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& c
     return quikOrderService->cancelStopOrderById(luaState, cancelStopOrderRequest);
 }
 
+list<TickerDto> Quik::getTickersByClassCode(lua_State *luaState, string& classCode) {
+    LOGGER->info("Get tickers with class code: {}", classCode);
+
+    auto tickerCodes = getClassSecurities(luaState, classCode);
+    list<TickerDto> tickers;
+
+    for (auto tickerCode : tickerCodes) {
+        auto ticker = getTickerById(luaState, classCode, tickerCode);
+
+        if (ticker.isPresent()) {
+            tickers.push_back(ticker.get());
+        }
+    }
+    return tickers;
+}
+
 Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, string& tickerCode) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 

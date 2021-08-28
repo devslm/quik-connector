@@ -6,6 +6,7 @@
 
 const string QueueService::QUIK_COMMAND_TOPIC = "topic:quik:commands";
 const string QueueService::QUIK_CONNECTION_STATUS_TOPIC = "topic:quik:connection:status";
+const string QueueService::QUIK_TICKERS_TOPIC = "topic:quik:tickers";
 const string QueueService::QUIK_TICKER_QUOTES_TOPIC = "topic:quik:ticker:quotes";
 const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
 const string QueueService::QUIK_STOP_ORDERS_TOPIC = "topic:quik:stop:orders";
@@ -23,6 +24,7 @@ const string QueueService::QUIK_GET_LAST_CANDLE_COMMAND = "GET_LAST_CANDLE";
 const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
 const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
+const string QueueService::QUIK_GET_TICKERS_COMMAND = "GET_TICKERS";
 
 QueueService::QueueService(Quik *quik, string host, int port) {
     this->quik = quik;
@@ -85,6 +87,12 @@ void QueueService::startCheckResponsesThread() {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
                 publishOrders(newOrders);
+            } else if (QUIK_GET_TICKERS_COMMAND == commandResponse.command) {
+                auto request = toGetTickersRequestDto(commandResponse.commandJsonData);
+                auto classCode = request.get().classCode;
+                auto tickers = quik->getTickersByClassCode(luaGetState(), classCode);
+
+                pubSubPublish(QUIK_TICKERS_TOPIC, toTickerJson(tickers).dump());
             } else if (QUIK_GET_CANDLES_COMMAND == commandResponse.command) {
                 auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
 

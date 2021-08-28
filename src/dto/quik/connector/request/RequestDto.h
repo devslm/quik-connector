@@ -15,10 +15,14 @@ typedef struct RequestDto {
     string command;
 } RequestDto;
 
-typedef struct TickerLastPriceDto {
+typedef struct TickersRequestDto {
+    string classCode;
+} TickersRequestDto;
+
+typedef struct TickerLastPriceRequestDto {
     string ticker;
     string classCode;
-} TickerLastPriceDto;
+} TickerLastPriceRequestDto;
 
 typedef struct NewStopOrderRequestDto {
     string account;

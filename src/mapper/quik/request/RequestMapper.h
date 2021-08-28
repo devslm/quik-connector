@@ -30,13 +30,20 @@ template<class T> Option<T> toRequestDto(const json& jsonData) {
     return Option<T>();
 }
 
+Option<TickersRequestDto> toGetTickersRequestDto(const json& jsonData) {
+    TickersRequestDto tickersRequest;
+    tickersRequest.classCode = jsonData["classCode"];
+
+    return {tickersRequest};
+}
+
 Option<CandlesRequestDto> toCandlesRequestDto(const json& jsonData) {
     CandlesRequestDto candlesRequest;
     candlesRequest.classCode = jsonData["classCode"];
     candlesRequest.ticker = jsonData["ticker"];
     candlesRequest.interval = QuikUtils::getIntervalByName(jsonData["interval"]);
 
-    return Option<CandlesRequestDto>(candlesRequest);
+    return {candlesRequest};
 }
 
 #endif //QUIK_CONNECTOR_REQUESTMAPPER_H
