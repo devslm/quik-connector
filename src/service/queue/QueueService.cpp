@@ -90,11 +90,12 @@ void QueueService::startCheckResponsesThread() {
 
                 publishOrders(newOrders);
             } else if (QUIK_GET_TICKERS_COMMAND == commandResponse.command) {
-                auto request = toGetTickersRequestDto(commandResponse.commandJsonData);
+                auto request = toTickersRequestDto(commandResponse.commandJsonData);
                 auto classCode = request.get().classCode;
                 auto tickers = quik->getTickersByClassCode(luaGetState(), classCode);
+                auto tickersJson = toTickerJson(tickers);
 
-                pubSubPublish(QUIK_TICKERS_TOPIC, toTickerJson(tickers).dump());
+                pubSubPublish(QUIK_TICKERS_TOPIC, tickersJson.dump());
             } else if (QUIK_GET_CANDLES_COMMAND == commandResponse.command) {
                 auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
 
@@ -143,6 +144,9 @@ void QueueService::startCheckResponsesThread() {
 
                         //Send response to client
                     }
+                } else {
+                    logger->info("Could not handle new request to subscribe candles with data: {} because request data is invalid!",
+                        commandResponse.commandJsonData.dump());
                 }
             } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandResponse.command) {
                 auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
@@ -163,6 +167,9 @@ void QueueService::startCheckResponsesThread() {
 
                         //Send response to client
                     }
+                } else {
+                    logger->info("Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
+                        commandResponse.commandJsonData.dump());
                 }
             }
         } catch (const exception& exception) {

@@ -14,8 +14,8 @@ using namespace nlohmann;
 using namespace std;
 
 static const size_t CANDLE_REQUEST_DTO_TYPE = typeid(CandlesRequestDto).hash_code();
-static const size_t CANDLE_SUBSCRIBE_REQUEST_DTO_TYPE = typeid(SubscribeToCandlesRequestDto).hash_code();
 
+static Option<TickersRequestDto> toTickersRequestDto(const json& jsonData);
 static Option<CandlesRequestDto> toCandlesRequestDto(const json& jsonData);
 static Option<SubscribeToCandlesRequestDto> toCandlesSubscribeRequestDto(const json& jsonData);
 
@@ -32,7 +32,7 @@ template<class T> Option<T> toRequestDto(const json& jsonData) {
     return Option<T>();
 }
 
-Option<TickersRequestDto> toGetTickersRequestDto(const json& jsonData) {
+Option<TickersRequestDto> toTickersRequestDto(const json& jsonData) {
     TickersRequestDto tickersRequest;
     tickersRequest.classCode = jsonData["classCode"];
 
@@ -45,7 +45,6 @@ Option<CandlesRequestDto> toCandlesRequestDto(const json& jsonData) {
     candlesRequest.ticker = jsonData["ticker"];
     candlesRequest.interval = QuikUtils::getIntervalByName(jsonData["interval"]);
 
-    return {candlesRequest};
     return {candlesRequest};
 }
 

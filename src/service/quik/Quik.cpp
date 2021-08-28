@@ -586,7 +586,7 @@ bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& c
 }
 
 list<TickerDto> Quik::getTickersByClassCode(lua_State *luaState, string& classCode) {
-    LOGGER->info("Get tickers with class code: {}", classCode);
+    logger->info("Get tickers with class code: {}", classCode);
 
     auto tickerCodes = getClassSecurities(luaState, classCode);
     list<TickerDto> tickers;
@@ -598,6 +598,8 @@ list<TickerDto> Quik::getTickersByClassCode(lua_State *luaState, string& classCo
             tickers.push_back(ticker.get());
         }
     }
+    logger->info("Found: {} tickers with class code: {}", tickers.size(), classCode);
+
     return tickers;
 }
 
