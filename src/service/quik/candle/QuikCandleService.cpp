@@ -84,6 +84,9 @@ void QuikCandleService::startCheckCandlesThread() {
                 if (candleOption.isPresent()) {
                     auto changedCandle = toChangedCandleDto(candleOption);
 
+                    for (const auto& callback : candleSubscription.callbacks) {
+                        callback(changedCandle);
+                    }
                     queueService->pubSubPublish(
                         QueueService::QUIK_CANDLE_CHANGE_TOPIC,
                         toChangedCandleJson(changedCandle).dump()
@@ -95,6 +98,14 @@ void QuikCandleService::startCheckCandlesThread() {
 }
 
 bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
+    return subscribeToCandles(luaState, classCode, ticker, interval, Option<UpdateCandleCallback>());
+}
+
+bool QuikCandleService::subscribeToCandles(lua_State *luaState,
+                                           string& classCode,
+                                           string& ticker,
+                                           Interval& interval,
+                                           Option<UpdateCandleCallback>& updateCandleCallback) {
     auto intervalName = QuikUtils::getIntervalName(interval);
 
     if (isSubscribedToCandles(luaState, classCode, ticker, interval)) {
@@ -109,16 +120,21 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCod
 
     if (!luaGetGlobal(luaState, "CreateDataSource")) {
         logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
-            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            classCode, ticker, intervalName);
         return {};
     }
     lua_pushstring(luaState, classCode.c_str());
     lua_pushstring(luaState, ticker.c_str());
-    lua_getglobal(luaState, intervalName.c_str());
+    // Push LUA interval constant value onto stack
+    if (!luaGetGlobal(luaState, intervalName)) {
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because could not get lua global field for interval <<{}>>",
+            classCode, ticker, intervalName, intervalName);
+        return {};
+    }
     auto result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}",
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
@@ -137,21 +153,23 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCod
     candleSubscription.ticker = ticker;
     candleSubscription.interval = interval;
 
+    if (updateCandleCallback.isPresent()) {
+        candleSubscription.callbacks.push_back(updateCandleCallback.get());
+    }
     auto candlesSize = getCandlesSize(&candleSubscription);
 
     if (candlesSize.isPresent()) {
         candleSubscription.dataSourceSize = candlesSize.get();
     } else {
         logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {} because class code or ticker may be invalid (data source is undefined)",
-            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            classCode, ticker, intervalName);
         return false;
     }
+    // Subscribe also to quotes otherwise we don't receive any events
+    subscribeToTickerQuotes(luaState, classCode, ticker);
 
     // Don't save subscription for TICK interval (don't send candles to topic)
     if (Interval::INTERVAL_TICK != interval) {
-        // Subscribe also to quotes otherwise we don't receive any events
-        subscribeToTickerQuotes(luaState, classCode, ticker);
-
         auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
 
         candlesSubscriptions[candlesSubscriptionsKey] = candleSubscription;
@@ -160,6 +178,8 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCod
     }
     logger->info("Subscribed to candles with class code: {}, ticker: {} and interval: {} (size: {})",
         classCode, ticker, intervalName, candleSubscription.dataSourceSize);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }
@@ -204,7 +224,11 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
     auto dataSource = luaLoadReference(luaState, quikSubscription.dataSourceIndex);
 
     // Tell QUIK to close candles data source
-    lua_getfield(luaState, dataSource, "Close");
+    if(!luaGetField(luaState, dataSource, "Close")) {
+        logger->error("Could not close candles data source with class code: {}, ticker: {} and interval: {} because could not get lua global field <<Close>>",
+            classCode, ticker, intervalName);
+        return false;
+    }
     lua_pushvalue(luaState, dataSource);
     auto result = lua_pcall(luaState, 1, 1, 0);
 
@@ -221,6 +245,11 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
             classCode, ticker, intervalName);
         return false;
     }
+    // Remove reference on data source from lua internal map
+    luaRemoveReference(luaState, quikSubscription.dataSourceIndex);
+    // Remove data source reference from the LUA stack
+    lua_pop(luaState, 1);
+
     unsubscribeFromTickerQuotes(luaState, classCode, ticker);
 
     // Remove subscription data from local cache from map
@@ -231,8 +260,8 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
     };
     redis->getConnection().srem(CANDLE_SUBSCRIPTION_CACHE_KEY, removeSubscriptions);
     redis->getConnection().sync_commit();
-    // Remove reference on data source from lua internal map
-    luaRemoveReference(luaState, quikSubscription.dataSourceIndex);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }
@@ -293,16 +322,21 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
 
     if (!luaGetGlobal(luaState, "CreateDataSource")) {
         logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua global field <<CreateDataSource>>",
-            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            classCode, ticker, intervalName);
         return {};
     }
     lua_pushstring(luaState, classCode.c_str());
     lua_pushstring(luaState, ticker.c_str());
-    lua_getglobal(luaState, intervalName.c_str());
+    // Push LUA interval constant value onto stack
+    if (!luaGetGlobal(luaState, intervalName)) {
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua global field for interval <<{}>>",
+            classCode, ticker, intervalName, intervalName);
+        return {};
+    }
     auto result = lua_pcall(luaState, 3 , 1, 0);
 
     if (LUA_OK != result) {
-        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}",
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return {};
     }
@@ -312,7 +346,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
     // Tell QUIK to load and update candles data
     if (!luaGetField(luaState, dataSource, "SetEmptyCallback")) {
         logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua field <<SetEmptyCallback>>",
-            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            classCode, ticker, intervalName);
         return {};
     }
     lua_pushvalue(luaState, dataSource);
@@ -329,11 +363,14 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
 
     if (!isSuccess || !isEmptyCallbackApplied) {
         logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: empty callback not applied",
-            classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            classCode, ticker, intervalName);
         lua_pop(luaState, 1);
 
         return {};
     }
+    // Remove reference on data source from lua internal map
+    luaRemoveReference(luaState, dataSourceIndex);
+    // Remove data source reference and callback from the LUA stack
     lua_pop(luaState, 2);
 
     // Wait while data will be loaded
@@ -363,6 +400,8 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
                 candleSubscription.classCode, candleSubscription.ticker, intervalName);
         }
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return candleOption;
 }
 
@@ -398,6 +437,7 @@ Option<int> QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscri
     if (luaGetNumber(luaState, &dataSourceSize)) {
         candlesSize = {(int)dataSourceSize};
     }
+    // Remove data source reference from the LUA stack
     lua_pop(luaState, 1);
 
     luaPrintStackSize(luaState, (string)__FUNCTION__);
@@ -420,6 +460,8 @@ bool QuikCandleService::isSubscribedToTickerQuotes(lua_State *luaState, string& 
         logger->error("Could not check if subscribed to quotes with class code: {} and ticker: {}", classCode, ticker);
         return false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return isSubscribed;
 }
 
@@ -443,6 +485,8 @@ bool QuikCandleService::subscribeToTickerQuotes(lua_State *luaState, string& cla
         logger->error("Could not subscribe to quotes with class code: {} and ticker: {}", classCode, ticker);
         return false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return isSubscribed;
 }
 
@@ -466,5 +510,7 @@ bool QuikCandleService::unsubscribeFromTickerQuotes(lua_State *luaState, string&
         logger->error("Could not check unsubscribed from quotes with class code: {} and ticker: {}", classCode, ticker);
         return false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return isUnSubscribed;
 }

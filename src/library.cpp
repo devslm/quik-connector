@@ -72,23 +72,6 @@ static void initlogger() {
     logger = Logger::init(config);
 }
 
-// TODO Remove test subscriptions when release
-static void subscribeToCandles(lua_State *luaState) {
-    string classCode = "SPBFUT";
-    string ticker = "RIU1";
-    Interval interval = Interval::INTERVAL_TICK;
-
-    quik->subscribeToCandles(luaState, classCode, ticker, interval);
-
-    ticker = "BRU1";
-
-    quik->subscribeToCandles(luaState, classCode, ticker, interval);
-
-    ticker = "SiU1";
-
-    quik->subscribeToCandles(luaState, classCode, ticker, interval);
-}
-
 static void initServices(lua_State *luaState) {
     redis = new Redis();
     redis->connect();
@@ -144,8 +127,6 @@ static int onStart(lua_State *luaState) {
     initServices(luaState);
 
     isQuikStarted = true;
-
-    subscribeToCandles(luaState);
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);

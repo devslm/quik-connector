@@ -24,8 +24,6 @@ using namespace nlohmann;
 class QueueService;
 class Redis;
 
-extern Redis* redis;
-
 class QuikCandleService {
 public:
     explicit QuikCandleService(QueueService *queueService);
@@ -39,6 +37,12 @@ public:
     bool isSubscribedToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
+
+    bool subscribeToCandles(lua_State *luaState,
+                            string& classCode,
+                            string& ticker,
+                            Interval& interval,
+                            Option<UpdateCandleCallback>& updateCandleCallback);
 
     void unsubscribeFromAllCandles(lua_State *luaState);
 

@@ -116,6 +116,12 @@ public:
 
     bool subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
+    bool subscribeToCandles(lua_State *luaState,
+                            string& classCode,
+                            string& ticker,
+                            Interval& interval,
+                            Option<UpdateCandleCallback>& updateCandleCallback);
+
     bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
     bool isSubscribedToTickerQuotes(lua_State *luaState, string& classCode, string& ticker);

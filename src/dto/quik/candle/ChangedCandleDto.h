@@ -5,6 +5,8 @@
 #ifndef QUIK_CONNECTOR_CHANGEDCANDLEDTO_H
 #define QUIK_CONNECTOR_CHANGEDCANDLEDTO_H
 
+#include "CandleDto.h"
+
 typedef struct ChangedCandleDto {
     string classCode;
     string ticker;

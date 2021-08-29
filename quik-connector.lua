@@ -4,16 +4,17 @@
 
 local DEBUG_MODE = "DEBUG"
 local RELEASE_MODE = "RELEASE"
+local DLL_NAME = "quik-connector.dll"
 
 RUN_MODE = RELEASE_MODE
 WORKING_DIRECTORY = getScriptPath()
 
-package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\?.dll;"
+package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\" .. DLL_NAME .. ";"
 
 if RUN_MODE == RELEASE_MODE then
-    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-release\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-release\\" .. DLL_NAME .. ";"
 else
-    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-debug\\?.dll;"
+    package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\cmake-build-debug\\" .. DLL_NAME .. ";"
 end
 
 require("quik_connector")

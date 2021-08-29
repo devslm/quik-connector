@@ -8,8 +8,11 @@
 #include <string>
 #include <mutex>
 #include "../../../../service/quik/utils/QuikUtils.h"
+#include "../../candle/ChangedCandleDto.h"
 
 using namespace std;
+
+typedef function<void(Option<ChangedCandleDto>)> UpdateCandleCallback;
 
 typedef struct QuikSubscriptionDto {
     lua_State *luaState;
@@ -19,6 +22,8 @@ typedef struct QuikSubscriptionDto {
     string classCode;
     string ticker;
     Interval interval;
+    list<UpdateCandleCallback> callbacks;
+
 } QuikSubscriptionDto;
 
 #endif //QUIK_CONNECTOR_QUIKSUBSCRIPTIONDTO_H

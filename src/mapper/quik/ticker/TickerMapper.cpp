@@ -49,6 +49,8 @@ bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
     if (!luaGetTableNumberField(luaState, "min_price_step", &ticker->minPriceStep)) {
         return false;
     }
+    lua_pop(luaState, 1);
+
     return true;
 }
 

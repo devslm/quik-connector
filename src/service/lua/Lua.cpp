@@ -346,6 +346,8 @@ bool luaGetBoolean(lua_State *L, bool *buffer) {
     }
     int value = lua_toboolean(L, fieldIndexInStack);
 
+    lua_pop(L, 1);
+
     *buffer = (value > 0 ? true : false);
 
     return true;
