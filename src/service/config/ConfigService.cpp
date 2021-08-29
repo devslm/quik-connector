@@ -34,24 +34,24 @@ ConfigService::~ConfigService() {
 }
 
 Option<string> ConfigService::loadCommonConfig() {
-    return Option<string>();
+    return {};
 }
 
 Option<string> ConfigService::loadLogConfig() {
     if (!configYaml["log"]) {
-        return Option<string>("Log section required");
+        return {"Log section required"};
     } else if (!configYaml["log"]["level"]) {
-        return Option<string>("Log level required");
+        return {"Log level required"};
     } else if (!configYaml["log"]["path"]) {
-        return Option<string>("Log path required");
+        return {"Log path required"};
     } else if (!configYaml["log"]["name"]) {
-        return Option<string>("Log name required");
+        return {"Log name required"};
     } else if (!configYaml["log"]["max"]) {
-        return Option<string>("Log max section required");
+        return {"Log max section required"};
     } else if (!configYaml["log"]["max"]["size"]) {
-        return Option<string>("Log max size required");
+        return {"Log max size required"};
     } else if (!configYaml["log"]["max"]["files"]) {
-        return Option<string>("Log max files required");
+        return {"Log max files required"};
     }
     config.log.level = configYaml["log"]["level"].as<string>();
     config.log.path = config.scriptPath + "\\" + configYaml["log"]["path"].as<string>();
@@ -59,62 +59,62 @@ Option<string> ConfigService::loadLogConfig() {
     config.log.fileMaxSize = configYaml["log"]["max"]["size"].as<int>();
     config.log.maxFiles = configYaml["log"]["max"]["files"].as<int>();
 
-    return Option<string>();
+    return {};
 }
 
 Option<string> ConfigService::loadRedisConfig() {
     if (!configYaml["redis"]) {
-        return Option<string>("Redis section required");
+        return {"Redis section required"};
     } else if (!configYaml["redis"]["host"]) {
-        return Option<string>("Redis host required");
+        return {"Redis host required"};
     } else if (!configYaml["redis"]["port"]) {
-        return Option<string>("Redis port required");
+        return {"Redis port required"};
     } else if (!configYaml["redis"]["password"]) {
-        return Option<string>("Redis password required");
+        return {"Redis password required"};
     }
     config.redis.host = configYaml["redis"]["host"].as<string>();
     config.redis.port = configYaml["redis"]["port"].as<int>();
 
     if (!configYaml["redis"]["password"].as<string>().empty()) {
-        config.redis.password = Option<string>(configYaml["redis"]["password"].as<string>());
+        config.redis.password = {configYaml["redis"]["password"].as<string>()};
     } else {
-        config.redis.password = Option<string>();
+        config.redis.password = {};
     }
-    return Option<string>();
+    return {};
 }
 
 Option<string> ConfigService::loadDbConfig() {
     if (!configYaml["db"]) {
-        return Option<string>("Db section required");
+        return {"Db section required"};
     } else if (!configYaml["db"]["path"]) {
-        return Option<string>("Db path required");
+        return {"Db path required"};
     } else if (!configYaml["db"]["name"]) {
-        return Option<string>("Db name required");
+        return {"Db name required"};
     } else if (!configYaml["db"]["migrations"]["path"]) {
-        return Option<string>("Db migrations path required");
+        return {"Db migrations path required"};
     }
     config.db.path = configYaml["db"]["path"].as<string>();
     config.db.name = configYaml["db"]["name"].as<string>();
     config.db.migrationsPath = configYaml["db"]["migrations"]["path"].as<string>();
 
-    return Option<string>();
+    return {};
 }
 
 Option<string> ConfigService::loadQuikConfig() {
     if (!configYaml["quik"]) {
-        return Option<string>("Quik section required");
+        return {"Quik section required"};
     } else if (!configYaml["quik"]["callback"]) {
-        return Option<string>("Quik callback required");
+        return {"Quik callback required"};
     } else if (!configYaml["quik"]["callback"]["enabled"]) {
-        return Option<string>("Quik callback enabled required");
+        return {"Quik callback enabled required"};
     } else if (!configYaml["quik"]["callback"]["enabled"]["all-trade"]) {
-        return Option<string>("Quik callback enabled all-trade required");
+        return {"Quik callback enabled all-trade required"};
     } else if (!configYaml["quik"]["callback"]["enabled"]["quote"]) {
-        return Option<string>("Quik callback enabled quote required");
+        return {"Quik callback enabled quote required"};
     } else if (!configYaml["quik"]["callback"]["enabled"]["order"]) {
-        return Option<string>("Quik callback enabled order required");
+        return {"Quik callback enabled order required"};
     } else if (!configYaml["quik"]["callback"]["enabled"]["trans-reply"]) {
-        return Option<string>("Quik callback enabled trans-reply required");
+        return {"Quik callback enabled trans-reply required"};
     }
     config.quik.callback.onAllTradeEnabled = configYaml["quik"]["callback"]["enabled"]["all-trade"].as<bool>();
     config.quik.callback.onQuoteEnabled = configYaml["quik"]["callback"]["enabled"]["quote"].as<bool>();
@@ -122,31 +122,45 @@ Option<string> ConfigService::loadQuikConfig() {
     config.quik.callback.onTransReplyEnabled = configYaml["quik"]["callback"]["enabled"]["trans-reply"].as<bool>();
 
     if (!configYaml["quik"]["order"]) {
-        return Option<string>("Quik order section required");
+        return {"Quik order section required"};
     } else if (!configYaml["quik"]["order"]["ignore"]) {
-        return Option<string>("Order ignore required");
+        return {"Order ignore required"};
     } else if (!configYaml["quik"]["order"]["ignore"]["canceled"]) {
-        return Option<string>("Order ignore canceled required");
+        return {"Order ignore canceled required"};
     } else if (!configYaml["quik"]["order"]["save"]) {
-        return Option<string>("Order save required");
+        return {"Order save required"};
     }
     config.quik.order.ignoreCancelled = configYaml["quik"]["order"]["ignore"]["canceled"].as<bool>();
     config.quik.order.saveToDb = configYaml["quik"]["order"]["save"].as<bool>();
 
-    return Option<string>();
+    if (!configYaml["quik"]["news"]) {
+        return {"Quik news section required"};
+    } else if (!configYaml["quik"]["news"]["file"]) {
+        return {"News file required"};
+    } else if (!configYaml["quik"]["news"]["file"]["name"]) {
+        return {"News file name required"};
+    } else if (!configYaml["quik"]["news"]["monitor"]) {
+        return {"News monitor required"};
+    } else if (!configYaml["quik"]["news"]["monitor"]["enabled"]) {
+        return {"News monitor enabled required"};
+    }
+    config.quik.news.fileName = configYaml["quik"]["news"]["file"]["name"].as<string>();
+    config.quik.news.monitorUpdatesEnabled = configYaml["quik"]["news"]["monitor"]["enabled"].as<bool>();
+    
+    return {};
 };
 
 Option<string> ConfigService::loadDebugConfig() {
     if (!configYaml["debug"]) {
-        return Option<string>("Debug section required");
+        return {"Debug section required"};
     } else if (!configYaml["debug"]["print"]) {
-        return Option<string>("Debug print required");
+        return {"Debug print required"};
     } else if (!configYaml["debug"]["print"]["lua-stack"]) {
-        return Option<string>("Debug print lua-stack required");
+        return {"Debug print lua-stack required"};
     }
     config.debug.printLuaStack = configYaml["debug"]["print"]["lua-stack"].as<bool>();
 
-    return Option<string>();
+    return {};
 }
 
 ConfigDto& ConfigService::getConfig() {

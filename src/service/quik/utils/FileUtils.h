@@ -19,6 +19,8 @@ public:
 
     static string readFile(string& filePath);
 
+    static uint64_t getFileSize(string& filePath);
+
 private:
     static void createdDir(const string& path);
 };

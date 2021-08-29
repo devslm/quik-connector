@@ -63,3 +63,12 @@ string FileUtils::readFile(string& filePath) {
     }
     return fileData;
 }
+
+uint64_t FileUtils::getFileSize(string& filePath) {
+    auto fileSize = 0;//GetFileSize(filePath, nullptr);
+
+    if (INVALID_FILE_SIZE == fileSize) {
+        return 0;
+    }
+    return (uint64_t)fileSize;
+}

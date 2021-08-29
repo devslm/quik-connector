@@ -29,6 +29,7 @@
 #include "candle/QuikCandleService.h"
 #include "order/QuikOrderService.h"
 #include "../config/ConfigService.h"
+#include "news/QuikNewsService.h"
 #include "../../dto/quik/ticker/TickerDto.h"
 #include "../../dto/quik/order/OrderDto.h"
 #include "../../dto/quik/order/StopOrderDto.h"
@@ -40,6 +41,7 @@
 using namespace std;
 
 const char MESSAGE_FUNCTION_NAME[] = "message";
+const char GET_WORKING_FOLDER_FUNCTION_NAME[] = "getWorkingFolder";
 const char IS_CONNECTED_FUNCTION_NAME[] = "isConnected";
 const char GET_CLASSES_LIST_FUNCTION_NAME[] = "getClassesList";
 const char GET_CLASS_INFO_FUNCTION_NAME[] = "getClassInfo";
@@ -109,6 +111,8 @@ public:
     int onTransReply(lua_State *luaState);
 
     void message(lua_State *luaState, string& text);
+
+    Option<string> getWorkingFolder(lua_State *luaState);
 
     Option<QuikConnectionStatusDto> getServerConnectionStatus(lua_State *luaState);
 
@@ -205,6 +209,7 @@ private:
     QuikCandleService *quikCandleService;
     QuikOrderService *quikOrderService;
     QueueService *queueService;
+    //QuikNewsService *quikNewsService;
 
     void startCheckAllTradesThread();
 

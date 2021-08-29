@@ -71,6 +71,8 @@ private:
 
     void startCheckCandlesThread();
 
+    static bool isCandleChanged(const CandleDto& previousCandle, const CandleDto& updatedCandle);
+
     void reloadSavedSubscriptions();
 
     void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);

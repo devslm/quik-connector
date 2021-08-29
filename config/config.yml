@@ -28,6 +28,11 @@ quik:
     ignore:
       canceled: true # Remove canceled orders from the list
     save: true # Save all orders to DB
+  news:
+    file:
+      name: news.log
+    monitor:
+      enabled: true # Check news file for updates and send it to queue
 
 debug:
   print:

@@ -24,6 +24,9 @@ int Quik::onStart(lua_State *luaState) {
 
     this->quikOrderService = new QuikOrderService(this);
 
+    //this->quikNewsService = new QuikNewsService(this);
+    //this->quikNewsService->startMonitorUpdates(luaState);
+
     isConnectorRunning = true;
 
     this->checkAllTradesThread = thread([this] {startCheckAllTradesThread();});
@@ -47,6 +50,7 @@ int Quik::onStop(lua_State *luaState) {
 
     delete quikOrderService;
     delete queueService;
+    //delete quikNewsService;
 
     checkAllTradesThread.join();
     checkQuotesThread.join();
@@ -218,6 +222,23 @@ void Quik::message(lua_State *luaState, string& text) {
     } else {
         lua_pop(luaState, 1);
     }
+}
+
+Option<string> Quik::getWorkingFolder(lua_State *luaState) {
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    if (!luaCallFunction(luaState, GET_WORKING_FOLDER_FUNCTION_NAME, 0, 1, nullptr)) {
+        logger->error("Could not call QUIK {} function!", GET_WORKING_FOLDER_FUNCTION_NAME);
+        return {};
+    }
+    string quikFolder;
+
+    if (luaGetString(luaState, &quikFolder)) {
+        return {quikFolder};
+    }
+    logger->error("Could not get QUIK working folder! Reason: {}", luaGetErrorMessage(luaState));
+
+    return {};
 }
 
 Option<QuikConnectionStatusDto> Quik::getServerConnectionStatus(lua_State *luaState) {

@@ -55,9 +55,15 @@ typedef struct QuikOrderConfigDto {
     bool saveToDb;
 } QuikOrderConfigDto;
 
+typedef struct QuikNewsConfigDto {
+    string fileName;
+    bool monitorUpdatesEnabled;
+} QuikNewsConfigDto;
+
 typedef struct QuikConfigDto {
     QuikCallbackConfigDto callback;
     QuikOrderConfigDto order;
+    QuikNewsConfigDto news;
 } QuikConfigDto;
 
 typedef struct DebugConfigDto {

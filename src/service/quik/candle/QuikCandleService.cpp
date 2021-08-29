@@ -57,48 +57,74 @@ void QuikCandleService::reloadSavedSubscriptions() {
 }
 
 void QuikCandleService::startCheckCandlesThread() {
+    ordered_map<string, CandleDto> previousCandles;
+
     while (isRunning) {
-        this_thread::sleep_for(chrono::milliseconds(250));
+        this_thread::sleep_for(chrono::milliseconds(1));
 
         for (const auto& keyValue : candlesSubscriptions) {
+            auto subscriptionCacheKey = keyValue.first;
             auto candleSubscription = keyValue.second;
             // Get current data source size
             auto candlesSize = getCandlesSize(&candleSubscription);
 
-            if (candlesSize.isPresent()) {
-                candleSubscription.dataSourceSize = candlesSize.get();
-                CandleDto candle;
-                Option<CandleDto> candleOption;
+            if (candlesSize.isEmpty()) {
+                continue;
+            }
+            candleSubscription.dataSourceSize = candlesSize.get();
+            CandleDto candle;
 
-                if (candleSubscription.dataSourceSize > 1) {
-                    if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
-                        auto intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
+            if (candleSubscription.dataSourceSize > 1) {
+                if (!toCandleDto(&candleSubscription, &candle, candleSubscription.dataSourceSize - 1, candleSubscription.dataSourceSize)) {
+                    auto intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
 
-                        logger->error("Could not get updated candle data with class code: {}, ticker: {} and interval: {}",
-                            candleSubscription.classCode, candleSubscription.ticker, intervalName);
-                        continue;
-                    }
-                    candleOption = Option<CandleDto>(candle);
+                    logger->error("Could not get updated candle data with class code: {}, ticker: {} and interval: {}",
+                        candleSubscription.classCode, candleSubscription.ticker, intervalName);
+                    continue;
                 }
 
-                if (candleOption.isPresent()) {
-                    auto changedCandle = toChangedCandleDto(candleOption);
-
-                    for (const auto& callback : candleSubscription.callbacks) {
-                        callback(changedCandle);
-                    }
-                    queueService->pubSubPublish(
-                        QueueService::QUIK_CANDLE_CHANGE_TOPIC,
-                        toChangedCandleJson(changedCandle).dump()
-                    );
+                if (!isCandleChanged(previousCandles[subscriptionCacheKey], candle)) {
+                    continue;
                 }
+                previousCandles[subscriptionCacheKey] = candle;
+
+                Option<CandleDto> candleOption = Option<CandleDto>(candle);
+                auto changedCandle = toChangedCandleDto(candleOption);
+
+                for (const auto& callback : candleSubscription.callbacks) {
+                    callback(changedCandle);
+                }
+                queueService->pubSubPublish(
+                    QueueService::QUIK_CANDLE_CHANGE_TOPIC,
+                    toChangedCandleJson(changedCandle).dump()
+                );
             }
         }
     }
 }
 
+bool QuikCandleService::isCandleChanged(const CandleDto& previousCandle, const CandleDto& updatedCandle) {
+    auto previousCandleValueIterator = previousCandle.values.begin();
+
+    for (const auto& updatedCandleValue : updatedCandle.values) {
+        auto previousCandleValue = previousCandleValueIterator++;
+
+        if (updatedCandleValue.close != previousCandleValue->close
+                || updatedCandleValue.open != previousCandleValue->open
+                || updatedCandleValue.high != previousCandleValue->high
+                || updatedCandleValue.low != previousCandleValue->low
+                || updatedCandleValue.volume != previousCandleValue->volume
+                || updatedCandleValue.date != previousCandleValue->date) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool QuikCandleService::subscribeToCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval) {
-    return subscribeToCandles(luaState, classCode, ticker, interval, Option<UpdateCandleCallback>());
+    Option<UpdateCandleCallback> emptyCallback;
+
+    return subscribeToCandles(luaState, classCode, ticker, interval, emptyCallback);
 }
 
 bool QuikCandleService::subscribeToCandles(lua_State *luaState,
