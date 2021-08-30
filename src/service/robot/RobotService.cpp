@@ -4,10 +4,6 @@
 
 #include "RobotService.h"
 
-RobotService::RobotService(Quik* quik) {
-    this->quik = quik;
-}
-
 void RobotService::run(lua_State* luaState) {
     // Implement robot custom logic here
     string classCode = "SPBFUT";
@@ -28,25 +24,5 @@ void RobotService::run(lua_State* luaState) {
             }
         }
     });
-    //quik->subscribeToCandles(luaState, classCode, ticker, interval, callback);
-
-    t = thread(
-        [this]() {
-            int loops = 20;
-            bool o = quik->isRunning();
-            int y = 0;
-
-            /*while (quik->isRunning()) {
-                //this_thread::sleep_for(chrono::milliseconds(500));
-
-                --loops;
-
-                if (loops <= 0) {
-                    loops = 20;
-
-                    //logger->info("Server time: {}", quik->getServerTime(luaState).get());
-                }
-            }*/
-        }
-    );
+    quik->subscribeToCandles(luaState, classCode, ticker, interval, callback);
 }

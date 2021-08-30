@@ -12,7 +12,7 @@ Redis::~Redis() {
     if (!configService->getConfig().redis.isEnabled) {
         return;
     }
-    logger->info("[Redis] Close all connections");
+    logger->info("[Redis] Closed all connections");
 
     redisClient.disconnect(true);
 

@@ -5,7 +5,6 @@
 #include "Logger.h"
 
 const auto QUIK_CONNECTOR_LOGGER = "quik-connector";
-const auto REDIS_LOGGER = "redis";
 
 shared_ptr<spdlog::logger> Logger::init(const ConfigDto& config) {
     auto logger = spdlog::rotating_logger_mt(

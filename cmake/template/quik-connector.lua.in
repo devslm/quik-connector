@@ -1,0 +1,11 @@
+---
+--- Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
+---
+
+local DLL_NAME = "quik-connector.dll"
+
+WORKING_DIRECTORY = getScriptPath()
+
+package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\" .. DLL_NAME .. ";"
+
+require("quik_connector")

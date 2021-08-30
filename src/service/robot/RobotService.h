@@ -9,15 +9,13 @@
 
 class Quik;
 
+extern Quik* quik;
+
 class RobotService {
 public:
-    explicit RobotService(Quik* quik);
+    RobotService() = default;
 
     void run(lua_State* luaState);
-
-private:
-    Quik* quik;
-    thread t;
 };
 
 #endif //QUIK_CONNECTOR_ROBOTSERVICE_H
