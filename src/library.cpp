@@ -138,7 +138,7 @@ static int onStart(lua_State *luaState) {
     isQuikStarted = true;
     // Run user robot logic in separate thread
     userRobotThread = thread([luaState]() {
-        RobotService robotService;
+        RobotService robotService(quik);
         robotService.run(luaState);
     });
 

@@ -9,11 +9,9 @@
 
 class Quik;
 
-extern Quik* quik;
-
 class RobotService {
 public:
-    RobotService() = default;
+    explicit RobotService(Quik* quik);
 
     virtual ~RobotService();
 
