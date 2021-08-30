@@ -4,8 +4,21 @@
 
 #include "RobotService.h"
 
+RobotService::RobotService(Quik* quik) {
+    this->quik = quik;
+}
+
+RobotService::~RobotService() {
+    // Don't forget to join any internal threads otherwise DLL will crash
+    robotInternalThread.join();
+}
+
 void RobotService::run(lua_State* luaState) {
     // Implement robot custom logic here
+    // Current logic just for example
+
+    runQuikConnectionStatusMonitor(luaState);
+
     string classCode = "SPBFUT";
     string ticker = "RIU1";
     auto interval = Interval::INTERVAL_M1;
@@ -25,4 +38,27 @@ void RobotService::run(lua_State* luaState) {
         }
     });
     quik->subscribeToCandles(luaState, classCode, ticker, interval, callback);
+
+    logger->info("[Robot] Finished main thread");
+}
+
+void RobotService::runQuikConnectionStatusMonitor(lua_State* luaState) {
+    robotInternalThread = thread([this, luaState]() {
+        while (quik->isRunning()) {
+            this_thread::sleep_for(chrono::milliseconds(10000));
+
+            auto connectionStatus = quik->getServerConnectionStatus(luaState);
+
+            if (connectionStatus.isPresent()) {
+                if (connectionStatus.get().isConnected) {
+                    logger->info("[Robot] QUIK server time: {} (connection status: connected)",
+                        quik->getServerTime(luaState).get());
+                } else {
+                    logger->info("[Robot] QUIK (connection status: disconnected)");
+                }
+            } else {
+                logger->error("[Robot] Could not get QUIK connection information!");
+            }
+        }
+    });
 }
