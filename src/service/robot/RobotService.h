@@ -13,11 +13,15 @@ class RobotService {
 public:
     explicit RobotService(Quik* quik);
 
+    virtual ~RobotService();
+
     void run(lua_State* luaState);
 
 private:
     Quik* quik;
-    thread t;
+    thread robotInternalThread;
+
+    void runQuikConnectionStatusMonitor(lua_State* luaState);
 };
 
 #endif //QUIK_CONNECTOR_ROBOTSERVICE_H
