@@ -8,5 +8,6 @@
 #include "service/log/Logger.h"
 #include "service/quik/Quik.h"
 #include "service/config/ConfigService.h"
+#include "service/robot/RobotService.h"
 
 #endif //QUIK_CONNECTOR_LIBRARY_H

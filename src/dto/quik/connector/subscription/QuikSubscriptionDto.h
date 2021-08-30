@@ -12,7 +12,7 @@
 
 using namespace std;
 
-typedef function<void(const Option<ChangedCandleDto>&)> UpdateCandleCallback;
+typedef function<void(Option<ChangedCandleDto>&)> UpdateCandleCallback;
 
 typedef struct QuikSubscriptionDto {
     lua_State *luaState;

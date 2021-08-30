@@ -7,15 +7,18 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(MSVC_COMPILE_FLAGS "/MP")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_COMPILE_FLAGS}")
 
+option(USE_LUA_VERSION_5_4 "Build QUIK DLL with LUA 5.4.1 otherwise with LUA 5.3.5" OFF)
+
 if (USE_LUA_VERSION_5_4)
     set(LUA_VERSION 5.4.1)
+    set(LUA_LIB_VERSION 54)
 else()
     set(LUA_VERSION 5.3.5)
+    set(LUA_LIB_VERSION 53)
 endif()
 
 message(STATUS "Build QUIK connector with LUA version: ${LUA_VERSION}")
 
-set(LUA_LIB_VERSION 53)
 set(SQLITE_CPP_WRAPPER_VERSION 3.1.1)
 set(LZMA_VERSION 5.2.5)
 set(JSON_VERSION 3.9.1)
@@ -159,11 +162,15 @@ set(
 
 target_link_libraries(quik-connector ${LINK_LIBRARIES})
 
-target_link_libraries(quik-connector-static ${LINK_LIBRARIES})
+option(QUIK_BUILD_TOOLS "Build quik tools executable files" OFF)
 
-add_executable(quik-tools "src/quik-tools.cpp")
+if(QUIK_BUILD_TOOLS)
+    target_link_libraries(quik-connector-static ${LINK_LIBRARIES})
 
-target_link_libraries(quik-tools PUBLIC quik-connector-static)
+    add_executable(quik-tools "src/quik-tools.cpp")
+
+    target_link_libraries(quik-tools PUBLIC quik-connector-static)
+endif(QUIK_BUILD_TOOLS)
 
 # Create quik connector output directory
 set(QUIK_CONNECTOR_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/quik-connector)
@@ -176,11 +183,13 @@ file(COPY ${PROJECT_SOURCE_DIR}/db/migrations DESTINATION ${QUIK_CONNECTOR_OUTPU
 
 set(QUIK_CONNECTOR_DLL_PATH ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
 
+option(CLION_IDE "Use Clion IDE therefore we will copy DLL from: ${PROJECT_BINARY_DIR} directory" OFF)
+
 if (CLION_IDE)
     set(QUIK_CONNECTOR_DLL_PATH ${PROJECT_BINARY_DIR})
 
     message(STATUS "QUIK connector DLL path (by Clion IDE): ${QUIK_CONNECTOR_DLL_PATH}")
-endif()
+endif(CLION_IDE)
 
 add_custom_command(
     TARGET quik-connector

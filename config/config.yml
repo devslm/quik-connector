@@ -7,6 +7,7 @@ log:
     files: 5 # Rotate max files
 
 redis:
+  enabled: true # If disabled no events will send to queue
   host: 127.0.0.1
   port: 6379
   password: c1bef278c2eb3d4e16c51148

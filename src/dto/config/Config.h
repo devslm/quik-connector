@@ -32,6 +32,7 @@ typedef struct LogConfigDto {
 } LogConfigDto;
 
 typedef struct RedisConfigDto {
+    bool isEnabled;
     string host;
     int port;
     Option<string> password;

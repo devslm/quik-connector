@@ -65,6 +65,8 @@ Option<string> ConfigService::loadLogConfig() {
 Option<string> ConfigService::loadRedisConfig() {
     if (!configYaml["redis"]) {
         return {"Redis section required"};
+    } else if (!configYaml["redis"]["enabled"]) {
+        return {"Redis enabled required"};
     } else if (!configYaml["redis"]["host"]) {
         return {"Redis host required"};
     } else if (!configYaml["redis"]["port"]) {
@@ -72,6 +74,7 @@ Option<string> ConfigService::loadRedisConfig() {
     } else if (!configYaml["redis"]["password"]) {
         return {"Redis password required"};
     }
+    config.redis.isEnabled = configYaml["redis"]["enabled"].as<bool>();
     config.redis.host = configYaml["redis"]["host"].as<string>();
     config.redis.port = configYaml["redis"]["port"].as<int>();
 

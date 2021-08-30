@@ -9,6 +9,9 @@ Redis::Redis() {
 }
 
 Redis::~Redis() {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     logger->info("[Redis] Close all connections");
 
     redisClient.disconnect(true);
@@ -20,6 +23,9 @@ Redis::~Redis() {
 }
 
 void Redis::connect() {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     //! Windows netword DLL init
     WORD version = MAKEWORD(2, 2);
     WSADATA data;
@@ -61,7 +67,8 @@ void Redis::connect() {
 }
 
 void Redis::authenticate() {
-    if (configService->getConfig().redis.password.isEmpty()) {
+    if (!configService->getConfig().redis.isEnabled
+            || configService->getConfig().redis.password.isEmpty()) {
         return;
     }
     redisClient.auth(configService->getConfig().redis.password.get(), [](const cpp_redis::reply& reply) {

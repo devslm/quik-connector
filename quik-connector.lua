@@ -6,7 +6,7 @@ local DEBUG_MODE = "DEBUG"
 local RELEASE_MODE = "RELEASE"
 local DLL_NAME = "quik-connector.dll"
 
-RUN_MODE = RELEASE_MODE
+RUN_MODE = DEBUG_MODE
 WORKING_DIRECTORY = getScriptPath()
 
 package.cpath = package.cpath .. ";" .. WORKING_DIRECTORY .. "\\bin\\" .. DLL_NAME .. ";"

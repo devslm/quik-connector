@@ -34,10 +34,16 @@ QueueService::QueueService(Quik *quik, string host, int port) {
     this->redisPort = port;
     this->redisReconnectAttempts = 1024 * 1024 * 1024;
     this->isRunning = true;
-    this->commandResponseHandlerThread = thread([this] {startCheckResponsesThread();});
+
+    if (configService->getConfig().redis.isEnabled) {
+        this->commandResponseHandlerThread = thread([this] {startCheckResponsesThread();});
+    }
 }
 
 QueueService::~QueueService() {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     logger->info("Queue service stopped");
 
     this->isRunning = false;
@@ -180,7 +186,8 @@ void QueueService::startCheckResponsesThread() {
 }
 
 void QueueService::publishOrders(list<OrderDto>& orders) {
-    if (orders.empty()) {
+    if (!configService->getConfig().redis.isEnabled
+            || orders.empty()) {
         return;
     }
     logger->debug("[Redis] Send orders to: {} with size: {}", QUIK_ORDERS_QUEUE, orders.size());
@@ -202,6 +209,9 @@ static bool parseCommandJson(const string& message, json* jsonData) {
 
 
 void QueueService::subscribeToCommandQueue() {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     redisSubscriber.subscribe(QUIK_COMMAND_TOPIC, [this](const std::string& channel, const std::string& message) {
         logger->debug("[Redis] New incoming command: {} in channel: {}", message, channel);
 
@@ -225,6 +235,9 @@ void QueueService::subscribeToCommandQueue() {
 }
 
 void QueueService::subscribe() {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     redisSubscriber.connect(
         redisHost,
         redisPort,
@@ -259,7 +272,8 @@ void QueueService::subscribe() {
 }
 
 void QueueService::authenticate() {
-    if (configService->getConfig().redis.password.isEmpty()) {
+    if (!configService->getConfig().redis.isEnabled
+            || configService->getConfig().redis.password.isEmpty()) {
         return;
     }
     redisSubscriber.auth(configService->getConfig().redis.password.get(), [](const cpp_redis::reply& reply) {
@@ -285,6 +299,9 @@ bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestI
 }
 
 void QueueService::publish(const string& channel, const string& message) {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     logger->debug("[Redis] Publish new message: {} to channel: {}", message, channel);
 
     if (redis->getConnection().is_connected()) {
@@ -296,6 +313,9 @@ void QueueService::publish(const string& channel, const string& message) {
 }
 
 void QueueService::pubSubPublish(const string& channel, const string& message) {
+    if (!configService->getConfig().redis.isEnabled) {
+        return;
+    }
     logger->debug("[Redis] Publish pub/sub new message: {} to channel: {}", message, channel);
 
     if (redis->getConnection().is_connected()) {

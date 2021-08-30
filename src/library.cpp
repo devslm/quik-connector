@@ -3,10 +3,7 @@
 //
 
 #include "library.h"
-
 #include <iostream>
-
-static Logger* loggerWrapper;
 
 shared_ptr<spdlog::logger> logger;
 Quik* quik;
@@ -14,15 +11,20 @@ ConfigService *configService;
 Redis* redis;
 Db* db;
 
+static Logger* loggerWrapper;
 static ConfigDto config;
-static volatile bool isQuikStarted = false;
+static thread userRobotThread;
+static volatile bool isQuikStarted;
 
 static void printQuikDisabledCallbacks();
 static void printDbDisabledOptions();
+static void printRedisDisabledOptions();
 
 static int onStop(lua_State *luaState) {
     isQuikStarted = false;
     int returnCode = quik->onStop(luaState);
+
+    userRobotThread.join();
 
     delete quik;
     delete db;
@@ -89,6 +91,7 @@ static void initServices(lua_State *luaState) {
 
     printQuikDisabledCallbacks();
     printDbDisabledOptions();
+    printRedisDisabledOptions();
 }
 
 static void printQuikDisabledCallbacks() {
@@ -115,6 +118,12 @@ static void printDbDisabledOptions() {
     }
 }
 
+static void printRedisDisabledOptions() {
+    if (!configService->getConfig().redis.isEnabled) {
+        logger->warn("Redis disabled - no events will send to queue");
+    }
+}
+
 static int onStart(lua_State *luaState) {
     Option<string> scriptPath = luaGetScriptPath(luaState);
 
@@ -127,6 +136,10 @@ static int onStart(lua_State *luaState) {
     initServices(luaState);
 
     isQuikStarted = true;
+    userRobotThread = thread([luaState]() {
+        RobotService robotService(quik);
+        robotService.run(luaState);
+    });
 
     while (quik->isRunning()) {
         quik->gcCollect(luaState);
