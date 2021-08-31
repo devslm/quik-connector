@@ -13,6 +13,8 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
         logger->error("Could not get table for order data! Current stack value type is: <<{}>> but required table!",
              luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
 
@@ -214,6 +216,8 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     if (!lua_istable(luaState, -1)) {
         logger->error("Could not get table for stop order data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
+
+        lua_pop(luaState, 1);
 
         return false;
     }

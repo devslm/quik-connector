@@ -9,6 +9,8 @@ bool toFutureLimitDto(lua_State *luaState, FutureLimitDto* futureLimit) {
         logger->error("Could not get table for futures limit data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
 

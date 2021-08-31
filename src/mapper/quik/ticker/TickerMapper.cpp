@@ -8,6 +8,9 @@ bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
     if (!lua_istable(luaState, -1)) {
         logger->error("Could not get table for ticker data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
+
+        lua_pop(luaState, 1);
+
         return false;
     }
 

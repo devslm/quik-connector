@@ -9,6 +9,8 @@ bool toDepoLimitDto(lua_State *luaState, DepoLimitDto* depoLimit) {
         logger->error("Could not get table for depo limit data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
 
@@ -54,6 +56,8 @@ bool toDepoLimitDto(lua_State *luaState, DepoLimitDto* depoLimit) {
     if (!luaGetTableIntegerField(luaState, "limit_kind", &depoLimit->limitKind)) {
         return false;
     }
+    lua_pop(luaState, 1);
+
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;

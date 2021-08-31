@@ -9,6 +9,8 @@ bool toMoneyLimitDto(lua_State *luaState, MoneyLimitDto* moneyLimit) {
         logger->error("Could not get table for money limit data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
 
@@ -33,6 +35,8 @@ bool toMoneyLimitDto(lua_State *luaState, MoneyLimitDto* moneyLimit) {
     if (!luaGetTableNumberField(luaState, "money_limit_available", &moneyLimit->moneyLimitAvailable)) {
         return false;
     }
+    lua_pop(luaState, 1);
+
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;

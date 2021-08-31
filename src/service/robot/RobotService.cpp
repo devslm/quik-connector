@@ -19,13 +19,6 @@ void RobotService::run(lua_State* luaState) {
 
     runQuikConnectionStatusMonitor(luaState);
 
-    string classCode = "SPBFUT";
-    string ticker = "RIU1";
-    Interval interval = Interval::INTERVAL_M5;
-
-    for (int i = 0; i < 15000; ++i) {
-        quik->getServerTime(luaState);
-    }
     logger->info("[Robot] Finished main thread");
 }
 

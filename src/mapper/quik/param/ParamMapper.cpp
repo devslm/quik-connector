@@ -11,6 +11,8 @@ bool toParamDto(lua_State *luaState, ParamDto *param) {
         logger->error("Could not get table for param ex data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
     string paramType;

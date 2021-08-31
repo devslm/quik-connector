@@ -13,6 +13,8 @@ bool toTransactionReplyDto(lua_State *luaState, TransactionReplyDto *transaction
         logger->error("Could not get table for transaction reply data! Current stack value type is: <<{}>> but required table!",
             luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
 

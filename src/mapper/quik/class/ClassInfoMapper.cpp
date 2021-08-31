@@ -8,6 +8,8 @@ bool toClassInfoDto(lua_State *luaState, ClassInfoDto *classInfo) {
     if (!lua_istable(luaState, -1)) {
         logger->error("Could not get table for class info data! Current stack value type is: <<{}>> but required table!", luaGetType(luaState, -1));
 
+        lua_pop(luaState, 1);
+
         return false;
     }
     bool isSuccess = true;
@@ -31,6 +33,8 @@ bool toClassInfoDto(lua_State *luaState, ClassInfoDto *classInfo) {
     if (!luaGetTableNumberField(luaState, "nsecs", &classInfo->nsecs)) {
         isSuccess = false;
     }
+    lua_pop(luaState, 1);
+
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return isSuccess;

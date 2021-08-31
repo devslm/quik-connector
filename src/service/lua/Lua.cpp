@@ -230,7 +230,10 @@ bool luaGetTableNumberField(lua_State *L, const char *key, double *buffer) {
 
         return false;
     }
-    lua_getfield(L, fieldIndexInStack, key);
+
+    if (!luaGetField(L, fieldIndexInStack, key)) {
+        return false;
+    }
 
     if (!lua_isnumber(L, fieldIndexInStack)) {
         logger->error("Could not get table number field with key: {} from table! Current stack value type is: <<{}>> but required number!",
@@ -260,7 +263,10 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer) {
 
         return false;
     }
-    lua_getfield(L, fieldIndexInStack, key);
+
+    if (!luaGetField(L, fieldIndexInStack, key)) {
+        return false;
+    }
 
     if (!lua_isinteger(L, fieldIndexInStack)) {
         logger->error("Could not get table integer field with key: {} from table! Current stack value type is: <<{}>> but required integer!",
@@ -288,9 +294,11 @@ bool luaGetTableStringField(lua_State *L, const char *key, string *buffer) {
 
         return false;
     }
-    lua_getfield(L, fieldIndexInStack, key);
 
-    return luaGetString(L, buffer);
+    if (luaGetField(L, fieldIndexInStack, key)) {
+        return luaGetString(L, buffer);
+    }
+    return false;
 }
 
 bool luaGetString(lua_State *L, string *buffer) {
