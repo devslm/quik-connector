@@ -9,6 +9,7 @@
 #include "yaml-cpp/yaml.h"
 #include "../../dto/config/Config.h"
 #include "../../dto/option/Option.h"
+#include "../utils/string/StringUtils.h"
 
 using namespace std;
 

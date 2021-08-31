@@ -353,7 +353,9 @@ bool toStopOrderDto(lua_State *luaState, Quik* quik, StopOrderDto* stopOrder) {
     stopOrder->name = ticker.shortName;
     stopOrder->lotSize = ticker.lotSize;
 
-    lua_pop(luaState, 2);
+    lua_pop(luaState, 1);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }

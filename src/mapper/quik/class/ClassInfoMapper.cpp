@@ -31,6 +31,8 @@ bool toClassInfoDto(lua_State *luaState, ClassInfoDto *classInfo) {
     if (!luaGetTableNumberField(luaState, "nsecs", &classInfo->nsecs)) {
         isSuccess = false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return isSuccess;
 }
 

@@ -9,5 +9,6 @@
 #include "service/quik/Quik.h"
 #include "service/config/ConfigService.h"
 #include "service/robot/RobotService.h"
+#include "component/quik/debug/DebugQuikFunctions.h"
 
 #endif //QUIK_CONNECTOR_LIBRARY_H

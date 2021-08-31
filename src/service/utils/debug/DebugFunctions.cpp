@@ -9,7 +9,7 @@ const int AS_DECIMAL = 10;
 void debugLuaFunctionArgsToString(FunctionArgDto *functionArgs, int functionNumArgs, char *resultBuffer, int bufferSize) {
     memset(resultBuffer, 0, bufferSize);
 
-    if (functionArgs == NULL) {
+    if (functionArgs == nullptr) {
         strcpy(resultBuffer, "NULL");
         return;
     }

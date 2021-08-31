@@ -13,9 +13,11 @@ shared_ptr<spdlog::logger> Logger::init(const ConfigDto& config) {
         config.log.fileMaxSize * 1024 * 1024,
         config.log.maxFiles
     );
-    logger->flush_on(
-        getLogLevelByType(config.log.level)
-    );
+    auto logLevel = getLogLevelByType(config.log.level);
+
+    logger->set_level(logLevel);
+    logger->flush_on(logLevel);
+
     spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%-7l] [%-5t]  %v");
 
     return logger;

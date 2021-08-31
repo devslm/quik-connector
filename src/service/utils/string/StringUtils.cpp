@@ -86,3 +86,7 @@ static string stringRepeat(const string& value, int numRepeat) {
     }
     return resultString;
 }
+
+string stringTrim(string& value) {
+    return value.erase(value.find_last_not_of("\t\n\v\f\r ") + 1);
+}

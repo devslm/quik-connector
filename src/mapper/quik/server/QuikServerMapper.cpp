@@ -12,6 +12,8 @@ bool toQuikServerConnectionStatusDto(lua_State *luaState, QuikConnectionStatusDt
     }
     quikConnectionStatus->isConnected = (isConnected > 0.0 ? true : false);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return true;
 }
 
@@ -30,6 +32,8 @@ json toQuikServerConnectionStatusJson(Option<QuikConnectionStatusDto> *quikConne
 
 bool toQuikUserInfoDto(lua_State *luaState, QuikUserInfoDto *quikUserInfo) {
     bool isSuccess = luaGetString(luaState, &quikUserInfo->name);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return isSuccess;
 }

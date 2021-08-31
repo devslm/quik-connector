@@ -58,7 +58,7 @@ int Quik::onStop(lua_State *luaState) {
 
     logger->info(logMessage);
 
-    message(luaState, logMessage);
+    message(luaState, logMessage, Quik::MessageIconType::WARNING);
 
     return 0;
 }
@@ -212,16 +212,25 @@ void Quik::gcCollect(lua_State *luaState) {
     luaGcCollect(luaState);
 }
 
-void Quik::message(lua_State *luaState, string& text) {
+bool Quik::message(lua_State *luaState, string& text, Quik::MessageIconType iconType) {
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
-    FunctionArgDto args[] = {{text}};
+    FunctionArgDto args[] = {{text}, {iconType}};
 
-    if (!luaCallFunction(luaState, MESSAGE_FUNCTION_NAME, 1, 0, args)) {
+    bool isSuccessDisplayed = false;
+
+    if (!luaCallFunction(luaState, MESSAGE_FUNCTION_NAME, 2, 1, args)) {
         logger->error("Could not call QUIK {} function!", MESSAGE_FUNCTION_NAME);
     } else {
-        lua_pop(luaState, 1);
+        double result = 0.0;
+
+        if (luaGetNumber(luaState, &result) && result >= 1.0) {
+            isSuccessDisplayed = true;
+        }
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
+    return isSuccessDisplayed;
 }
 
 Option<string> Quik::getWorkingFolder(lua_State *luaState) {
@@ -321,6 +330,8 @@ Option<DepoLimitDto> Quik::getDepoLimit(lua_State *luaState,
 
     bool isSuccess = toDepoLimitDto(luaState, &depoLimit);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     if (isSuccess) {
         return {depoLimit};
     }
@@ -376,6 +387,7 @@ void Quik::getTableValues(lua_State *luaState, const string& tableName, function
         }
         callback(clientCode);
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 }
 
 set<string> Quik::getClassesList(lua_State *luaState) {
@@ -394,6 +406,8 @@ set<string> Quik::getClassesList(lua_State *luaState) {
     if (isSuccess) {
         classes = stringSplitByDelimeter(classesStr, ',');
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return classes;
 }
 
@@ -408,6 +422,8 @@ Option<ClassInfoDto> Quik::getClassInfo(lua_State *luaState, string& className) 
     }
     ClassInfoDto classInfo;
     bool isSuccess = toClassInfoDto(luaState, &classInfo);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     if (isSuccess) {
         return {classInfo};
@@ -436,6 +452,8 @@ set<string> Quik::getClassSecurities(lua_State *luaState, string& className) {
     } else {
         logger->error("Could not get class securities for class code: {}!", className);
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return classSecurities;
 }
 
@@ -455,6 +473,8 @@ Option<MoneyLimitDto> Quik::getMoney(lua_State *luaState,
     MoneyLimitDto moneyLimit;
 
     bool isSuccess = toMoneyLimitDto(luaState, &moneyLimit);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     if (isSuccess) {
         return {moneyLimit};
@@ -481,6 +501,8 @@ Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
     FutureLimitDto futureLimit;
 
     bool isSuccess = toFutureLimitDto(luaState, &futureLimit);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     if (isSuccess) {
         return {futureLimit};
@@ -546,6 +568,8 @@ Option<TickerQuoteDto> Quik::getTickerQuotes(lua_State *luaState, string& classC
 
     bool isSuccess = toTickerQuoteDto(luaState, &tickerQuote);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     if (isSuccess) {
         return {tickerQuote};
     }
@@ -595,6 +619,8 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
 
         existsTrades.push_back(trade);
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return existsTrades;
 }
 
@@ -629,6 +655,8 @@ list<TickerDto> Quik::getTickersByClassCode(lua_State *luaState, string& classCo
     }
     logger->info("Found: {} tickers with class code: {}", tickers.size(), classCode);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return tickers;
 }
 
@@ -644,6 +672,8 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, st
     TickerDto ticker;
 
     bool isSuccess = toTickerDto(luaState, &ticker);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     if (isSuccess) {
         return {ticker};
@@ -679,6 +709,8 @@ Option<double> Quik::getTickerPriceStepCost(lua_State *luaState, const string& c
     }
     logger->error("Could not get ticker price step cost for class code: {} and ticker: {}!", classCode, ticker);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return {};
 }
 
@@ -700,6 +732,8 @@ Option<double> Quik::getTickerPriceStep(lua_State *luaState, const string& class
     }
     logger->error("Could not get ticker price step for class code: {} and ticker: {}!", classCode, ticker);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return {};
 }
 
@@ -718,6 +752,8 @@ Option<ParamDto> Quik::getParamEx(lua_State *luaState,
     ParamDto param;
 
     auto isSuccess = toParamDto(luaState, &param);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     if (isSuccess) {
         return {param};

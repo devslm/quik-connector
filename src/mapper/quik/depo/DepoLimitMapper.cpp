@@ -54,6 +54,8 @@ bool toDepoLimitDto(lua_State *luaState, DepoLimitDto* depoLimit) {
     if (!luaGetTableIntegerField(luaState, "limit_kind", &depoLimit->limitKind)) {
         return false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return true;
 }
 

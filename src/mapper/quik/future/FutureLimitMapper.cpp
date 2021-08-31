@@ -62,6 +62,8 @@ bool toFutureLimitDto(lua_State *luaState, FutureLimitDto* futureLimit) {
     }
     lua_pop(luaState, 1);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return true;
 }
 

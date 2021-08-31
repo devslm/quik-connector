@@ -17,4 +17,6 @@ string stringRepeatWithoutFirstNChars(string value, int numRepeat, int removeFir
 
 string stringRepeatWithoutLastNChars(string value, int numRepeat, int removeLastNChars);
 
+string stringTrim(string& value);
+
 #endif //QUIK_CONNECTOR_STRINGUTILS_H

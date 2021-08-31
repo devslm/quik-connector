@@ -57,7 +57,7 @@ void QueueService::startCheckResponsesThread() {
         this_thread::sleep_for(chrono::milliseconds(1));
 
         if (responseQueue.empty()) {
-            logger->debug("[Redis] Response queue is empty");
+            logger->trace("[Redis] Response queue is empty");
             continue;
         }
         CommandResponseDto commandResponse = responseQueue.front();

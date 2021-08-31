@@ -33,6 +33,8 @@ bool toMoneyLimitDto(lua_State *luaState, MoneyLimitDto* moneyLimit) {
     if (!luaGetTableNumberField(luaState, "money_limit_available", &moneyLimit->moneyLimitAvailable)) {
         return false;
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return true;
 }
 

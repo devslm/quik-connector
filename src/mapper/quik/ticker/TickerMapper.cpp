@@ -51,6 +51,8 @@ bool toTickerDto(lua_State *luaState, TickerDto *ticker) {
     }
     lua_pop(luaState, 1);
 
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return true;
 }
 

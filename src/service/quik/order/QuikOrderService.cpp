@@ -137,6 +137,8 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
             logger->debug("Skipping add order: {} data to list because it status: {}", order.orderNum, order.status);
         }
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return orders;
 }
 
@@ -177,6 +179,8 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
         }
         stopOrders.push_back(stopOrder);
     }
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
     return stopOrders;
 }
 

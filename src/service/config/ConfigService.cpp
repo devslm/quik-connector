@@ -54,8 +54,14 @@ Option<string> ConfigService::loadLogConfig() {
         return {"Log max files required"};
     }
     config.log.level = configYaml["log"]["level"].as<string>();
+    config.log.level = stringTrim(config.log.level);
+
     config.log.path = config.scriptPath + "\\" + configYaml["log"]["path"].as<string>();
+    config.log.path = stringTrim(config.log.path);
+
     config.log.name = configYaml["log"]["name"].as<string>();
+    config.log.name = stringTrim(config.log.name);
+
     config.log.fileMaxSize = configYaml["log"]["max"]["size"].as<int>();
     config.log.maxFiles = configYaml["log"]["max"]["files"].as<int>();
 
@@ -75,11 +81,15 @@ Option<string> ConfigService::loadRedisConfig() {
         return {"Redis password required"};
     }
     config.redis.isEnabled = configYaml["redis"]["enabled"].as<bool>();
+
     config.redis.host = configYaml["redis"]["host"].as<string>();
+    config.redis.host = stringTrim(config.redis.host);
+
     config.redis.port = configYaml["redis"]["port"].as<int>();
 
     if (!configYaml["redis"]["password"].as<string>().empty()) {
-        config.redis.password = {configYaml["redis"]["password"].as<string>()};
+        string redisPassword = configYaml["redis"]["password"].as<string>();
+        config.redis.password = {stringTrim(redisPassword)};
     } else {
         config.redis.password = {};
     }
@@ -97,8 +107,13 @@ Option<string> ConfigService::loadDbConfig() {
         return {"Db migrations path required"};
     }
     config.db.path = configYaml["db"]["path"].as<string>();
+    config.db.path = stringTrim(config.db.path);
+
     config.db.name = configYaml["db"]["name"].as<string>();
+    config.db.name = stringTrim(config.db.name);
+
     config.db.migrationsPath = configYaml["db"]["migrations"]["path"].as<string>();
+    config.db.migrationsPath = stringTrim(config.db.migrationsPath);
 
     return {};
 }
@@ -148,6 +163,8 @@ Option<string> ConfigService::loadQuikConfig() {
         return {"News monitor enabled required"};
     }
     config.quik.news.fileName = configYaml["quik"]["news"]["file"]["name"].as<string>();
+    config.quik.news.fileName = stringTrim(config.quik.news.fileName);
+
     config.quik.news.monitorUpdatesEnabled = configYaml["quik"]["news"]["monitor"]["enabled"].as<bool>();
     
     return {};

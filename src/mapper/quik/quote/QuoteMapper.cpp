@@ -4,6 +4,7 @@
 
 #include "QuoteMapper.h"
 
+// TODO Refactoring required
 bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
     if (!lua_istable(luaState, -1)) {
         logger->error("Could not get table for ticker quotes data! Current stack value type is: <<{}>> but required table!",
@@ -85,6 +86,8 @@ bool toTickerQuoteDto(lua_State *luaState, TickerQuoteDto *tickerQuote) {
         tickerQuote->offers.push_back(tickerPrice);
     }
     lua_pop(luaState, 2);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
 
     return true;
 }

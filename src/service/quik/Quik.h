@@ -76,6 +76,12 @@ public:
 
     ~Quik() = default;
 
+    enum MessageIconType {
+        INFO = 1,
+        WARNING = 2,
+        FATAL_ERROR = 3 // Can't use simple ERROR name because it's system macros
+    };
+
     bool isRunning() const;
 
     int onStart(lua_State *luaState);
@@ -110,7 +116,7 @@ public:
 
     int onTransReply(lua_State *luaState);
 
-    void message(lua_State *luaState, string& text);
+    bool message(lua_State *luaState, string& text, Quik::MessageIconType iconType = Quik::MessageIconType::INFO);
 
     Option<string> getWorkingFolder(lua_State *luaState);
 

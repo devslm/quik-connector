@@ -37,6 +37,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build-dependencies.cmake)
 
 # Add definition QUIK_LUA_VERSION for version.h file
 add_definitions(-DQUIK_LUA_VERSION="${LUA_VERSION}")
+# Add definition INCLUDE_QUIK_FUNCTIONS_TEST_CALL for library.cpp file to call test functions
+option(INCLUDE_QUIK_FUNCTIONS_TEST_CALL "Include call of test functions to validate proper QUIK functions work" OFF)
+
+if (INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
+    add_definitions(-DINCLUDE_QUIK_FUNCTIONS_TEST_CALL="${INCLUDE_QUIK_FUNCTIONS_TEST_CALL}")
+endif(INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
 
 file(GLOB_RECURSE INCLUDE_FILES "src/*.h")
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
