@@ -22,6 +22,14 @@ if (CLION_IDE)
     message(STATUS "QUIK connector DLL path (by Clion IDE): ${QUIK_CONNECTOR_DLL_PATH}")
 endif(CLION_IDE)
 
+if(QUIK_BUILD_TOOLS)
+    add_custom_command(
+        TARGET quik-flags-debug
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${QUIK_CONNECTOR_DLL_PATH}/quik-flags-debug.exe ${QUIK_CONNECTOR_OUTPUT_DIR}/bin/quik-flags-debug.exe
+    )
+endif(QUIK_BUILD_TOOLS)
+
 add_custom_command(
     TARGET quik-connector
     POST_BUILD

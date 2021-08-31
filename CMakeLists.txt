@@ -43,7 +43,7 @@ file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
 # Remove library.h and .cpp, quik-tools.cpp files to define them in separate variables
 list(REMOVE_ITEM INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/library.h")
-list(REMOVE_ITEM SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/library.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/quik-tools.cpp")
+list(REMOVE_ITEM SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/library.cpp" "apps/tools/quik-flags-debug.cpp")
 
 set(LIBRARY_INC_FILE "src/library.h")
 set(LIBRARY_SRC_FILE "src/library.cpp")
@@ -67,16 +67,20 @@ set(
 
 target_link_libraries(quik-connector ${LINK_LIBRARIES})
 
-option(QUIK_BUILD_TOOLS "Build quik tools executable files" OFF)
+option(QUIK_BUILD_TOOLS "Build QUIK tools binaries files" OFF)
 
 if(QUIK_BUILD_TOOLS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
+
     add_library(quik-connector-static STATIC ${INCLUDE_FILES} ${SRC_FILES} ${LIBRARY_INC_FILE} ${LIBRARY_SRC_FILE} ${VERSION_FILE})
 
     target_link_libraries(quik-connector-static ${LINK_LIBRARIES})
 
-    add_executable(quik-tools "src/quik-tools.cpp")
+    add_executable(quik-flags-debug "apps/tools/quik-flags-debug.cpp")
 
-    target_link_libraries(quik-tools PUBLIC quik-connector-static)
+    target_link_libraries(quik-flags-debug PUBLIC quik-connector-static)
 endif(QUIK_BUILD_TOOLS)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/create-output-directory-tree.cmake)

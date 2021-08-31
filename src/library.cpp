@@ -119,7 +119,7 @@ static void printDbDisabledOptions() {
 }
 
 static void printRedisDisabledOptions() {
-    if (!configService->getConfig().redis.isEnabled) {
+    if (!config.redis.isEnabled) {
         logger->warn("Redis disabled - no events will send to queue");
     }
 }
