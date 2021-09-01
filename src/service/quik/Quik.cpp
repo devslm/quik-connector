@@ -56,6 +56,7 @@ int Quik::onStop(lua_State *luaState) {
     checkAllTradesThread.join();
     checkQuotesThread.join();
     checkNewOrdersThread.join();
+    pushServerInfoThread.join();
 
     logger->info(logMessage);
 
