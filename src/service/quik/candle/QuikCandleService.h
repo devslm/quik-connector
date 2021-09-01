@@ -65,6 +65,7 @@ private:
 
     thread checkCandlesThread;
     unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
+    mutex candlesSubscriptionsLock;
     recursive_mutex *mutexLock;
     atomic_bool isRunning;
     QueueService *queueService;

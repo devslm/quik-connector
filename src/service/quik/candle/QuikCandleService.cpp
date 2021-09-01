@@ -35,7 +35,7 @@ void QuikCandleService::reloadSavedSubscriptions() {
         auto subscriptions = loadSubscriptionsFromCache();
 
         if (subscriptions.empty()) {
-            logger->info("Skipping reload candles subscriptions from cache because no subscriptions....");
+            logger->info("Skipping reload candles subscriptions from cache because no subscriptions found....");
             return;
         }
         logger->info("Found: {} candles subscriptions in cache", subscriptions.size());
@@ -61,6 +61,8 @@ void QuikCandleService::startCheckCandlesThread() {
 
     while (isRunning) {
         this_thread::sleep_for(chrono::milliseconds(2));
+
+        /*candlesSubscriptionsLock.lock();
 
         for (const auto& keyValue : candlesSubscriptions) {
             auto subscriptionCacheKey = keyValue.first;
@@ -100,6 +102,7 @@ void QuikCandleService::startCheckCandlesThread() {
                 );
             }
         }
+        candlesSubscriptionsLock.unlock();*/
     }
 }
 
@@ -198,7 +201,11 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState,
     if (Interval::INTERVAL_TICK != interval) {
         auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
 
+        candlesSubscriptionsLock.lock();
+
         candlesSubscriptions[candlesSubscriptionsKey] = candleSubscription;
+
+        candlesSubscriptionsLock.unlock();
 
         saveCandleSubscriptionToCache(classCode, ticker, interval);
     }
@@ -246,7 +253,9 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
     auto quikSubscription = candlesSubscriptions.find(candlesSubscriptionsKey)->second;
     // Remove subscription data from local cache from map before unsubscribe in QUIK
     // so the check candle updates thread will skip this subscription and will not crash
+    candlesSubscriptionsLock.lock();
     candlesSubscriptions.erase(candlesSubscriptionsKey);
+    candlesSubscriptionsLock.unlock();
     // Give check updates thread some time to complete it work
     this_thread::sleep_for(chrono::milliseconds(100));
 

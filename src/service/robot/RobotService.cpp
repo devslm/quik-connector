@@ -43,7 +43,7 @@ void RobotService::run(lua_State* luaState) {
 
 void RobotService::runQuikConnectionStatusMonitor(lua_State* luaState) {
     robotInternalThread = thread([this, luaState]() {
-        int totalLoops = 100;
+        int totalLoops = 1200;
 
         while (quik->isRunning()) {
             // Avoid sleep for a long time because we can't exit properly due to QUIK timeout

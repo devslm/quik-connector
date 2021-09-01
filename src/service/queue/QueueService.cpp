@@ -224,7 +224,7 @@ void QueueService::subscribeToCommandQueue() {
         if (!isSuccess || commandName.empty()) {
             logger->error("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
-            logger->debug("[Redis] Send response for command: {} (response queue size: {})",
+            logger->info("[Redis] Send response for command: {} (response queue size: {})",
                  commandName, responseQueue.size());
 
             CommandResponseDto commandResponse(commandName, commandId, commandJsonData);
