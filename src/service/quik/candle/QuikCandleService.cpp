@@ -60,7 +60,7 @@ void QuikCandleService::startCheckCandlesThread() {
     ordered_map<string, CandleDto> previousCandles;
 
     while (isRunning) {
-        this_thread::sleep_for(chrono::milliseconds(1));
+        this_thread::sleep_for(chrono::milliseconds(2));
 
         for (const auto& keyValue : candlesSubscriptions) {
             auto subscriptionCacheKey = keyValue.first;
@@ -244,6 +244,11 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
 
     auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
     auto quikSubscription = candlesSubscriptions.find(candlesSubscriptionsKey)->second;
+    // Remove subscription data from local cache from map before unsubscribe in QUIK
+    // so the check candle updates thread will skip this subscription and will not crash
+    candlesSubscriptions.erase(candlesSubscriptionsKey);
+    // Give check updates thread some time to complete it work
+    this_thread::sleep_for(chrono::milliseconds(100));
 
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
@@ -278,8 +283,6 @@ bool QuikCandleService::unsubscribeFromCandles(lua_State *luaState, string& clas
 
     unsubscribeFromTickerQuotes(luaState, classCode, ticker);
 
-    // Remove subscription data from local cache from map
-    candlesSubscriptions.erase(candlesSubscriptionsKey);
     // Remove subscription data from REDIS
     vector<string> removeSubscriptions = {
         toSubscriptionCacheValue(classCode, ticker, interval)
