@@ -210,6 +210,7 @@ private:
     thread checkAllTradesThread;
     thread checkQuotesThread;
     thread checkNewOrdersThread;
+    thread pushServerInfoThread;
     unordered_map<string, string> changedQuotes;
     list<OrderDto> newOrders;
     QuikCandleService *quikCandleService;
@@ -222,6 +223,8 @@ private:
     void startCheckQuotesThread();
 
     void startCheckNewOrdersThread();
+
+    void startPushServerInfoThread();
 };
 
 #endif //QUIK_CONNECTOR_QUIK_H

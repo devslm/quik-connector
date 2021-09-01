@@ -32,6 +32,7 @@ int Quik::onStart(lua_State *luaState) {
     this->checkAllTradesThread = thread([this] {startCheckAllTradesThread();});
     this->checkQuotesThread = thread([this] {startCheckQuotesThread();});
     this->checkNewOrdersThread = thread([this] {startCheckNewOrdersThread();});
+    this->pushServerInfoThread = thread([this] {startPushServerInfoThread();});
     this->isConnectorRunning = true;
 
     logger->info(logMessage);
@@ -205,6 +206,23 @@ void Quik::startCheckNewOrdersThread() {
         quikOrderService->onNewOrder(order);
 
         changedOrderListLock.unlock();
+    }
+}
+
+void Quik::startPushServerInfoThread() {
+    while (isConnectorRunning) {
+        this_thread::sleep_for(chrono::seconds(1));
+
+        Option<string> ping = getAvgPingDuration(luaGetState());
+        Option<string> serverTime = getServerTime(luaGetState());
+        Option<QuikConnectionStatusDto> connectionStatus = getServerConnectionStatus(luaGetState());
+
+        json jsonObject;
+        jsonObject["ping"] = (ping.isPresent() ? ping.get() : nullptr);
+        jsonObject["serverTime"] = (serverTime.isPresent() ? serverTime.get() : nullptr);
+        jsonObject["isConnected"] = (connectionStatus.isPresent() ? connectionStatus.get().isConnected : nullptr);
+
+        queueService->pubSubPublish(QueueService::QUIK_SERVER_INFO_TOPIC, jsonObject.dump());
     }
 }
 

@@ -47,6 +47,7 @@ public:
     static const string QUIK_LAST_CANDLE_TOPIC;
     static const string QUIK_ALL_TRADES_TOPIC;
     static const string QUIK_CANDLE_CHANGE_TOPIC;
+    static const string QUIK_SERVER_INFO_TOPIC;
 
     static const string QUIK_ORDERS_QUEUE;
 
