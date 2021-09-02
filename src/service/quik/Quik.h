@@ -175,8 +175,6 @@ public:
 
     Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
 
-    Option<CandleDto> getLastCandle(lua_State *luaState, CandlesRequestDto& candlesRequest);
-
     Option<CandleDto> getCandles(lua_State *luaState, CandlesRequestDto& candlesRequest);
 
     list<TradeDto> getTrades(lua_State *luaState);

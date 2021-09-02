@@ -26,7 +26,7 @@ class Redis;
 
 class QuikOrderService {
 public:
-    QuikOrderService(Quik *quik);
+    explicit QuikOrderService(Quik *quik);
 
     ~QuikOrderService() = default;
 
@@ -41,8 +41,8 @@ public:
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
 private:
-    recursive_mutex *mutexLock;
     Quik *quik;
+    recursive_mutex *mutexLock;
 
     bool isOrderExistsInCache(const OrderDto& order);
 

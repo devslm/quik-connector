@@ -22,7 +22,6 @@ class Quik;
 class Redis;
 
 extern Redis* redis;
-extern shared_ptr<spdlog::logger> logger;
 
 typedef struct CommandResponseDto {
     CommandResponseDto(string command, string commandId, json commandJsonData) {
@@ -44,7 +43,6 @@ public:
     static const string QUIK_USER_TOPIC;
     static const string QUIK_STOP_ORDERS_TOPIC;
     static const string QUIK_CANDLES_TOPIC;
-    static const string QUIK_LAST_CANDLE_TOPIC;
     static const string QUIK_ALL_TRADES_TOPIC;
     static const string QUIK_CANDLE_CHANGE_TOPIC;
     static const string QUIK_SERVER_INFO_TOPIC;
@@ -54,7 +52,6 @@ public:
     static const string QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND;
     static const string QUIK_GET_USER_INFO_COMMAND;
     static const string QUIK_GET_CANDLES_COMMAND;
-    static const string QUIK_GET_LAST_CANDLE_COMMAND;
     static const string QUIK_GET_ORDERS_COMMAND;
     static const string QUIK_GET_NEW_ORDERS_COMMAND;
     static const string QUIK_GET_STOP_ORDERS_COMMAND;
@@ -79,7 +76,7 @@ private:
     int32_t redisReconnectAttempts;
     cpp_redis::subscriber redisSubscriber;
     thread commandResponseHandlerThread;
-    queue<CommandResponseDto> responseQueue;
+    deque<CommandResponseDto> responseQueue;
     bool isRunning;
 
     void authenticate();

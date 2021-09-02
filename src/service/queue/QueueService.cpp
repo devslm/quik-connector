@@ -11,7 +11,6 @@ const string QueueService::QUIK_TICKER_QUOTES_TOPIC = "topic:quik:ticker:quotes"
 const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
 const string QueueService::QUIK_STOP_ORDERS_TOPIC = "topic:quik:stop:orders";
 const string QueueService::QUIK_CANDLES_TOPIC = "topic:quik:candles";
-const string QueueService::QUIK_LAST_CANDLE_TOPIC = "topic:quik:candles:last";
 const string QueueService::QUIK_ALL_TRADES_TOPIC = "topic:quik:trades:all";
 const string QueueService::QUIK_CANDLE_CHANGE_TOPIC = "topic:quik:candle:change";
 const string QueueService::QUIK_SERVER_INFO_TOPIC = "topic:quik:server:info";
@@ -21,7 +20,6 @@ const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
 const string QueueService::QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
 const string QueueService::QUIK_GET_USER_INFO_COMMAND = "GET_USER";
 const string QueueService::QUIK_GET_CANDLES_COMMAND = "GET_CANDLES";
-const string QueueService::QUIK_GET_LAST_CANDLE_COMMAND = "GET_LAST_CANDLE";
 const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
 const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
@@ -55,14 +53,14 @@ QueueService::~QueueService() {
 
 void QueueService::startCheckResponsesThread() {
     while (isRunning) {
-        this_thread::sleep_for(chrono::milliseconds(1));
+        this_thread::sleep_for(chrono::milliseconds(5));
 
         if (responseQueue.empty()) {
             logger->trace("[Redis] Response queue is empty");
             continue;
         }
         CommandResponseDto commandResponse = responseQueue.front();
-        responseQueue.pop();
+        responseQueue.pop_front();
 
         const string requestId = commandResponse.commandId;
 
@@ -118,20 +116,6 @@ void QueueService::startCheckResponsesThread() {
                         pubSubPublish(QUIK_CANDLES_TOPIC, candlesJson.dump());
                     }
                 }
-            } else if (QUIK_GET_LAST_CANDLE_COMMAND == commandResponse.command) {
-                auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
-
-                if (candlesRequestOption.isPresent()) {
-                    auto candlesRequest = candlesRequestOption.get();
-                    auto lastCandle = quik->getLastCandle(luaGetState(), candlesRequest);
-                    auto candleJson = toCandleJson(lastCandle);
-
-                    if (true) {
-                        addRequestIdToResponse(candleJson, requestId);
-
-                        pubSubPublish(QUIK_LAST_CANDLE_TOPIC, candleJson.dump());
-                    }
-                }
             } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandResponse.command) {
                 auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
 
@@ -152,7 +136,7 @@ void QueueService::startCheckResponsesThread() {
                         //Send response to client
                     }
                 } else {
-                    logger->info("Could not handle new request to subscribe candles with data: {} because request data is invalid!",
+                    logger->error("Could not handle new request to subscribe candles with data: {} because request data is invalid!",
                         commandResponse.commandJsonData.dump());
                 }
             } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandResponse.command) {
@@ -175,7 +159,7 @@ void QueueService::startCheckResponsesThread() {
                         //Send response to client
                     }
                 } else {
-                    logger->info("Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
+                    logger->error("Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
                         commandResponse.commandJsonData.dump());
                 }
             }
@@ -224,12 +208,12 @@ void QueueService::subscribeToCommandQueue() {
         if (!isSuccess || commandName.empty()) {
             logger->error("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
-            logger->info("[Redis] Send response for command: {} (response queue size: {})",
+            logger->debug("[Redis] Send response for command: {} (response queue size: {})",
                  commandName, responseQueue.size());
 
             CommandResponseDto commandResponse(commandName, commandId, commandJsonData);
 
-            responseQueue.push(commandResponse);
+            responseQueue.push_back(commandResponse);
         }
     });
     redisSubscriber.commit();

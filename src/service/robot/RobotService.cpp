@@ -54,7 +54,7 @@ void RobotService::runQuikConnectionStatusMonitor(lua_State* luaState) {
             if (totalLoops >= 0) {
                 continue;
             }
-            totalLoops = 20;
+            totalLoops = 1200;
             auto connectionStatus = quik->getServerConnectionStatus(luaState);
 
             if (connectionStatus.isPresent()) {

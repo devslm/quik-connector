@@ -48,8 +48,6 @@ public:
 
     bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    Option<CandleDto> getLastCandle(lua_State *luaState, const CandlesRequestDto& candlesRequest);
-
     Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
 
     Option<int> getCandlesSize(QuikSubscriptionDto *candleSubscription);
@@ -63,22 +61,19 @@ public:
 private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";
 
-    thread checkCandlesThread;
     unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
-    mutex candlesSubscriptionsLock;
     recursive_mutex *mutexLock;
     atomic_bool isRunning;
     QueueService *queueService;
-
-    void startCheckCandlesThread();
-
-    static bool isCandleChanged(const CandleDto& previousCandle, const CandleDto& updatedCandle);
+    thread reloadSubscriptionsThread;
 
     void reloadSavedSubscriptions();
 
     void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);
 
-    vector<cpp_redis::reply> QuikCandleService::loadSubscriptionsFromCache();
+    vector<cpp_redis::reply> loadSubscriptionsFromCache();
+
+    bool addUpdateCallbackToDataSource(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
 
     string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
 };
