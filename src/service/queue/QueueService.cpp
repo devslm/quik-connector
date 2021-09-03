@@ -5,7 +5,6 @@
 #include "QueueService.h"
 
 const string QueueService::QUIK_COMMAND_TOPIC = "topic:quik:commands";
-const string QueueService::QUIK_CONNECTION_STATUS_TOPIC = "topic:quik:connection:status";
 const string QueueService::QUIK_TICKERS_TOPIC = "topic:quik:tickers";
 const string QueueService::QUIK_TICKER_QUOTES_TOPIC = "topic:quik:ticker:quotes";
 const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
@@ -17,7 +16,6 @@ const string QueueService::QUIK_SERVER_INFO_TOPIC = "topic:quik:server:info";
 
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
 
-const string QueueService::QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND = "IS_QUIK_SERVER_CONNECTED";
 const string QueueService::QUIK_GET_USER_INFO_COMMAND = "GET_USER";
 const string QueueService::QUIK_GET_CANDLES_COMMAND = "GET_CANDLES";
 const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
@@ -35,80 +33,77 @@ QueueService::QueueService(Quik *quik, string host, int port) {
     this->isRunning = true;
 
     if (configService->getConfig().redis.isEnabled) {
-        this->commandResponseHandlerThread = thread([this] {startCheckResponsesThread();});
+        this->commandResponseHandlerThread = thread([this] {startCheckRequestsThread();});
+        this->commandPublisherThread = thread([this]() {startCheckResponsesThread();});
     }
 }
 
 QueueService::~QueueService() {
-    if (!configService->getConfig().redis.isEnabled) {
-        return;
-    }
     logger->info("Queue service stopped");
 
     this->isRunning = false;
 
-    redisSubscriber.disconnect();
+    if (!configService->getConfig().redis.isEnabled) {
+        redisSubscriber.disconnect();
+    }
     commandResponseHandlerThread.join();
+    commandPublisherThread.join();
 }
 
-void QueueService::startCheckResponsesThread() {
+void QueueService::startCheckRequestsThread() {
     while (isRunning) {
         this_thread::sleep_for(chrono::milliseconds(5));
 
-        if (responseQueue.empty()) {
-            logger->trace("[Redis] Response queue is empty");
+        if (requestQueue.empty()) {
+            logger->trace("[Redis] Request queue is empty");
             continue;
         }
-        CommandResponseDto commandResponse = responseQueue.front();
-        responseQueue.pop_front();
+        CommandRequestDto commandRequest = requestQueue.back();
+        requestQueue.pop();
 
-        const string requestId = commandResponse.commandId;
+        const string requestId = commandRequest.commandId;
 
         try {
-            if (QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND == commandResponse.command) {
-                auto quikConnectionStatus = quik->getServerConnectionStatus(luaGetState());
-
-                if (quikConnectionStatus.isPresent()) {
-                    pubSubPublish(
-                        QUIK_CONNECTION_STATUS_TOPIC,
-                        toQuikServerConnectionStatusJson(&quikConnectionStatus).dump()
-                    );
-                }
-            } else if (QUIK_GET_USER_INFO_COMMAND == commandResponse.command) {
+            if (QUIK_GET_USER_INFO_COMMAND == commandRequest.command) {
                 auto quikUserInfo = quik->getUserName(luaGetState());
 
                 if (quikUserInfo.isPresent()) {
                     pubSubPublish(QUIK_USER_TOPIC, toQuikUserInfoJson(&quikUserInfo).dump());
                 }
-            } else if (QUIK_GET_ORDERS_COMMAND == commandResponse.command) {
+            } else if (QUIK_GET_ORDERS_COMMAND == commandRequest.command) {
                 auto orders = quik->getOrders(luaGetState());
 
                 publishOrders(orders);
-            } else if (QUIK_GET_STOP_ORDERS_COMMAND == commandResponse.command) {
+            } else if (QUIK_GET_STOP_ORDERS_COMMAND == commandRequest.command) {
                 auto stopOrders = quik->getStopOrders(luaGetState());
 
                 if (!stopOrders.empty()) {
                     pubSubPublish(QUIK_STOP_ORDERS_TOPIC, toStopOrderJson(stopOrders).dump());
                 }
-            } else if (QUIK_GET_NEW_ORDERS_COMMAND == commandResponse.command) {
+            } else if (QUIK_GET_NEW_ORDERS_COMMAND == commandRequest.command) {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
                 publishOrders(newOrders);
-            } else if (QUIK_GET_TICKERS_COMMAND == commandResponse.command) {
-                auto request = toTickersRequestDto(commandResponse.commandJsonData);
+            } else if (QUIK_GET_TICKERS_COMMAND == commandRequest.command) {
+                auto request = toTickersRequestDto(commandRequest.commandJsonData);
                 auto classCode = request.get().classCode;
                 auto tickers = quik->getTickersByClassCode(luaGetState(), classCode);
                 auto tickersJson = toTickerJson(tickers);
 
                 pubSubPublish(QUIK_TICKERS_TOPIC, tickersJson.dump());
-            } else if (QUIK_GET_CANDLES_COMMAND == commandResponse.command) {
-                auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandResponse.commandJsonData);
+            } else if (QUIK_GET_CANDLES_COMMAND == commandRequest.command) {
+                auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandRequest.commandJsonData);
 
                 if (candlesRequestOption.isPresent()) {
                     auto candlesRequest = candlesRequestOption.get();
                     auto candles = quik->getCandles(luaGetState(), candlesRequest);
 
+                    logger->info(">>>>>>>> 1 >>> Send candles size: {} with ticker",
+                        (candles.isPresent() ? candles.get().values.size() : -1), (candles.isPresent() ? candles.get().ticker : "NO"));
+
                     if (candles.isPresent()) {
+                        logger->info(">>>>>>>> 2 >>> Send candles size: {} with ticker: {}", candles.get().values.size(), candles.get().ticker);
+
                         auto candlesJson = toCandleJson(candles);
 
                         addRequestIdToResponse(candlesJson, requestId);
@@ -116,11 +111,11 @@ void QueueService::startCheckResponsesThread() {
                         pubSubPublish(QUIK_CANDLES_TOPIC, candlesJson.dump());
                     }
                 }
-            } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandResponse.command) {
-                auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
+            } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandRequest.command) {
+                auto requestOption = toCandlesSubscribeRequestDto(commandRequest.commandJsonData);
 
                 if (requestOption.isPresent()) {
-                    logger->info("New request to subscribe candles with data: {}", commandResponse.commandJsonData.dump());
+                    logger->info("New request to subscribe candles with data: {}", commandRequest.commandJsonData.dump());
 
                     auto request = requestOption.get();
                     auto isSubscribed = quik->subscribeToCandles(
@@ -137,13 +132,13 @@ void QueueService::startCheckResponsesThread() {
                     }
                 } else {
                     logger->error("Could not handle new request to subscribe candles with data: {} because request data is invalid!",
-                        commandResponse.commandJsonData.dump());
+                        commandRequest.commandJsonData.dump());
                 }
-            } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandResponse.command) {
-                auto requestOption = toCandlesSubscribeRequestDto(commandResponse.commandJsonData);
+            } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandRequest.command) {
+                auto requestOption = toCandlesSubscribeRequestDto(commandRequest.commandJsonData);
 
                 if (requestOption.isPresent()) {
-                    logger->info("New request to unsubscribe candles with data: {}", commandResponse.commandJsonData.dump());
+                    logger->info("New request to unsubscribe candles with data: {}", commandRequest.commandJsonData.dump());
 
                     auto request = requestOption.get();
                     auto isUnsubscribed = quik->unsubscribeFromCandles(
@@ -160,13 +155,40 @@ void QueueService::startCheckResponsesThread() {
                     }
                 } else {
                     logger->error("Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
-                        commandResponse.commandJsonData.dump());
+                        commandRequest.commandJsonData.dump());
                 }
             }
         } catch (const exception& exception) {
             logger->error("Could not send response for command: {} with id: {}! Reason: {}",
-                commandResponse.command, commandResponse.commandId, exception.what());
+                commandRequest.command, commandRequest.commandId, exception.what());
         }
+    }
+}
+void QueueService::startCheckResponsesThread() {
+    while (isRunning) {
+        this_thread::sleep_for(chrono::milliseconds(1));
+
+        if (responseQueue.empty()) {
+            logger->trace("[Redis] Response queue is empty");
+            continue;
+        } else if (!redis->getConnection().is_connected()) {
+            continue;
+        }
+        CommandResponseDto commandResponse = responseQueue.back();
+        responseQueue.pop();
+
+        if (commandResponse.type == QueueResponseType::QUEUE) {
+            logger->debug("[Redis] Publish new message: {} to channel: {}", commandResponse.message, commandResponse.channel);
+
+            vector<string> values = {commandResponse.message};
+
+            redis->getConnection().rpush(commandResponse.channel, values);
+        } else {
+            logger->debug("[Redis] Publish pub/sub new message: {} to channel: {}", commandResponse.message, commandResponse.channel);
+
+            redis->getConnection().publish(commandResponse.channel, commandResponse.message);
+        }
+        redis->getConnection().sync_commit();
     }
 }
 
@@ -192,7 +214,6 @@ static bool parseCommandJson(const string& message, json* jsonData) {
     return false;
 }
 
-
 void QueueService::subscribeToCommandQueue() {
     if (!configService->getConfig().redis.isEnabled) {
         return;
@@ -209,11 +230,11 @@ void QueueService::subscribeToCommandQueue() {
             logger->error("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
             logger->debug("[Redis] Send response for command: {} (response queue size: {})",
-                 commandName, responseQueue.size());
+                commandName, requestQueue.size());
 
-            CommandResponseDto commandResponse(commandName, commandId, commandJsonData);
+            CommandRequestDto commandResponse(commandName, commandId, commandJsonData);
 
-            responseQueue.push_back(commandResponse);
+            requestQueue.push(commandResponse);
         }
     });
     redisSubscriber.commit();
@@ -286,25 +307,19 @@ bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestI
 void QueueService::publish(const string& channel, const string& message) {
     if (!configService->getConfig().redis.isEnabled) {
         return;
-    }
-    logger->debug("[Redis] Publish new message: {} to channel: {}", message, channel);
+    } else if (redis->getConnection().is_connected()) {
+        CommandResponseDto commandResponse(channel, QueueResponseType::QUEUE, message);
 
-    if (redis->getConnection().is_connected()) {
-        vector<string> values = { message };
-
-        redis->getConnection().rpush(channel, values);
-        redis->getConnection().sync_commit();
+        responseQueue.push(commandResponse);
     }
 }
 
 void QueueService::pubSubPublish(const string& channel, const string& message) {
     if (!configService->getConfig().redis.isEnabled) {
         return;
-    }
-    logger->debug("[Redis] Publish pub/sub new message: {} to channel: {}", message, channel);
+    } else if (redis->getConnection().is_connected()) {
+        CommandResponseDto commandResponse(channel, QueueResponseType::TOPIC, message);
 
-    if (redis->getConnection().is_connected()) {
-        redis->getConnection().publish(channel, message);
-        redis->getConnection().sync_commit();
+        responseQueue.push(commandResponse);
     }
 }

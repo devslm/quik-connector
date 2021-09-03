@@ -23,8 +23,13 @@ class Redis;
 
 extern Redis* redis;
 
-typedef struct CommandResponseDto {
-    CommandResponseDto(string command, string commandId, json commandJsonData) {
+enum QueueResponseType {
+    QUEUE,
+    TOPIC
+};
+
+typedef struct CommandRequestDto {
+    CommandRequestDto(string command, string commandId, json commandJsonData) {
         this->command = command;
         this->commandId = commandId;
         this->commandJsonData = commandJsonData;
@@ -32,12 +37,22 @@ typedef struct CommandResponseDto {
     string command;
     string commandId;
     json commandJsonData;
+} CommandRequestDto;
+
+typedef struct CommandResponseDto {
+    CommandResponseDto(string channel, QueueResponseType type, string message) {
+        this->channel = channel;
+        this->type = type;
+        this->message = message;
+    }
+    string channel;
+QueueResponseType type;
+    string message;
 } CommandResponseDto;
 
 class QueueService {
 public:
     static const string QUIK_COMMAND_TOPIC;
-    static const string QUIK_CONNECTION_STATUS_TOPIC;
     static const string QUIK_TICKERS_TOPIC;
     static const string QUIK_TICKER_QUOTES_TOPIC;
     static const string QUIK_USER_TOPIC;
@@ -49,7 +64,6 @@ public:
 
     static const string QUIK_ORDERS_QUEUE;
 
-    static const string QUIK_IS_QUIK_SERVER_CONNECTED_COMMAND;
     static const string QUIK_GET_USER_INFO_COMMAND;
     static const string QUIK_GET_CANDLES_COMMAND;
     static const string QUIK_GET_ORDERS_COMMAND;
@@ -76,7 +90,9 @@ private:
     int32_t redisReconnectAttempts;
     cpp_redis::subscriber redisSubscriber;
     thread commandResponseHandlerThread;
-    deque<CommandResponseDto> responseQueue;
+    thread commandPublisherThread;
+    queue<CommandRequestDto> requestQueue;
+    queue<CommandResponseDto> responseQueue;
     bool isRunning;
 
     void authenticate();
@@ -86,6 +102,8 @@ private:
     void publishOrders(list<OrderDto>& orders);
 
     bool addRequestIdToResponse(json& jsonData, const string& requestId);
+
+    void startCheckRequestsThread();
 
     void startCheckResponsesThread();
 };
