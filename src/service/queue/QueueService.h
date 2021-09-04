@@ -46,7 +46,7 @@ typedef struct CommandResponseDto {
         this->message = message;
     }
     string channel;
-QueueResponseType type;
+    QueueResponseType type;
     string message;
 } CommandResponseDto;
 
@@ -93,6 +93,8 @@ private:
     thread commandPublisherThread;
     queue<CommandRequestDto> requestQueue;
     queue<CommandResponseDto> responseQueue;
+    mutex requestQueueMutex;
+    mutex responseQueueMutex;
     bool isRunning;
 
     void authenticate();

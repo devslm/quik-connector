@@ -100,8 +100,6 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState,
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
         return false;
     }
-    logger->info(">>>>>>>>>>> 1");
-
     // Save reference to data source and remove from stack, so stack size - 1
     auto dataSourceIndex = luaSaveReference(luaState);
 
@@ -121,8 +119,6 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState,
     } else if (updateCandleCallback.isPresent()) {
         candleSubscription.callbacks.push_back(updateCandleCallback.get());
     }
-    logger->info(">>>>>>>>>>> 2");
-
     auto candlesSize = getCandlesSize(&candleSubscription);
 
     if (candlesSize.isPresent()) {
@@ -132,20 +128,14 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState,
             classCode, ticker, intervalName);
         return false;
     }
-    logger->info(">>>>>>>>>>> 3");
-
     // Subscribe also to quotes otherwise we don't receive any events
     subscribeToTickerQuotes(luaState, classCode, ticker);
-
-    logger->info(">>>>>>>>>>> 4");
 
     auto candlesSubscriptionsKey = QuikUtils::createCandlesMapKey(classCode, ticker, intervalName);
 
     candlesSubscriptions[candlesSubscriptionsKey] = candleSubscription;
 
     saveCandleSubscriptionToCache(classCode, ticker, interval);
-
-    logger->info(">>>>>>>>>>> 5");
 
     logger->info("Subscribed to candles with class code: {}, ticker: {} and interval: {} (size: {})",
         classCode, ticker, intervalName, candleSubscription.dataSourceSize);
@@ -184,7 +174,7 @@ bool QuikCandleService::addUpdateCallbackToDataSource(lua_State *luaState, QuikS
 
             if (!luaGetNumber(state, &updatedCandleIndex)) {
                 logger->error("Could not send event with updated candle because can't get updated candle index! Reason: {}",
-                              luaGetErrorMessage(state));
+                    luaGetErrorMessage(state));
                 return 0;
             }
             auto candleSubscription = subscriptions->at(*candleSubscriptionCacheKey);
@@ -471,7 +461,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
             }
         }
         // Remove reference on data source from lua internal map
-        //luaRemoveReference(luaState, dataSourceIndex);
+        luaRemoveReference(luaState, dataSourceIndex);
 
         luaPrintStackSize(luaState, (string)__FUNCTION__);
     }

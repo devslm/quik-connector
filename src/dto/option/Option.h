@@ -8,12 +8,12 @@
 template <typename T> class Option {
 public:
     Option() {
-        empty = true;
+        this->empty = true;
     }
 
     Option(T newData) {
-        empty = false;
-        data = newData;
+        this->empty = false;
+        this->data = newData;
     }
 
     T get() {

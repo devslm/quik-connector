@@ -114,7 +114,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
     }
     logger->debug("Found: {} active orders", (int)totalOrders);
 
-    for (int i = 0; i < totalOrders; ++i) {
+    for (int i = 0; i < (int)totalOrders; ++i) {
         FunctionArgDto getItemFunctionArgs[] = {{QUIK_ORDERS_TABLE_NAME}, {i}};
 
         if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemFunctionArgs)) {
@@ -126,7 +126,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
         isSuccess = toOrderDto(luaState, quik, &order);
 
         if (!isSuccess) {
-            logger->error("Could not convert order data to dto!");
+            logger->error("Could not convert order data to dto on position: {} from total: {} in orders table!", i, totalOrders);
             continue;
         }
 
@@ -134,7 +134,7 @@ list<OrderDto> QuikOrderService::getOrders(lua_State *luaState) {
                 || order.status != ORDER_STATUS_CANCELED) {
             orders.push_back(order);
         } else {
-            logger->debug("Skipping add order: {} data to list because it status: {}", order.orderNum, order.status);
+            logger->debug("Skipping add order: {} data to list because it's status: {}", order.orderNum, order.status);
         }
     }
     luaPrintStackSize(luaState, (string)__FUNCTION__);

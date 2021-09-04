@@ -44,23 +44,35 @@ if (INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
     add_definitions(-DINCLUDE_QUIK_FUNCTIONS_TEST_CALL="${INCLUDE_QUIK_FUNCTIONS_TEST_CALL}")
 endif(INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
 
-file(GLOB_RECURSE INCLUDE_FILES "src/*.h")
-file(GLOB_RECURSE SRC_FILES "src/*.cpp")
+file(GLOB_RECURSE QUIK_INCLUDE_FILES "src/*.h")
+file(GLOB_RECURSE QUIK_SRC_FILES "src/*.cpp")
 
 # Remove library.h and .cpp, quik-tools.cpp files to define them in separate variables
 list(REMOVE_ITEM INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/library.h")
 list(REMOVE_ITEM SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/library.cpp" "apps/tools/quik-flags-debug.cpp")
 
-set(LIBRARY_INC_FILE "src/library.h")
-set(LIBRARY_SRC_FILE "src/library.cpp")
-set(VERSION_FILE "src/version.rc")
+set(QUIK_DLL_INC_FILE "src/library.h")
+set(QUIK_DLL_SRC_FILE "src/library.cpp")
+set(QUIK_DLL_VERSION_FILE "src/version.rc")
 
-add_library(quik-connector SHARED ${INCLUDE_FILES} ${SRC_FILES} ${LIBRARY_INC_FILE} ${LIBRARY_SRC_FILE} ${VERSION_FILE})
+add_library(
+    quik-connector
+    SHARED
+    ${QUIK_INCLUDE_FILES}
+    ${QUIK_SRC_FILES}
+    ${QUIK_DLL_INC_FILE}
+    ${QUIK_DLL_SRC_FILE}
+    ${QUIK_DLL_VERSION_FILE}
+)
 
-include_directories(lua-${LUA_VERSION}/src ${SQLiteCpp_SOURCE_DIR}/include)
+include_directories(
+    lua-${LUA_VERSION}/src
+    ${SQLiteCpp_SOURCE_DIR}/include
+    ${liblzma_SOURCE_DIR}/src/liblzma/api
+)
 
 set(
-    LINK_LIBRARIES
+    QUIK_LINK_LIBRARIES
     liblzma
     sqlite3
     SQLiteCpp
@@ -71,7 +83,7 @@ set(
     ${CMAKE_CURRENT_BINARY_DIR}/../lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
 )
 
-target_link_libraries(quik-connector ${LINK_LIBRARIES})
+target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
 
 option(QUIK_BUILD_TOOLS "Build QUIK tools binaries files" OFF)
 
@@ -80,13 +92,27 @@ if(QUIK_BUILD_TOOLS)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 
-    add_library(quik-connector-static STATIC ${INCLUDE_FILES} ${SRC_FILES} ${LIBRARY_INC_FILE} ${LIBRARY_SRC_FILE} ${VERSION_FILE})
+    add_library(
+        quik-connector-static
+        STATIC
+        ${QUIK_INCLUDE_FILES}
+        ${QUIK_SRC_FILES}
+        ${QUIK_DLL_INC_FILE}
+        ${QUIK_DLL_SRC_FILE}
+        ${QUIK_DLL_VERSION_FILE}
+    )
 
-    target_link_libraries(quik-connector-static ${LINK_LIBRARIES})
+    target_link_libraries(quik-connector-static ${QUIK_LINK_LIBRARIES})
 
     add_executable(quik-flags-debug "apps/tools/quik-flags-debug.cpp")
 
     target_link_libraries(quik-flags-debug PUBLIC quik-connector-static)
 endif(QUIK_BUILD_TOOLS)
+
+option(QUIK_BUILD_TESTS "Build tests" OFF)
+
+if (QUIK_BUILD_TESTS)
+    # Add build tests rules
+endif(QUIK_BUILD_TESTS)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/create-output-directory-tree.cmake)

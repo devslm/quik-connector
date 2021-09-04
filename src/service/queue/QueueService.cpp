@@ -58,8 +58,12 @@ void QueueService::startCheckRequestsThread() {
             logger->trace("[Redis] Request queue is empty");
             continue;
         }
+        requestQueueMutex.lock();
+
         CommandRequestDto commandRequest = requestQueue.back();
         requestQueue.pop();
+
+        requestQueueMutex.unlock();
 
         const string requestId = commandRequest.commandId;
 
@@ -98,8 +102,8 @@ void QueueService::startCheckRequestsThread() {
                     auto candlesRequest = candlesRequestOption.get();
                     auto candles = quik->getCandles(luaGetState(), candlesRequest);
 
-                    logger->info(">>>>>>>> 1 >>> Send candles size: {} with ticker",
-                        (candles.isPresent() ? candles.get().values.size() : -1), (candles.isPresent() ? candles.get().ticker : "NO"));
+                    //logger->info(">>>>>>>> 1 >>> Send candles size: {} with ticker",
+                    //    (candles.isPresent() ? candles.get().values.size() : -1), (candles.isPresent() ? candles.get().ticker : "NO"));
 
                     if (candles.isPresent()) {
                         logger->info(">>>>>>>> 2 >>> Send candles size: {} with ticker: {}", candles.get().values.size(), candles.get().ticker);
@@ -174,8 +178,12 @@ void QueueService::startCheckResponsesThread() {
         } else if (!redis->getConnection().is_connected()) {
             continue;
         }
+        responseQueueMutex.lock();
+
         CommandResponseDto commandResponse = responseQueue.back();
         responseQueue.pop();
+
+        responseQueueMutex.unlock();
 
         if (commandResponse.type == QueueResponseType::QUEUE) {
             logger->debug("[Redis] Publish new message: {} to channel: {}", commandResponse.message, commandResponse.channel);
@@ -219,22 +227,28 @@ void QueueService::subscribeToCommandQueue() {
         return;
     }
     redisSubscriber.subscribe(QUIK_COMMAND_TOPIC, [this](const std::string& channel, const std::string& message) {
+        if (!isRunning) {
+            return;
+        }
         logger->debug("[Redis] New incoming command: {} in channel: {}", message, channel);
 
         json commandJsonData;
         auto isSuccess = parseCommandJson(message, &commandJsonData);
-        auto commandId = commandJsonData["id"];
-        auto commandName = commandJsonData["command"];
 
-        if (!isSuccess || commandName.empty()) {
+        if (!isSuccess) {
             logger->error("[Redis] Could not handle incoming command: {} because JSON parse error!", message);
         } else {
+            auto commandId = commandJsonData["id"];
+            auto commandName = commandJsonData["command"];
+
             logger->debug("[Redis] Send response for command: {} (response queue size: {})",
                 commandName, requestQueue.size());
 
             CommandRequestDto commandResponse(commandName, commandId, commandJsonData);
 
+            requestQueueMutex.lock();
             requestQueue.push(commandResponse);
+            requestQueueMutex.unlock();
         }
     });
     redisSubscriber.commit();
@@ -305,21 +319,27 @@ bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestI
 }
 
 void QueueService::publish(const string& channel, const string& message) {
-    if (!configService->getConfig().redis.isEnabled) {
+    if (!isRunning
+            || !configService->getConfig().redis.isEnabled) {
         return;
     } else if (redis->getConnection().is_connected()) {
         CommandResponseDto commandResponse(channel, QueueResponseType::QUEUE, message);
 
+        responseQueueMutex.lock();
         responseQueue.push(commandResponse);
+        responseQueueMutex.unlock();
     }
 }
 
 void QueueService::pubSubPublish(const string& channel, const string& message) {
-    if (!configService->getConfig().redis.isEnabled) {
+    if (!isRunning
+            || !configService->getConfig().redis.isEnabled) {
         return;
     } else if (redis->getConnection().is_connected()) {
         CommandResponseDto commandResponse(channel, QueueResponseType::TOPIC, message);
 
+        responseQueueMutex.lock();
         responseQueue.push(commandResponse);
+        responseQueueMutex.unlock();
     }
 }

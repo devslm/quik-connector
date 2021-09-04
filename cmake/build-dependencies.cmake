@@ -28,8 +28,6 @@ if(NOT liblzma_POPULATED)
     FetchContent_Populate(liblzma)
 
     add_subdirectory(${liblzma_SOURCE_DIR} ${liblzma_BINARY_DIR})
-
-    target_include_directories(liblzma INTERFACE ${liblzma_SOURCE_DIR}/src/liblzma/api)
 endif()
 
 # Include JSON library (https://github.com/nlohmann/json)

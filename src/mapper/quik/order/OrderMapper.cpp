@@ -176,7 +176,7 @@ bool toOrderDto(lua_State *luaState, Quik *quik, OrderDto* order) {
     }
     order->priceStepCost = priceStepCostOption.get();
 
-    lua_pop(luaState, 2);
+    lua_pop(luaState, 1);
 
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 

@@ -49,14 +49,14 @@ int Quik::onStop(lua_State *luaState) {
 
     quikCandleService->destroy();
 
-    delete quikOrderService;
-    delete queueService;
-    //delete quikNewsService;
-
     checkAllTradesThread.join();
     checkQuotesThread.join();
     checkNewOrdersThread.join();
     pushServerInfoThread.join();
+
+    delete quikOrderService;
+    delete queueService;
+    //delete quikNewsService;
 
     logger->info(logMessage);
 
@@ -629,8 +629,6 @@ list<TradeDto> Quik::getTrades(lua_State *luaState) {
             continue;
         }
         Option<TradeDto> tradeOption(trade);
-
-        logger->debug("Trade: {}", toTradeJson(tradeOption));
 
         existsTrades.push_back(trade);
     }
