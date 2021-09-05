@@ -90,11 +90,11 @@ private:
     int32_t redisReconnectAttempts;
     cpp_redis::subscriber redisSubscriber;
     thread commandResponseHandlerThread;
+    thread commandResponseChangedCandleHandlerThread;
     thread commandPublisherThread;
     queue<CommandRequestDto> requestQueue;
     queue<CommandResponseDto> responseQueue;
-    mutex requestQueueMutex;
-    mutex responseQueueMutex;
+    queue<CommandResponseDto> changedCandlesResponseQueue;
     bool isRunning;
 
     void authenticate();
@@ -108,6 +108,8 @@ private:
     void startCheckRequestsThread();
 
     void startCheckResponsesThread();
+
+    void startCheckChangedCandleResponsesThread();
 };
 
 #endif //QUIK_CONNECTOR_QUEUESERVICE_H

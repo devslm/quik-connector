@@ -433,7 +433,7 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
             return {};
         }
         // Remove data source reference and callback from the LUA stack
-        //lua_pop(luaState, 1);
+        lua_pop(luaState, 1);
 
         // Wait while data will be loaded
         this_thread::sleep_for(chrono::milliseconds(200));
@@ -448,6 +448,21 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
         candleSubscription.interval = interval;
 
         auto candlesSize = getCandlesSize(&candleSubscription);
+        auto totalRetries = 10;
+
+        while (isRunning && (candlesSize.isEmpty() || candlesSize.get() < 1)) {
+            if (totalRetries <= 0) {
+                break;
+            }
+            this_thread::sleep_for(chrono::milliseconds(500));
+
+            logger->info("Await candles to be loaded for class code: {}, ticker: {} and interval: {}....",
+                classCode, ticker, intervalName);
+
+            candlesSize = getCandlesSize(&candleSubscription);
+
+            --totalRetries;
+        }
 
         if (candlesSize.isPresent() && candlesSize.get() > 0) {
             candleSubscription.dataSourceSize = candlesSize.get();

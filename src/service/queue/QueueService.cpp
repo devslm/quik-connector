@@ -35,6 +35,7 @@ QueueService::QueueService(Quik *quik, string host, int port) {
     if (configService->getConfig().redis.isEnabled) {
         this->commandResponseHandlerThread = thread([this] {startCheckRequestsThread();});
         this->commandPublisherThread = thread([this]() {startCheckResponsesThread();});
+        this->commandResponseChangedCandleHandlerThread = thread([this]() {startCheckChangedCandleResponsesThread();});
     }
 }
 
@@ -47,6 +48,7 @@ QueueService::~QueueService() {
         redisSubscriber.disconnect();
     }
     commandResponseHandlerThread.join();
+    commandResponseChangedCandleHandlerThread.join();
     commandPublisherThread.join();
 }
 
@@ -58,12 +60,7 @@ void QueueService::startCheckRequestsThread() {
             logger->trace("[Redis] Request queue is empty");
             continue;
         }
-        requestQueueMutex.lock();
-
-        CommandRequestDto commandRequest = requestQueue.back();
-        requestQueue.pop();
-
-        requestQueueMutex.unlock();
+        CommandRequestDto commandRequest = requestQueue.front();
 
         const string requestId = commandRequest.commandId;
 
@@ -102,12 +99,7 @@ void QueueService::startCheckRequestsThread() {
                     auto candlesRequest = candlesRequestOption.get();
                     auto candles = quik->getCandles(luaGetState(), candlesRequest);
 
-                    //logger->info(">>>>>>>> 1 >>> Send candles size: {} with ticker",
-                    //    (candles.isPresent() ? candles.get().values.size() : -1), (candles.isPresent() ? candles.get().ticker : "NO"));
-
                     if (candles.isPresent()) {
-                        logger->info(">>>>>>>> 2 >>> Send candles size: {} with ticker: {}", candles.get().values.size(), candles.get().ticker);
-
                         auto candlesJson = toCandleJson(candles);
 
                         addRequestIdToResponse(candlesJson, requestId);
@@ -132,7 +124,7 @@ void QueueService::startCheckRequestsThread() {
                     if (!isSubscribed) {
                         //addRequestIdToResponse(json, requestId);
 
-                        //Send response to client
+                        //Send response to client with the result
                     }
                 } else {
                     logger->error("Could not handle new request to subscribe candles with data: {} because request data is invalid!",
@@ -155,7 +147,7 @@ void QueueService::startCheckRequestsThread() {
                     if (!isUnsubscribed) {
                         //addRequestIdToResponse(json, requestId);
 
-                        //Send response to client
+                        //Send response to client with the result
                     }
                 } else {
                     logger->error("Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
@@ -166,6 +158,7 @@ void QueueService::startCheckRequestsThread() {
             logger->error("Could not send response for command: {} with id: {}! Reason: {}",
                 commandRequest.command, commandRequest.commandId, exception.what());
         }
+        requestQueue.pop();
     }
 }
 void QueueService::startCheckResponsesThread() {
@@ -178,12 +171,7 @@ void QueueService::startCheckResponsesThread() {
         } else if (!redis->getConnection().is_connected()) {
             continue;
         }
-        responseQueueMutex.lock();
-
-        CommandResponseDto commandResponse = responseQueue.back();
-        responseQueue.pop();
-
-        responseQueueMutex.unlock();
+        CommandResponseDto commandResponse = responseQueue.front();
 
         if (commandResponse.type == QueueResponseType::QUEUE) {
             logger->debug("[Redis] Publish new message: {} to channel: {}", commandResponse.message, commandResponse.channel);
@@ -196,7 +184,30 @@ void QueueService::startCheckResponsesThread() {
 
             redis->getConnection().publish(commandResponse.channel, commandResponse.message);
         }
-        redis->getConnection().sync_commit();
+        redis->getConnection().commit();
+
+        responseQueue.pop();
+    }
+}
+
+void QueueService::startCheckChangedCandleResponsesThread() {
+    while (isRunning) {
+        this_thread::sleep_for(chrono::milliseconds(1));
+
+        if (changedCandlesResponseQueue.empty()) {
+            logger->trace("[Redis] Changed candles response queue is empty");
+            continue;
+        } else if (!redis->getConnection().is_connected()) {
+            continue;
+        }
+        CommandResponseDto commandResponse = changedCandlesResponseQueue.front();
+
+        logger->debug("[Redis] Publish pub/sub new message: {} to channel: {}", commandResponse.message, commandResponse.channel);
+
+        redis->getConnection().publish(commandResponse.channel, commandResponse.message);
+        redis->getConnection().commit();
+
+        changedCandlesResponseQueue.pop();
     }
 }
 
@@ -241,14 +252,12 @@ void QueueService::subscribeToCommandQueue() {
             auto commandId = commandJsonData["id"];
             auto commandName = commandJsonData["command"];
 
-            logger->debug("[Redis] Send response for command: {} (response queue size: {})",
-                commandName, requestQueue.size());
+            logger->debug("[Redis] Send response for command: {} (request queue size: {} and response queue size: {})",
+                commandName, requestQueue.size(), responseQueue.size());
 
             CommandRequestDto commandResponse(commandName, commandId, commandJsonData);
 
-            requestQueueMutex.lock();
             requestQueue.push(commandResponse);
-            requestQueueMutex.unlock();
         }
     });
     redisSubscriber.commit();
@@ -325,9 +334,7 @@ void QueueService::publish(const string& channel, const string& message) {
     } else if (redis->getConnection().is_connected()) {
         CommandResponseDto commandResponse(channel, QueueResponseType::QUEUE, message);
 
-        responseQueueMutex.lock();
         responseQueue.push(commandResponse);
-        responseQueueMutex.unlock();
     }
 }
 
@@ -338,8 +345,12 @@ void QueueService::pubSubPublish(const string& channel, const string& message) {
     } else if (redis->getConnection().is_connected()) {
         CommandResponseDto commandResponse(channel, QueueResponseType::TOPIC, message);
 
-        responseQueueMutex.lock();
-        responseQueue.push(commandResponse);
-        responseQueueMutex.unlock();
+        // Use separate thread for changed candles to avoid stuck on huge amount of
+        // events when subscribe to new data source
+        if (channel != QueueService::QUIK_CANDLE_CHANGE_TOPIC) {
+            responseQueue.push(commandResponse);
+        } else {
+            changedCandlesResponseQueue.push(commandResponse);
+        }
     }
 }
