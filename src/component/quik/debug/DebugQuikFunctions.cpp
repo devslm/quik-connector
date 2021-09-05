@@ -22,21 +22,21 @@ void debugQuikFunctions(lua_State *luaState) {
 
     OrderRepository orderRepository;
 
-    Option<string> serverTime = quik->getServerTime(luaState);
+    auto serverTime = quik->getServerTime(luaState);
 
     if (serverTime.isPresent()) {
         logger->info("QUIK server time: {}", serverTime.get());
     } else {
         throw runtime_error("Could not debug QUIK server time function!");
     }
-    Option<string> avgPingDuration = quik->getAvgPingDuration(luaState);
+    auto avgPingDuration = quik->getAvgPingDuration(luaState);
 
     if (avgPingDuration.isPresent()) {
         logger->info("QUIK AVG ping: {}", avgPingDuration.get());
     } else {
         throw runtime_error("Could not debug QUIK avg ping function!");
     }
-    Option<DepoLimitDto> depoLimit = quik->getDepoLimit(luaState, (string)"MC013***", (string)"152***", (string)"AGRO", (string)"L01-0*******", 2);
+    auto depoLimit = quik->getDepoLimit(luaState, (string)"MC013***", (string)"152***", (string)"AGRO", (string)"L01-0*******", 2);
 
     if (depoLimit.isPresent()) {
         logger->info("QUIK depo limit: {}", toDepoLimitJson(depoLimit).dump());
@@ -44,14 +44,14 @@ void debugQuikFunctions(lua_State *luaState) {
         throw runtime_error("Could not debug QUIK depo limit function!");
     }
     string futureName = "RIU1";
-    Option<double> stepCost = quik->getTickerPriceStepCost(luaState, "SPBFUT", futureName);
+    auto stepCost = quik->getTickerPriceStepCost(luaState, "SPBFUT", futureName);
 
     if (stepCost.isPresent()) {
         logger->info("Future: {} price step cost: {}", futureName, stepCost.get());
     } else {
         throw runtime_error("Could not debug QUIK price step cost function for: " + futureName);
     }
-    set<string> clientCodes = quik->getClientCodes(luaState);
+    auto clientCodes = quik->getClientCodes(luaState);
 
     if (clientCodes.empty()) {
         throw runtime_error("Could not debug QUIK get client codes function for because result is empty!");
@@ -60,11 +60,19 @@ void debugQuikFunctions(lua_State *luaState) {
     for (const auto& clientCode : clientCodes) {
         logger->info("Client code -> {}", clientCode);
     }
-    Option<FutureLimitDto> futureLimit = quik->getFuturesLimit(luaState, (string)"MC013***", (string)"410***", 0, (string)"SUR");
+    auto futureLimit = quik->getFuturesLimit(luaState, (string)"MC013***", (string)"410***", 0, (string)"SUR");
 
     if (futureLimit.isPresent()) {
         logger->info("Futures limits: {}", toFutureLimitJson(futureLimit).dump());
     } else {
         throw runtime_error("Could not debug QUIK get futures limits function for because result is empty!");
+    }
+
+    auto maxLots = quik->calcBuySell(luaState, (string)"SPBFUT", (string)"RIU1", (string)"MC013***", (string)"410***", 172500.0, true, false);
+
+    if (futureLimit.isPresent()) {
+        logger->info("Total BUY/SELL lots: {}", toMaxTradeLotsJson(maxLots).dump());
+    } else {
+        throw runtime_error("Could not debug QUIK get BUY/SELL total lots function for because result is empty!");
     }
 }

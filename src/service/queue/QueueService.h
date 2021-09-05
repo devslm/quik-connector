@@ -95,6 +95,9 @@ private:
     queue<CommandRequestDto> requestQueue;
     queue<CommandResponseDto> responseQueue;
     queue<CommandResponseDto> changedCandlesResponseQueue;
+    mutex requestQueueMutex;
+    mutex responseQueueMutex;
+    mutex changedCandlesResponseQueueMutex;
     bool isRunning;
 
     void authenticate();

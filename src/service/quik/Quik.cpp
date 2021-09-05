@@ -519,7 +519,7 @@ Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
     }
     FutureLimitDto futureLimit;
 
-    bool isSuccess = toFutureLimitDto(luaState, &futureLimit);
+    auto isSuccess = toFutureLimitDto(luaState, &futureLimit);
 
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
@@ -528,6 +528,41 @@ Option<FutureLimitDto> Quik::getFuturesLimit(lua_State *luaState,
     }
     logger->error("Could not get futures limit with firm: {}, account: {}, limit type: {} and currency code: {}!",
         firmId, account, limitType, currencyCode);
+
+    return {};
+}
+
+Option<MaxTradeLotsDto> Quik::calcBuySell(lua_State *luaState,
+                                          string& classCode,
+                                          string& ticker,
+                                          string& clientCode,
+                                          string& account,
+                                          double price,
+                                          bool isBuy,
+                                          bool isMarket) {
+    // See this limitation in the ARQA QUIK doc
+    if (isMarket) {
+        price = 0.0;
+    }
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{classCode}, {ticker}, {clientCode}, {account}, {price}, {isBuy}, {isMarket}};
+
+    if (!luaCallFunction(luaState, CALC_BUY_SELL_FUNCTION_NAME, 7, 2, args)) {
+        logger->error("Could not call QUIK {} function!", CALC_BUY_SELL_FUNCTION_NAME);
+        return {};
+    }
+    MaxTradeLotsDto maxTradeLots;
+
+    auto isSuccess = toMaxTradeLotsDto(luaState, &maxTradeLots);
+
+    luaPrintStackSize(luaState, (string)__FUNCTION__);
+
+    if (isSuccess) {
+        return {maxTradeLots};
+    }
+    logger->error("Could not calculate max buy/sell lots with clientCode: {}, account: {}, class code: {}, ticker: {}, price: {}, is buy: {} and is market: {}!",
+        clientCode, account, classCode, ticker, price, isBuy, isMarket);
 
     return {};
 }

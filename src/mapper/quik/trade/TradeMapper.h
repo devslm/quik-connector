@@ -10,15 +10,20 @@
 #include "../../../dto/quik/trade/TradeDto.h"
 #include "../date/DateMapper.h"
 #include "../../../dto/option/Option.h"
+#include "../../../dto/quik/trade/MaxTradeLotsDto.h"
 
 using namespace nlohmann;
 
 bool toAllTradeDto(lua_State *luaState, TradeDto *trade);
 
-bool toTradeDto(lua_State *L, TradeDto *trade);
+bool toTradeDto(lua_State *luaState, TradeDto *trade);
+
+bool toMaxTradeLotsDto(lua_State *luaState, MaxTradeLotsDto *maxTradeLots);
 
 json toAllTradeJson(Option<TradeDto>& tradeOption);
 
 json toTradeJson(Option<TradeDto>& tradeOption);
+
+json toMaxTradeLotsJson(Option<MaxTradeLotsDto>& maxTradeLotsOption);
 
 #endif //QUIK_CONNECTOR_TRADEMAPPER_H

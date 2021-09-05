@@ -153,6 +153,23 @@ bool toTradeDto(lua_State *luaState, TradeDto *trade) {
     return true;
 }
 
+bool toMaxTradeLotsDto(lua_State *luaState, MaxTradeLotsDto *maxTradeLots) {
+    if (!lua_isnumber(luaState, -1)) {
+        lua_pop(luaState, 1);
+
+        return false;
+    }
+
+    if (!luaGetNumber(luaState, &maxTradeLots->commission)) {
+        return false;
+    }
+
+    if (!luaGetNumber(luaState, &maxTradeLots->qty)) {
+        return false;
+    }
+    return true;
+}
+
 json toAllTradeJson(Option<TradeDto>& tradeOption) {
     json jsonObject;
 
@@ -193,6 +210,19 @@ json toTradeJson(Option<TradeDto>& tradeOption) {
     jsonObject["exchangeComission"] = trade.exchangeComission;
     jsonObject["techCenterComission"] = trade.techCenterComission;
     jsonObject["brokerComission"] = trade.brokerComission;
+
+    return jsonObject;
+}
+
+json toMaxTradeLotsJson(Option<MaxTradeLotsDto>& maxTradeLotsOption) {
+    json jsonObject;
+
+    if (maxTradeLotsOption.isEmpty()) {
+        return jsonObject;
+    }
+    MaxTradeLotsDto maxTradeLots = maxTradeLotsOption.get();
+    jsonObject["qty"] = maxTradeLots.qty;
+    jsonObject["commission"] = maxTradeLots.commission;
 
     return jsonObject;
 }

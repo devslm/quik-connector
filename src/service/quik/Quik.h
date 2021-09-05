@@ -37,6 +37,7 @@
 #include "../../dto/quik/limit/MoneyLimitDto.h"
 #include "../../mapper/quik/money/MoneyLimitMapper.h"
 #include "../../mapper/quik/future/FutureLimitMapper.h"
+#include "../../dto/quik/trade/MaxTradeLotsDto.h"
 
 using namespace std;
 
@@ -53,6 +54,7 @@ const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
 const char GET_CLASS_SECURITIES_FUNCTION_NAME[] = "getClassSecurities";
 const char GET_MONEY_FUNCTION_NAME[] = "getMoney";
 const char GET_FUTURES_LIMIT_FUNCTION_NAME[] = "getFuturesLimit";
+const char CALC_BUY_SELL_FUNCTION_NAME[] = "CalcBuySell";
 const char GET_DEPO_EX_FUNCTION_NAME[] = "getDepoEx";
 const char GET_PARAM_EX_FUNCTION_NAME[] = "getParamEx";
 const char SEND_TRANSACTION_FUNCTION_NAME[] = "sendTransaction";
@@ -172,6 +174,15 @@ public:
     Option<MoneyLimitDto> getMoney(lua_State *luaState, string& clientCode, string& firmId, string& tag, string& currencyCode);
 
     Option<FutureLimitDto> getFuturesLimit(lua_State *luaState, string& firmId, string& account, int limitType, string& currencyCode);
+
+    Option<MaxTradeLotsDto> calcBuySell(lua_State *luaState,
+                                        string& classCode,
+                                        string& ticker,
+                                        string& clientCode,
+                                        string& account,
+                                        double price,
+                                        bool isBuy,
+                                        bool isMarket);
 
     Option<TickerQuoteDto> getTickerQuotes(lua_State *luaState, string& classCode, string& ticker);
 
