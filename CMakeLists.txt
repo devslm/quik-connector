@@ -85,6 +85,14 @@ set(
 
 target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
 
+option(QUIK_INCLUDE_TA_LIB "Include TA-LIB indicators library" OFF)
+
+if (QUIK_INCLUDE_TA_LIB)
+    include_directories(ta-lib/include)
+
+    target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../ta-lib/lib/ta_libc_cdr.lib)
+endif()
+
 option(QUIK_BUILD_TOOLS "Build QUIK tools binaries files" OFF)
 
 if(QUIK_BUILD_TOOLS)
