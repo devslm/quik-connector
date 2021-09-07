@@ -75,6 +75,8 @@ private:
 
     bool addUpdateCallbackToDataSource(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
 
+    void requestNewCandlesDataFromServer(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
+
     string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
 };
 
