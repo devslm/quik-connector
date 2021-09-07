@@ -62,12 +62,17 @@ private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";
 
     unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
+    unordered_map<string, QuikSubscriptionDto> candlesRequests;
+
     recursive_mutex *mutexLock;
     atomic_bool isRunning;
     QueueService *queueService;
     thread reloadSubscriptionsThread;
+    thread checkCandlesRequestsCompleteThread;
 
     void reloadSavedSubscriptions();
+
+    void checkCandlesRequestsComplete();
 
     void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);
 
@@ -75,7 +80,9 @@ private:
 
     bool addUpdateCallbackToDataSource(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
 
-    void requestNewCandlesDataFromServer(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
+    void requestNewCandlesDataFromServer(lua_State *luaState,
+                                         const CandlesRequestDto& candlesRequest,
+                                         QuikSubscriptionDto& quikSubscription);
 
     string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
 };

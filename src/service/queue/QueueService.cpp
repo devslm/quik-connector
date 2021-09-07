@@ -99,6 +99,7 @@ void QueueService::startCheckRequestsThread() {
 
                 if (candlesRequestOption.isPresent()) {
                     auto candlesRequest = candlesRequestOption.get();
+                    candlesRequest.requestId = requestId;
                     auto candles = quik->getCandles(luaGetState(), candlesRequest);
 
                     if (candles.isPresent()) {

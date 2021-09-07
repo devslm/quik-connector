@@ -66,6 +66,7 @@ typedef struct UnsubscribeFromCandlesRequestDto {
 } UnsubscribeFromCandlesRequestDto;
 
 typedef struct CandlesRequestDto {
+    string requestId;
     string ticker;
     string classCode;
     Interval interval;

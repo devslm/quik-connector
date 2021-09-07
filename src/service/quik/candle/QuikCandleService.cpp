@@ -14,6 +14,7 @@ QuikCandleService::~QuikCandleService() {
     this->isRunning = false;
 
     reloadSubscriptionsThread.join();
+    checkCandlesRequestsCompleteThread.join();
 }
 
 void QuikCandleService::init() {
@@ -21,6 +22,11 @@ void QuikCandleService::init() {
         this_thread::sleep_for(chrono::seconds(1));
 
         reloadSavedSubscriptions();
+    });
+    checkCandlesRequestsCompleteThread = thread([this]() {
+        this_thread::sleep_for(chrono::seconds(1));
+
+        checkCandlesRequestsComplete();
     });
 }
 
@@ -54,6 +60,81 @@ void QuikCandleService::reloadSavedSubscriptions() {
         }
     } catch (exception& exception) {
         logger->error("Could not reload candles subscriptions from cache! Reason: {}", exception.what());
+    }
+}
+
+/**
+ * Check candles requests to complete preparing.
+ *
+ * Candles prepared when datasource size > 0. Send data to queue when
+ * prepared.
+ */
+void QuikCandleService::checkCandlesRequestsComplete() {
+    int totalLoopsBeforePrintQueueSize = 50;
+    unordered_map<string, int> candlesRequestsTimeout;
+
+    while (isRunning) {
+        this_thread::sleep_for(chrono::milliseconds(200));
+
+        for (auto& candlesRequest : candlesRequests) {
+            auto requestId = candlesRequest.first;
+            auto candleSubscription = candlesRequest.second;
+            auto candlesSize = getCandlesSize(&candleSubscription);
+            auto intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
+
+            if (candlesSize.isEmpty()
+                    || candlesSize.get() < 1) {
+                logger->debug("Candles not ready for class code: {}, ticker: {} and interval: {}, awaiting....",
+                    candleSubscription.classCode, candleSubscription.ticker, intervalName);
+
+                if (candlesRequestsTimeout.find(requestId) != candlesRequestsTimeout.end()) {
+                    candlesRequestsTimeout[requestId] = candlesRequestsTimeout[requestId] + 1;
+                } else {
+                    candlesRequestsTimeout[requestId] = 1;
+                }
+
+                if (candlesRequestsTimeout[requestId] > 200) {
+                    logger->error("Could not get candles size for class code: {}, ticker: {} and interval: {}, because timeout!",
+                        candleSubscription.classCode, candleSubscription.ticker, intervalName);
+
+                    candlesRequestsTimeout.erase(requestId);
+                    candlesRequests.erase(requestId);
+                }
+                continue;
+            }
+            candleSubscription.dataSourceSize = candlesSize.get();
+            Option<CandleDto> candleOption;
+            CandleDto candle;
+
+            if (toCandleDto(&candleSubscription, &candle, 1, candleSubscription.dataSourceSize)) {
+                candleOption = Option<CandleDto>(candle);
+            } else {
+                logger->error("Could not get candle data with class code: {}, ticker: {} and interval: {}",
+                    candleSubscription.classCode, candleSubscription.ticker, intervalName);
+                continue;
+            }
+            logger->info("Candles prepared for class code: {}, ticker: {} and interval: {}. Total candles: {}",
+                candleSubscription.classCode, candleSubscription.ticker, intervalName, candlesSize.get());
+
+            candlesRequestsTimeout.erase(requestId);
+            candlesRequests.erase(requestId);
+
+            auto candlesJson = toCandleJson(candleOption);
+
+            QueueService::addRequestIdToResponse(candlesJson, requestId);
+
+            queueService->pubSubPublish(
+                QueueService::QUIK_CANDLES_TOPIC,
+                candlesJson.dump()
+            );
+        }
+        --totalLoopsBeforePrintQueueSize;
+
+        if (totalLoopsBeforePrintQueueSize <= 0) {
+            totalLoopsBeforePrintQueueSize = 0;
+
+            logger->debug("Total candles requests waiting for complete in queue: {}", candlesRequests.size());
+        }
     }
 }
 
@@ -194,7 +275,10 @@ bool QuikCandleService::addUpdateCallbackToDataSource(lua_State *luaState, QuikS
                 logger->warn("Skipping handle updated candle with class code: {}, ticker: {} and interval: {} because index 0 is not valid (it should start from 1)",
                     candleSubscription.classCode, candleSubscription.ticker, intervalName);
                 return 0;
-            } else if (updatedCandleIndex < candleSubscription.dataSourceSize) {
+            }
+            auto candlesSize = quikCandleService->getCandlesSize(&candleSubscription);
+
+            if (candlesSize.isPresent() && updatedCandleIndex < candlesSize.get()) {
                 // Don't push historical candles to queue
                 return 0;
             }
@@ -432,13 +516,11 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
         auto candlesSize = getCandlesSize(&candleSubscription);
 
         if (candlesSize.isEmpty() || candlesSize.get() < 1) {
-            requestNewCandlesDataFromServer(luaState, candleSubscription);
+            requestNewCandlesDataFromServer(luaState, candlesRequest, candleSubscription);
         } else {
             logger->info("Candles already exists for class code: {}, ticker: {} and interval: {}. Skipping request new data....",
                 classCode, ticker, intervalName);
-        }
 
-        if (candlesSize.isPresent() && candlesSize.get() > 0) {
             candleSubscription.dataSourceSize = candlesSize.get();
             CandleDto candle;
 
@@ -457,11 +539,14 @@ Option<CandleDto> QuikCandleService::getCandles(lua_State *luaState, const Candl
     return candleOption;
 }
 
-void QuikCandleService::requestNewCandlesDataFromServer(lua_State *luaState, QuikSubscriptionDto& quikSubscription) {
+void QuikCandleService::requestNewCandlesDataFromServer(lua_State *luaState,
+                                                        const CandlesRequestDto& candlesRequest,
+                                                        QuikSubscriptionDto& quikSubscription) {
     auto classCode = quikSubscription.classCode;
     auto ticker = quikSubscription.ticker;
     auto dataSource = luaLoadReference(luaState, quikSubscription.dataSourceIndex);
-    auto intervalName = QuikUtils::getIntervalName(quikSubscription.interval);
+    auto interval = quikSubscription.interval;
+    auto intervalName = QuikUtils::getIntervalName(interval);
 
     logger->info("Candles not exists for class code: {}, ticker: {} and interval: {}. Requesting new data....",
         classCode, ticker, intervalName);
@@ -495,22 +580,8 @@ void QuikCandleService::requestNewCandlesDataFromServer(lua_State *luaState, Qui
     // Remove data source reference and callback from the LUA stack
     lua_pop(luaState, 1);
 
-    // Wait while data will be loaded
-    this_thread::sleep_for(chrono::milliseconds(50));
-
-    auto totalRetries = 100;
-    auto candlesSize = getCandlesSize(&quikSubscription);
-
-    while (isRunning && (candlesSize.isEmpty() || candlesSize.get() < 1)) {
-        if (totalRetries <= 0) {
-            break;
-        }
-        this_thread::sleep_for(chrono::milliseconds(50));
-
-        candlesSize = getCandlesSize(&quikSubscription);
-
-        --totalRetries;
-    }
+    // Postpone check when data source will be ready to separate thread
+    candlesRequests[candlesRequest.requestId] = quikSubscription;
 }
 
 Option<int> QuikCandleService::getCandlesSize(QuikSubscriptionDto *candleSubscription) {

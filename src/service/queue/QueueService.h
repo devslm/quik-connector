@@ -83,6 +83,8 @@ public:
 
     void pubSubPublish(const string& channel, const string& message);
 
+    static bool addRequestIdToResponse(json& jsonData, const string& requestId);
+
 private:
     Quik *quik;
     string redisHost;
@@ -105,8 +107,6 @@ private:
     void subscribeToCommandQueue();
 
     void publishOrders(list<OrderDto>& orders);
-
-    bool addRequestIdToResponse(json& jsonData, const string& requestId);
 
     void startCheckRequestsThread();
 
