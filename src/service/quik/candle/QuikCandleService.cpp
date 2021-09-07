@@ -72,9 +72,12 @@ void QuikCandleService::reloadSavedSubscriptions() {
 void QuikCandleService::checkCandlesRequestsComplete() {
     int totalLoopsBeforePrintQueueSize = 50;
     unordered_map<string, int> candlesRequestsTimeout;
+    int loopTimeoutMillis = 200;
+    int requestAwaitingTimeoutMillis = 20000;
+    int requestAwaitingMaxLoops = (int)((double)requestAwaitingTimeoutMillis / (double)loopTimeoutMillis);
 
     while (isRunning) {
-        this_thread::sleep_for(chrono::milliseconds(200));
+        this_thread::sleep_for(chrono::milliseconds(loopTimeoutMillis));
 
         for (auto& candlesRequest : candlesRequests) {
             auto requestId = candlesRequest.first;
@@ -93,7 +96,7 @@ void QuikCandleService::checkCandlesRequestsComplete() {
                     candlesRequestsTimeout[requestId] = 1;
                 }
 
-                if (candlesRequestsTimeout[requestId] > 200) {
+                if (candlesRequestsTimeout[requestId] > requestAwaitingMaxLoops) {
                     logger->error("Could not get candles size for class code: {}, ticker: {} and interval: {}, because timeout!",
                         candleSubscription.classCode, candleSubscription.ticker, intervalName);
 
