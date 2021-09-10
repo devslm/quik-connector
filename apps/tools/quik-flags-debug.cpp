@@ -1,14 +1,15 @@
 //
-// Copyright (c) 2021 SLM <sergey.s.mareychev@gmail.com>. All rights reserved.
+// Copyright (c) 2021 SLM Dev <https://slm-dev.com/quik-connector/>. All rights reserved.
 //
 
 #include <iostream>
-#include <iomanip>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "../../src/service/quik/utils/QuikUtils.h"
 
-std::shared_ptr<spdlog::logger> logger;
+using namespace std;
+
+shared_ptr<spdlog::logger> logger;
 
 static void loggerInit() {
     logger = spdlog::stdout_color_mt("quik-flags-debug");

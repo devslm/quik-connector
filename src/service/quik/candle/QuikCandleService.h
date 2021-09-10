@@ -17,6 +17,7 @@
 #include "../../../dto/quik/connector/request/RequestDto.h"
 #include "../../../mapper/quik/candle/CandleMapper.h"
 #include "../../queue/QueueService.h"
+#include "../../../component/concurrent/SmallConcurrentMap.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -61,18 +62,23 @@ public:
 private:
     const string CANDLE_SUBSCRIPTION_CACHE_KEY = "candles:subscriptions";
 
-    unordered_map<string, QuikSubscriptionDto> candlesSubscriptions;
-    unordered_map<string, QuikSubscriptionDto> candlesRequests;
+    SmallConcurrentMap<string, QuikSubscriptionDto> candlesSubscriptions;
+    SmallConcurrentMap<string, QuikSubscriptionDto> candlesRequests;
+    SmallConcurrentMap<string, int> updatedCandles;
 
     recursive_mutex *mutexLock;
     atomic_bool isRunning;
     QueueService *queueService;
     thread reloadSubscriptionsThread;
     thread checkCandlesRequestsCompleteThread;
+    thread checkUpdatedCandlesThread;
+    mutex candlesRequestsMutex;
 
     void reloadSavedSubscriptions();
 
     void checkCandlesRequestsComplete();
+
+    void handleUpdatedCandles();
 
     void saveCandleSubscriptionToCache(string& classCode, string& ticker, Interval& interval);
 

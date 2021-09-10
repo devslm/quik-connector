@@ -95,10 +95,7 @@ void Quik::startCheckAllTradesThread() {
 }
 
 int Quik::onQuote(lua_State *luaState) {
-    lock_guard<recursive_mutex> lockGuard(*mutexLock);
-
-    quoteLock.lock();
-    changedQuoteMapLock.lock();
+    lock_guard<recursive_mutex> mutexLockGuard(*mutexLock);
 
     string classCode;
     string ticker;
@@ -115,10 +112,7 @@ int Quik::onQuote(lua_State *luaState) {
         logger->error("Could not get changed quote ticker");
         return 0;
     }
-    changedQuotes[ticker] = classCode;
-
-    quoteLock.unlock();
-    changedQuoteMapLock.unlock();
+    changedQuotes.put(ticker, classCode);
 
     return 0;
 }
@@ -127,20 +121,16 @@ void Quik::startCheckQuotesThread() {
     while (isConnectorRunning) {
         this_thread::sleep_for(chrono::milliseconds(2));
 
-        if (changedQuotes.empty()) {
+        if (changedQuotes.isEmpty()) {
             continue;
         }
-        changedQuoteMapLock.lock();
 
-        unordered_map<string, string> quotes(changedQuotes);
+        for (const auto& entry : changedQuotes.iterator()) {
+            string ticker = entry.key;
+            string classCode = entry.value;
 
-        changedQuotes.clear();
+            changedQuotes.remove(entry.key);
 
-        changedQuoteMapLock.unlock();
-
-        for (const auto& entry : quotes) {
-            string ticker = entry.first;
-            string classCode = entry.second;
             auto tickerQuotes = getTickerQuotes(luaGetState(), ticker, classCode);
 
             queueService->pubSubPublish(
@@ -152,24 +142,19 @@ void Quik::startCheckQuotesThread() {
 }
 
 int Quik::onOrder(lua_State *luaState) {
-    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+    lock_guard<recursive_mutex> mutexLockGuard(*mutexLock);
+    lock_guard<mutex> orderLockGuard(orderLock);
+    lock_guard<mutex> changedOrderListLockGuard(changedOrderListLock);
 
     OrderDto order;
 
-    orderLock.lock();
-    changedOrderListLock.lock();
-
     bool isSuccess = toOrderDto(luaState, this, &order);
-
-    orderLock.unlock();
 
     if (isSuccess) {
         newOrders.push_back(order);
     } else {
         logger->error("Could not get new order from callback!");
     }
-    changedOrderListLock.unlock();
-
     return 0;
 }
 
@@ -196,7 +181,7 @@ void Quik::startCheckNewOrdersThread() {
         if (newOrders.empty()) {
             continue;
         }
-        changedOrderListLock.lock();
+        lock_guard<mutex> changedOrderListLockGuard(changedOrderListLock);
 
         OrderDto order = newOrders.front();
 
@@ -205,8 +190,6 @@ void Quik::startCheckNewOrdersThread() {
         OrderEntity orderEntity = toOrderEntity(order);
 
         quikOrderService->onNewOrder(order);
-
-        changedOrderListLock.unlock();
     }
 }
 

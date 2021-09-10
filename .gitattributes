@@ -1,4 +1,6 @@
 lua-5.3.5/* linguist-vendored
+lua-5.4.1/* linguist-vendored
+ta-lib/* linguist-vendored
 
 *.c linguist-detectable=false
 *.h linguist-detectable=false

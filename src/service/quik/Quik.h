@@ -13,6 +13,7 @@
 #include <string>
 #include "utils/QuikUtils.h"
 #include "../lua/Lua.h"
+#include "../../component/concurrent/SmallConcurrentMap.h"
 #include "../../dto/config/Config.h"
 #include "../../dto/quik/trade/TradeDto.h"
 #include "../../dto/option/Option.h"
@@ -211,16 +212,14 @@ private:
     queue<TradeDto> trades;
     recursive_mutex* mutexLock;
     mutex allTradeLock;
-    mutex quoteLock;
     mutex orderLock;
-    mutex changedQuoteMapLock;
     mutex changedOrderListLock;
     mutex changedTradeQueueLock;
     thread checkAllTradesThread;
     thread checkQuotesThread;
     thread checkNewOrdersThread;
     thread pushServerInfoThread;
-    unordered_map<string, string> changedQuotes;
+    SmallConcurrentMap<string, string> changedQuotes;
     list<OrderDto> newOrders;
     QuikCandleService *quikCandleService;
     QuikOrderService *quikOrderService;
