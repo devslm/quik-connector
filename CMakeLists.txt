@@ -66,9 +66,9 @@ add_library(
 )
 
 include_directories(
-    lua-${LUA_VERSION}/src
     ${SQLiteCpp_SOURCE_DIR}/include
     ${liblzma_SOURCE_DIR}/src/liblzma/api
+    external/lua-${LUA_VERSION}/src
 )
 
 set(
@@ -80,7 +80,7 @@ set(
     nlohmann_json::nlohmann_json
     yaml-cpp
     cpp_redis
-    ${CMAKE_CURRENT_BINARY_DIR}/../lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
+    ${CMAKE_CURRENT_BINARY_DIR}/../external/lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
 )
 
 target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
@@ -88,9 +88,9 @@ target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
 option(QUIK_INCLUDE_TA_LIB "Include TA-LIB indicators library" OFF)
 
 if (QUIK_INCLUDE_TA_LIB)
-    include_directories(ta-lib/include)
+    include_directories(external/ta-lib/include)
 
-    target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../ta-lib/lib/ta_libc_cdr.lib)
+    target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../external/ta-lib/lib/ta_libc_cdr.lib)
 endif()
 
 option(QUIK_BUILD_TOOLS "Build QUIK tools binaries files" OFF)
