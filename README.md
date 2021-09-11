@@ -1,6 +1,7 @@
 [![C++](https://img.shields.io/badge/C++-%2011-green.svg)]()
 [![Lua 5.3.5](https://img.shields.io/badge/Lua-%205.3.5-green.svg)]()
 [![Lua 5.4.1](https://img.shields.io/badge/Lua-%205.4.1-green.svg)]()
+[![TA-Lib 0.4.0](https://img.shields.io/badge/TA--Lib-%200.4.0-green.svg)]()
 [![Windows 7/8/10](https://img.shields.io/badge/Windows-7/8/10-blue.svg)](https://www.microsoft.com/)
 [![Arqa Quik 8.13+](https://img.shields.io/badge/Arqa%20Quik-8.13+-blue.svg)](https://arqatech.com/en/products/quik/)
 
