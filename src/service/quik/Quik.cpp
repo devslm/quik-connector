@@ -86,10 +86,9 @@ void Quik::startCheckAllTradesThread() {
         for (const auto& trade : tradeList) {
             Option<TradeDto> tradeOption(trade);
 
-            queueService->pubSubPublish(
-                QueueService::QUIK_ALL_TRADES_TOPIC,
-                toAllTradeJson(tradeOption).dump()
-            );
+            SuccessResponseDto response(toAllTradeJson(tradeOption));
+
+            queueService->pubSubPublish(QueueService::QUIK_ALL_TRADES_TOPIC, response);
         }
     }
 }
@@ -133,10 +132,9 @@ void Quik::startCheckQuotesThread() {
 
             auto tickerQuotes = getTickerQuotes(luaGetState(), ticker, classCode);
 
-            queueService->pubSubPublish(
-                QueueService::QUIK_TICKER_QUOTES_TOPIC,
-                toTickerQuoteJson(tickerQuotes).dump()
-            );
+            SuccessResponseDto response(toTickerQuoteJson(tickerQuotes));
+
+            queueService->pubSubPublish(QueueService::QUIK_TICKER_QUOTES_TOPIC, response);
         }
     }
 }
@@ -206,7 +204,9 @@ void Quik::startPushServerInfoThread() {
         jsonObject["serverTime"] = (serverTime.isPresent() ? serverTime.get() : nullptr);
         jsonObject["isConnected"] = (connectionStatus.isPresent() ? connectionStatus.get().isConnected : nullptr);
 
-        queueService->pubSubPublish(QueueService::QUIK_SERVER_INFO_TOPIC, jsonObject.dump());
+        SuccessResponseDto response(jsonObject);
+
+        queueService->pubSubPublish(QueueService::QUIK_SERVER_INFO_TOPIC, response);
     }
 }
 

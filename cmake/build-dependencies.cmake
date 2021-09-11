@@ -84,6 +84,21 @@ if(NOT cpp_redis_POPULATED)
     target_include_directories(cpp_redis INTERFACE ${cpp_redis_SOURCE_DIR}/tacopie/includes)
 endif()
 
+# Include crossguid library (https://github.com/graeme-hill/crossguid)
+FetchContent_Declare(
+    crossguid
+    GIT_REPOSITORY https://github.com/graeme-hill/crossguid
+    GIT_TAG v${CROSSGUID_VERSION}
+)
+
+FetchContent_GetProperties(crossguid)
+
+if(NOT crossguid_POPULATED)
+    FetchContent_Populate(crossguid)
+
+    add_subdirectory(${crossguid_SOURCE_DIR} ${crossguid_BINARY_DIR})
+endif()
+
 # Include GoogleTest test framework (https://github.com/google/googletest)
 FetchContent_Declare(
     googletest

@@ -89,10 +89,11 @@ void QuikCandleService::checkCandlesRequestsComplete() {
             continue;
         }
 
-        try {
-            for (auto &candlesRequest: candlesRequests.iterator()) {
-                auto requestId = candlesRequest.key;
-                auto candleSubscription = candlesRequest.value;
+        for (auto &candlesRequest: candlesRequests.iterator()) {
+            auto requestId = candlesRequest.key;
+            auto candleSubscription = candlesRequest.value;
+
+            try {
                 auto candlesSize = getCandlesSize(&candleSubscription);
                 auto intervalName = QuikUtils::getIntervalName(candleSubscription.interval);
 
@@ -143,19 +144,20 @@ void QuikCandleService::checkCandlesRequestsComplete() {
                 candlesRequestsTimeout.remove(requestId);
                 candlesRequests.remove(requestId);
 
-                auto candlesJson = toCandleJson(candleOption);
+                SuccessResponseDto response(requestId, toCandleJson(candleOption));
 
-                QueueService::addRequestIdToResponse(candlesJson, requestId);
+                queueService->pubSubPublish(QueueService::QUIK_CANDLES_TOPIC, response);
+            } catch (exception& exception) {
+                auto errorMessage = string("Could not check candles request for complete! Reason: ").append(exception.what());
 
-                queueService->pubSubPublish(
-                    QueueService::QUIK_CANDLES_TOPIC,
-                    candlesJson.dump()
-                );
+                logger->error(errorMessage);
+
+                mutexLock->unlock();
+
+                ErrorResponseDto response(requestId, RESPONSE_QUIK_LUA_ERROR, errorMessage);
+
+                queueService->pubSubPublish(QueueService::QUIK_CANDLES_TOPIC, response);
             }
-        } catch (exception& exception) {
-            logger->error("Could not check candles request for complete! Reason: {}", exception.what());
-
-            mutexLock->unlock();
         }
         --totalLoopsBeforePrintQueueSize;
 
@@ -212,12 +214,17 @@ void QuikCandleService::handleUpdatedCandles() {
                 for (const auto &callback: candleSubscription.callbacks) {
                     callback(changedCandle);
                 }
-                queueService->pubSubPublish(
-                    QueueService::QUIK_CANDLE_CHANGE_TOPIC,
-                    toChangedCandleJson(changedCandle).dump()
-                );
+                SuccessResponseDto response(toChangedCandleJson(changedCandle));
+
+                queueService->pubSubPublish(QueueService::QUIK_CANDLE_CHANGE_TOPIC, response);
             } catch (exception &exception) {
-                logger->error("Could not handle updated candle in callback! Reason: {}", exception.what());
+                auto errorMessage = string("Could not handle updated candle in callback! Reason: ").append(exception.what());
+
+                logger->error(errorMessage);
+
+                ErrorResponseDto response(RESPONSE_QUIK_LUA_ERROR, errorMessage);
+
+                queueService->pubSubPublish(QueueService::QUIK_CANDLES_TOPIC, response);
             }
         }
     }

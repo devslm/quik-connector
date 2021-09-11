@@ -7,8 +7,8 @@
 
 #include <string>
 #include <nlohmann/json.hpp>
-#include "../../../dto/option/Option.h"
-#include "../../../dto/quik/connector/request/RequestDto.h"
+#include "../../dto/option/Option.h"
+#include "../../dto/quik/connector/request/RequestDto.h"
 
 using namespace nlohmann;
 using namespace std;

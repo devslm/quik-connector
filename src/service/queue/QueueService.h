@@ -12,7 +12,8 @@
 #include "../log/Logger.h"
 #include "../../component/redis/Redis.h"
 #include "../../component/uuid/Uuid.h"
-#include "../../mapper/quik/request/RequestMapper.h"
+#include "../../mapper/request/RequestMapper.h"
+#include "../../mapper/response/ResponseMapper.h"
 #include "../../dto/quik/order/OrderDto.h"
 #include "../quik/Quik.h"
 
@@ -31,9 +32,9 @@ enum QueueResponseType {
 
 typedef struct CommandRequestDto {
     CommandRequestDto(string command, string commandId, json commandJsonData) {
-        this->command = command;
-        this->commandId = commandId;
-        this->commandJsonData = commandJsonData;
+        this->command = move(command);
+        this->commandId = move(commandId);
+        this->commandJsonData = move(commandJsonData);
     }
     string command;
     string commandId;
@@ -42,49 +43,14 @@ typedef struct CommandRequestDto {
 
 typedef struct CommandResponseDto {
     CommandResponseDto(string channel, QueueResponseType type, string message) {
-        this->channel = channel;
+        this->channel = move(channel);
         this->type = type;
-        this->message = message;
+        this->message = move(message);
     }
     string channel;
     QueueResponseType type;
     string message;
 } CommandResponseDto;
-
-typedef enum ResponseStatus {
-    OK = 200,
-    BAD_REQUEST = 400,
-    INTERNAL_ERROR = 500
-} ResponseStatus;
-
-typedef struct SuccessResponseDto {
-    SuccessResponseDto(json data) {
-        this->id = Uuid::createRandom();
-        this->data = move(data);
-        this->status = OK;
-    }
-    SuccessResponseDto(string id, json data) {
-        this->id = move(id);
-        this->data = move(data);
-        this->status = ResponseStatus::OK;
-    }
-    string id;
-    int status;
-    json data;
-} SuccessResponseDto;
-
-typedef struct ErrorResponseDto {
-    ErrorResponseDto(string id, ResponseStatus status = INTERNAL_ERROR, string code, string detail = "Details not available!") {
-        this->id = move(id);
-        this->status = status;
-        this->code = move(code);
-        this->detail = move(detail);
-    }
-    string id;
-    int status;
-    string code;
-    string detail;
-} ErrorResponseDto;
 
 class QueueService {
 public:
@@ -97,6 +63,8 @@ public:
     static const string QUIK_ALL_TRADES_TOPIC;
     static const string QUIK_CANDLE_CHANGE_TOPIC;
     static const string QUIK_SERVER_INFO_TOPIC;
+    static const string QUIK_SUBSCRIPTION_RESULT_TOPIC;
+    static const string QUIK_COMMON_ERROR_TOPIC;
 
     static const string QUIK_ORDERS_QUEUE;
 
@@ -115,11 +83,13 @@ public:
 
     void subscribe();
 
-    void publish(const string& channel, const string& message);
+    void publish(const string& channel, SuccessResponseDto& response);
 
-    void pubSubPublish(const string& channel, const string& message);
+    void publish(const string& channel, ErrorResponseDto& response);
 
-    static bool addRequestIdToResponse(json& jsonData, const string& requestId);
+    void pubSubPublish(const string& channel, SuccessResponseDto& response);
+
+    void pubSubPublish(const string& channel, ErrorResponseDto& response);
 
 private:
     Quik *quik;
@@ -149,6 +119,10 @@ private:
     void startCheckResponsesThread();
 
     void startCheckChangedCandleResponsesThread();
+
+    void publish(const string& channel, const string& message);
+
+    void pubSubPublish(const string& channel, const string& message);
 };
 
 #endif //QUIK_CONNECTOR_QUEUESERVICE_H

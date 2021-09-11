@@ -13,6 +13,8 @@ const string QueueService::QUIK_CANDLES_TOPIC = "topic:quik:candles";
 const string QueueService::QUIK_ALL_TRADES_TOPIC = "topic:quik:trades:all";
 const string QueueService::QUIK_CANDLE_CHANGE_TOPIC = "topic:quik:candle:change";
 const string QueueService::QUIK_SERVER_INFO_TOPIC = "topic:quik:server:info";
+const string QueueService::QUIK_SUBSCRIPTION_RESULT_TOPIC = "topic:quik:subscription:result";
+const string QueueService::QUIK_COMMON_ERROR_TOPIC = "topic:quik:error";
 
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
 
@@ -71,7 +73,13 @@ void QueueService::startCheckRequestsThread() {
                 auto quikUserInfo = quik->getUserName(luaGetState());
 
                 if (quikUserInfo.isPresent()) {
-                    pubSubPublish(QUIK_USER_TOPIC, toQuikUserInfoJson(&quikUserInfo).dump());
+                    SuccessResponseDto response(requestId, toQuikUserInfoJson(&quikUserInfo));
+
+                    pubSubPublish(QUIK_USER_TOPIC, response);
+                } else {
+                    ErrorResponseDto response(requestId, RESPONSE_QUIK_LUA_ERROR, RESPONSE_DEFAULT_ERROR_MESSAGE);
+
+                    pubSubPublish(QUIK_USER_TOPIC, response);
                 }
             } else if (QUIK_GET_ORDERS_COMMAND == commandRequest.command) {
                 auto orders = quik->getOrders(luaGetState());
@@ -79,10 +87,9 @@ void QueueService::startCheckRequestsThread() {
                 publishOrders(orders);
             } else if (QUIK_GET_STOP_ORDERS_COMMAND == commandRequest.command) {
                 auto stopOrders = quik->getStopOrders(luaGetState());
+                SuccessResponseDto response(requestId, toStopOrderJson(stopOrders));
 
-                if (!stopOrders.empty()) {
-                    pubSubPublish(QUIK_STOP_ORDERS_TOPIC, toStopOrderJson(stopOrders).dump());
-                }
+                pubSubPublish(QUIK_STOP_ORDERS_TOPIC, response);
             } else if (QUIK_GET_NEW_ORDERS_COMMAND == commandRequest.command) {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
@@ -91,9 +98,10 @@ void QueueService::startCheckRequestsThread() {
                 auto request = toTickersRequestDto(commandRequest.commandJsonData);
                 auto classCode = request.get().classCode;
                 auto tickers = quik->getTickersByClassCode(luaGetState(), classCode);
-                auto tickersJson = toTickerJson(tickers);
 
-                pubSubPublish(QUIK_TICKERS_TOPIC, tickersJson.dump());
+                SuccessResponseDto response(requestId, toTickerJson(tickers));
+
+                pubSubPublish(QUIK_TICKERS_TOPIC, response);
             } else if (QUIK_GET_CANDLES_COMMAND == commandRequest.command) {
                 auto candlesRequestOption = toRequestDto<CandlesRequestDto>(commandRequest.commandJsonData);
 
@@ -106,10 +114,19 @@ void QueueService::startCheckRequestsThread() {
                         auto candlesJson = toCandleJson(candles);
                         SuccessResponseDto response(requestId, candlesJson);
 
-                        addRequestIdToResponse(candlesJson, requestId);
+                        pubSubPublish(QUIK_CANDLES_TOPIC, response);
+                    } else {
+                        ErrorResponseDto response(requestId, RESPONSE_QUIK_LUA_ERROR, RESPONSE_DEFAULT_ERROR_MESSAGE);
 
-                        pubSubPublish(QUIK_CANDLES_TOPIC, candlesJson.dump());
+                        pubSubPublish(QUIK_CANDLES_TOPIC, response);
                     }
+                } else {
+                    ErrorResponseDto response(
+                        requestId,
+                        RESPONSE_COMMAND_REQUEST_ERROR,
+                        "Could not get candles because request is not valid!"
+                    );
+                    pubSubPublish(QUIK_CANDLES_TOPIC, response);
                 }
             } else if (SUBSCRIBE_TO_CANDLES_COMMAND == commandRequest.command) {
                 auto requestOption = toCandlesSubscribeRequestDto(commandRequest.commandJsonData);
@@ -128,10 +145,17 @@ void QueueService::startCheckRequestsThread() {
                     jsonObject["isSubscribed"] = isSubscribed;
                     SuccessResponseDto response(requestId, jsonObject);
 
-                    // Send response to the client
+                    pubSubPublish(QUIK_SUBSCRIPTION_RESULT_TOPIC, response);
                 } else {
                     logger->error("[Redis] Could not handle new request to subscribe candles with data: {} because request data is invalid!",
                         commandRequest.commandJsonData.dump());
+
+                    ErrorResponseDto response(
+                        requestId,
+                        RESPONSE_COMMAND_REQUEST_ERROR,
+                        "Could not subscribe to candles because request is not valid!"
+                    );
+                    pubSubPublish(QUIK_SUBSCRIPTION_RESULT_TOPIC, response);
                 }
             } else if (UNSUBSCRIBE_FROM_CANDLES_COMMAND == commandRequest.command) {
                 auto requestOption = toCandlesSubscribeRequestDto(commandRequest.commandJsonData);
@@ -149,9 +173,18 @@ void QueueService::startCheckRequestsThread() {
                     json jsonObject;
                     jsonObject["isUnsubscribed"] = isUnsubscribed;
                     SuccessResponseDto response(requestId, jsonObject);
+
+                    pubSubPublish(QUIK_SUBSCRIPTION_RESULT_TOPIC, response);
                 } else {
                     logger->error("[Redis] Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
                         commandRequest.commandJsonData.dump());
+
+                    ErrorResponseDto response(
+                        requestId,
+                        RESPONSE_COMMAND_REQUEST_ERROR,
+                        "Could not unsubscribe from candles because request is not valid!"
+                    );
+                    pubSubPublish(QUIK_SUBSCRIPTION_RESULT_TOPIC, response);
                 }
             }
         } catch (const exception& exception) {
@@ -326,17 +359,12 @@ void QueueService::authenticate() {
     });
 }
 
-bool QueueService::addRequestIdToResponse(json& jsonData, const string& requestId) {
-    if (jsonData == nullptr) {
-        logger->error("[Redis] Could not add request id to response data because json data is empty!");
-        return false;
-    } else if (requestId.empty()) {
-        // Skip add request id if not present
-        return true;
-    }
-    jsonData["requestId"] = requestId;
+void QueueService::publish(const string& channel, SuccessResponseDto& response) {
+    publish(channel, toResponseJson(response).dump());
+}
 
-    return true;
+void QueueService::publish(const string& channel, ErrorResponseDto& response) {
+    publish(channel, toResponseJson(response).dump());
 }
 
 void QueueService::publish(const string& channel, const string& message) {
@@ -350,6 +378,14 @@ void QueueService::publish(const string& channel, const string& message) {
         responseQueue.push(commandResponse);
         responseQueueMutex.unlock();
     }
+}
+
+void QueueService::pubSubPublish(const string& channel, SuccessResponseDto& response) {
+    pubSubPublish(channel, toResponseJson(response).dump());
+}
+
+void QueueService::pubSubPublish(const string& channel, ErrorResponseDto& response) {
+    pubSubPublish(channel, toResponseJson(response).dump());
 }
 
 void QueueService::pubSubPublish(const string& channel, const string& message) {

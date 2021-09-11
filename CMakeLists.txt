@@ -25,6 +25,7 @@ set(JSON_VERSION 3.9.1)
 set(YAML_CPP_VERSION 0.7.0)
 set(SPDLOG_VERSION 1.9.0)
 set(CPP_REDIS_VERSION 4.3.1)
+set(CROSSGUID_VERSION 0.2.2)
 set(GOOGLE_TEST_FRAMEWORK_VERSION 1.11.0)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -68,6 +69,7 @@ add_library(
 include_directories(
     ${SQLiteCpp_SOURCE_DIR}/include
     ${liblzma_SOURCE_DIR}/src/liblzma/api
+    ${crossguid_SOURCE_DIR}
     external/lua-${LUA_VERSION}/src
 )
 
@@ -80,6 +82,7 @@ set(
     nlohmann_json::nlohmann_json
     yaml-cpp
     cpp_redis
+    xg # crossguid library
     ${CMAKE_CURRENT_BINARY_DIR}/../external/lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
 )
 

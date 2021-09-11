@@ -4,17 +4,6 @@
 
 #include "Uuid.h"
 
-string Uuid::createRandom() {
-    UUID uuid;
-    UuidCreate(&uuid);
-
-    char *str;
-
-    UuidToStringA(&uuid, (RPC_CSTR*)&str);
-
-    auto uuidString = string(str);
-
-    delete str;
-
-    return uuidString;
+string slmdev::Uuid::createRandom() {
+    return xg::newGuid().str();
 }

@@ -5,14 +5,15 @@
 #ifndef QUIK_CONNECTOR_UUID_H
 #define QUIK_CONNECTOR_UUID_H
 
-#include <string>
-#include "windows.h"
+#include <Guid.hpp>
 
 using namespace std;
 
-class Uuid {
-public:
-    static string createRandom();
-};
+namespace slmdev {
+    class Uuid {
+    public:
+        static string createRandom();
+    };
+}
 
 #endif //QUIK_CONNECTOR_UUID_H
