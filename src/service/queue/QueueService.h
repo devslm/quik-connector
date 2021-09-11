@@ -11,6 +11,7 @@
 #include <cpp_redis/cpp_redis>
 #include "../log/Logger.h"
 #include "../../component/redis/Redis.h"
+#include "../../component/uuid/Uuid.h"
 #include "../../mapper/quik/request/RequestMapper.h"
 #include "../../dto/quik/order/OrderDto.h"
 #include "../quik/Quik.h"
@@ -49,6 +50,41 @@ typedef struct CommandResponseDto {
     QueueResponseType type;
     string message;
 } CommandResponseDto;
+
+typedef enum ResponseStatus {
+    OK = 200,
+    BAD_REQUEST = 400,
+    INTERNAL_ERROR = 500
+} ResponseStatus;
+
+typedef struct SuccessResponseDto {
+    SuccessResponseDto(json data) {
+        this->id = Uuid::createRandom();
+        this->data = move(data);
+        this->status = OK;
+    }
+    SuccessResponseDto(string id, json data) {
+        this->id = move(id);
+        this->data = move(data);
+        this->status = ResponseStatus::OK;
+    }
+    string id;
+    int status;
+    json data;
+} SuccessResponseDto;
+
+typedef struct ErrorResponseDto {
+    ErrorResponseDto(string id, ResponseStatus status = INTERNAL_ERROR, string code, string detail = "Details not available!") {
+        this->id = move(id);
+        this->status = status;
+        this->code = move(code);
+        this->detail = move(detail);
+    }
+    string id;
+    int status;
+    string code;
+    string detail;
+} ErrorResponseDto;
 
 class QueueService {
 public:

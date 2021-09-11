@@ -104,6 +104,7 @@ void QueueService::startCheckRequestsThread() {
 
                     if (candles.isPresent()) {
                         auto candlesJson = toCandleJson(candles);
+                        SuccessResponseDto response(requestId, candlesJson);
 
                         addRequestIdToResponse(candlesJson, requestId);
 
@@ -123,12 +124,11 @@ void QueueService::startCheckRequestsThread() {
                         request.ticker,
                         request.interval
                     );
+                    json jsonObject;
+                    jsonObject["isSubscribed"] = isSubscribed;
+                    SuccessResponseDto response(requestId, jsonObject);
 
-                    if (!isSubscribed) {
-                        //addRequestIdToResponse(json, requestId);
-
-                        //Send response to client with the result
-                    }
+                    // Send response to the client
                 } else {
                     logger->error("[Redis] Could not handle new request to subscribe candles with data: {} because request data is invalid!",
                         commandRequest.commandJsonData.dump());
@@ -146,12 +146,9 @@ void QueueService::startCheckRequestsThread() {
                         request.ticker,
                         request.interval
                     );
-
-                    if (!isUnsubscribed) {
-                        //addRequestIdToResponse(json, requestId);
-
-                        //Send response to client with the result
-                    }
+                    json jsonObject;
+                    jsonObject["isUnsubscribed"] = isUnsubscribed;
+                    SuccessResponseDto response(requestId, jsonObject);
                 } else {
                     logger->error("[Redis] Could not handle new request to unsubscribe candles with data: {} because request data is invalid!",
                         commandRequest.commandJsonData.dump());
