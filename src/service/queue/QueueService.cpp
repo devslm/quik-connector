@@ -108,14 +108,9 @@ void QueueService::startCheckRequestsThread() {
                 if (candlesRequestOption.isPresent()) {
                     auto candlesRequest = candlesRequestOption.get();
                     candlesRequest.requestId = requestId;
-                    auto candles = quik->getCandles(luaGetState(), candlesRequest);
+                    auto isSuccess = quik->getCandles(luaGetState(), candlesRequest);
 
-                    if (candles.isPresent()) {
-                        auto candlesJson = toCandleJson(candles);
-                        SuccessResponseDto response(requestId, candlesJson);
-
-                        pubSubPublish(QUIK_CANDLES_TOPIC, response);
-                    } else {
+                    if (!isSuccess) {
                         ErrorResponseDto response(requestId, RESPONSE_QUIK_LUA_ERROR, RESPONSE_DEFAULT_ERROR_MESSAGE);
 
                         pubSubPublish(QUIK_CANDLES_TOPIC, response);

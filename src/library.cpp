@@ -138,6 +138,9 @@ static int onStart(lua_State *luaState) {
     isQuikStarted = true;
     // Run user robot logic in separate thread
     userRobotThread = thread([luaState]() {
+        // Let DLL to complete all initializations before start the robot
+        this_thread::sleep_for(chrono::seconds(5));
+
         RobotService robotService(quik);
         robotService.run(luaState);
     });

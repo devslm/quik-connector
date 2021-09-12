@@ -12,7 +12,10 @@
 
 using namespace std;
 
+// Callbacks only for updated candles from setUpdateCallback in datasource
 typedef function<void(Option<ChangedCandleDto>&)> UpdateCandleCallback;
+// Callbacks only for ready candles with getCandles request
+typedef function<void(Option<CandleDto>&)> CandlesReadyCallback;
 
 typedef struct QuikSubscriptionDto {
     lua_State *luaState;
@@ -22,8 +25,8 @@ typedef struct QuikSubscriptionDto {
     string classCode;
     string ticker;
     Interval interval;
-    list<UpdateCandleCallback> callbacks;
-
+    list<UpdateCandleCallback> updateCandleCallbacks;
+    list<CandlesReadyCallback> candlesReadyCallbacks;
 } QuikSubscriptionDto;
 
 #endif //QUIK_CONNECTOR_QUIKSUBSCRIPTIONDTO_H

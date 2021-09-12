@@ -18,26 +18,56 @@ void RobotService::run(lua_State* luaState) {
     // Current logic just for example
     runQuikConnectionStatusMonitor(luaState);
 
-    string classCode = "SPBFUT";
-    string ticker = "RIU1";
-    auto interval = Interval::INTERVAL_M1;
-    uint64_t lastBlastDate = 0;
+    CandlesRequestDto candlesRequest;
+    candlesRequest.classCode = "SPBFUT";
+    candlesRequest.ticker = "RIU1";
+    candlesRequest.interval = Interval::INTERVAL_M2;
 
-    Option<UpdateCandleCallback> callback([&lastBlastDate](Option<ChangedCandleDto>& changedCandle) {
-        if (changedCandle.isPresent()) {
-            auto candle = changedCandle.get();
-            auto previousCandleDiff = abs(candle.previousCandle.close - candle.previousCandle.open);
-
-            if (lastBlastDate != candle.previousCandle.date
-                    && previousCandleDiff < 1.0) {
-                lastBlastDate = candle.previousCandle.date;
-
-                logger->info("Found blast diff: {} in candle on time: {}", previousCandleDiff, candle.previousCandle.date);
-            }
+    // Calculate EMA 9 after candles prepared
+    auto onCandlesReadyCallback = [](Option<CandleDto> candleOption) {
+        if (candleOption.isEmpty()) {
+            logger->error("[Robot] Could not get candles");
+            return;
         }
-    });
-    quik->subscribeToCandles(luaState, classCode, ticker, interval, callback);
+        logger->info("[Robot] Got candles with size: {}", candleOption.get().values.size());
 
+        int candlesSize = candleOption.get().values.size();
+
+        #ifdef TA_LIB
+
+        TA_Real* closePrice = new TA_Real[candlesSize];
+        TA_Real* out = new TA_Real[candlesSize];
+        TA_Integer outBeg;
+        TA_Integer outNbElement;
+
+        int i = 0;
+
+        for (auto& candle : candleOption.get().values) {
+            closePrice[i++] = candle.close;
+        }
+        auto retCode = TA_MA(0, candlesSize - 1,
+                         &closePrice[0],
+                         9,TA_MAType_EMA,
+                         &outBeg, &outNbElement, &out[0]);
+
+        if (TA_SUCCESS != retCode) {
+            logger->info("[Robot] Could not calculate EMA 9!");
+        } else {
+            int lastValueIndex = outNbElement - 1;
+
+            logger->info("[Robot] EMA 9 values: {}, {}, {}", out[lastValueIndex], out[lastValueIndex - 1], out[lastValueIndex - 2]);
+        }
+        delete[] closePrice;
+        delete[] out;
+
+        #endif
+    };
+    auto isSuccess = quik->getCandles(luaState, candlesRequest, Option<CandlesReadyCallback>(onCandlesReadyCallback));
+
+    if (!isSuccess) {
+        logger->error("[Robot] Could not get candles with class code: {}, ticker: {} and interval: INTERVAL_M1",
+            candlesRequest.classCode, candlesRequest.ticker);
+    }
     logger->info("[Robot] Finished main thread");
 }
 

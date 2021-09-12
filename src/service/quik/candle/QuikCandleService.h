@@ -49,7 +49,11 @@ public:
 
     bool unsubscribeFromCandles(lua_State *luaState, string& classCode, string& ticker, Interval& interval);
 
-    Option<CandleDto> getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
+    bool getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest);
+
+    bool getCandles(lua_State *luaState,
+                    const CandlesRequestDto& candlesRequest,
+                    Option<CandlesReadyCallback>& candlesReadyCallback);
 
     Option<int> getCandlesSize(QuikSubscriptionDto *candleSubscription);
 
@@ -72,7 +76,6 @@ private:
     thread reloadSubscriptionsThread;
     thread checkCandlesRequestsCompleteThread;
     thread checkUpdatedCandlesThread;
-    mutex candlesRequestsMutex;
 
     void reloadSavedSubscriptions();
 
@@ -86,9 +89,9 @@ private:
 
     bool addUpdateCallbackToDataSource(lua_State *luaState, QuikSubscriptionDto& quikSubscription);
 
-    void requestNewCandlesDataFromServer(lua_State *luaState,
+    bool requestNewCandlesDataFromServer(lua_State *luaState,
                                          const CandlesRequestDto& candlesRequest,
-                                         QuikSubscriptionDto& quikSubscription);
+                                         QuikSubscriptionDto& candleSubscription);
 
     string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
 };

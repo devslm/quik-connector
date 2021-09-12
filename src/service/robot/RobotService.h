@@ -7,6 +7,10 @@
 
 #include "../quik/Quik.h"
 
+#ifdef TA_LIB
+    #include "ta_func.h"
+#endif
+
 class Quik;
 
 class RobotService {
