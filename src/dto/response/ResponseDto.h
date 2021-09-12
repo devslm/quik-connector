@@ -14,7 +14,7 @@ using namespace nlohmann;
 
 static const string RESPONSE_QUIK_LUA_ERROR = "QUIK_LUA_ERROR";
 static const string RESPONSE_COMMAND_REQUEST_ERROR = "COMMAND_REQUEST_ERROR";
-static const string RESPONSE_GET_CANDLES_TIMEOUT_ERROR = "GET_CANDLES_TIMEOUT_ERROR";
+static const string RESPONSE_CANDLES_TIMEOUT_ERROR = "CANDLES_TIMEOUT_ERROR";
 
 static const string RESPONSE_DEFAULT_ERROR_MESSAGE = "Details not available!";
 

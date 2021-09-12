@@ -121,7 +121,7 @@ void QuikCandleService::checkCandlesRequestsComplete() {
 
                         ErrorResponseDto response(
                             requestId,
-                            RESPONSE_GET_CANDLES_TIMEOUT_ERROR,
+                            RESPONSE_CANDLES_TIMEOUT_ERROR,
                             "Could not get candles because timeout while waiting datasource size!"
                         );
                         queueService->pubSubPublish(QueueService::QUIK_CANDLES_TOPIC, response);
