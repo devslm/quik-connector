@@ -545,6 +545,12 @@ bool QuikCandleService::getCandles(lua_State *luaState,
     auto classCode = candlesRequest.classCode;
     auto ticker = candlesRequest.ticker;
     auto interval = candlesRequest.interval;
+
+    if (candlesRequest.requestId == "") {
+        logger->error("Could not get candles with class code: {}, ticker: {} and interval: {} because request id is required!",
+            classCode, ticker, intervalName);
+        return false;
+    }
     QuikSubscriptionDto candleSubscription;
 
     logger->debug("Get candles with class code: {}, ticker: {} and interval: {}", classCode, ticker, intervalName);

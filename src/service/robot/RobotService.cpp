@@ -19,6 +19,7 @@ void RobotService::run(lua_State* luaState) {
     runQuikConnectionStatusMonitor(luaState);
 
     CandlesRequestDto candlesRequest;
+    candlesRequest.requestId = connector::Uuid::createRandom();
     candlesRequest.classCode = "SPBFUT";
     candlesRequest.ticker = "RIU1";
     candlesRequest.interval = Interval::INTERVAL_M2;

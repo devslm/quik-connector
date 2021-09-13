@@ -20,7 +20,7 @@ static const string RESPONSE_DEFAULT_ERROR_MESSAGE = "Details not available!";
 
 typedef struct SuccessResponseDto {
     SuccessResponseDto(const json data) {
-        this->id = slmdev::Uuid::createRandom();
+        this->id = connector::Uuid::createRandom();
         this->data = move(data);
     }
     SuccessResponseDto(const string id, const json data) {
@@ -34,7 +34,7 @@ typedef struct SuccessResponseDto {
 
 typedef struct ErrorResponseDto {
     ErrorResponseDto(const string code, const string detail) {
-        this->id = slmdev::Uuid::createRandom();
+        this->id = connector::Uuid::createRandom();
         this->code = move(code);
         this->detail = move(detail);
     }

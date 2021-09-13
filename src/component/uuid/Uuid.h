@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace slmdev {
+namespace connector {
     class Uuid {
     public:
         static string createRandom();

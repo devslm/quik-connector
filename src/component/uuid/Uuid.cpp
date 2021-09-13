@@ -4,6 +4,6 @@
 
 #include "Uuid.h"
 
-string slmdev::Uuid::createRandom() {
+string connector::Uuid::createRandom() {
     return xg::newGuid().str();
 }
