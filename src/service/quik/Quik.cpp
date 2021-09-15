@@ -671,6 +671,10 @@ list<StopOrderDto> Quik::getStopOrders(lua_State *luaState) {
     return quikOrderService->getStopOrders(luaState);
 }
 
+Option<OrderDto> Quik::getOrderById(lua_State *luaState, uint64_t orderId) {
+    return quikOrderService->getOrderById(luaState, orderId);
+}
+
 bool Quik::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest) {
     return quikOrderService->cancelStopOrderById(luaState, cancelStopOrderRequest);
 }

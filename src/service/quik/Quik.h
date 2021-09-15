@@ -49,6 +49,7 @@ const char GET_CLASSES_LIST_FUNCTION_NAME[] = "getClassesList";
 const char GET_CLASS_INFO_FUNCTION_NAME[] = "getClassInfo";
 const char GET_INFO_PARAM_FUNCTION_NAME[] = "getInfoParam";
 const char GET_QUOTE_LEVEL_2_FUNCTION_NAME[] = "getQuoteLevel2";
+const char GET_ORDER_BY_NUMBER_FUNCTION_NAME[] = "getOrderByNumber";
 const char GET_NUMBER_OF_FUNCTION_NAME[] = "getNumberOf";
 const char GET_ITEM_FUNCTION_NAME[] = "getItem";
 const char GET_SECURITY_INFO_FUNCTION_NAME[] = "getSecurityInfo";
@@ -198,6 +199,8 @@ public:
     list<OrderDto> getOrders(lua_State *luaState);
 
     list<StopOrderDto> getStopOrders(lua_State *luaState);
+
+    Option<OrderDto> getOrderById(lua_State *luaState, uint64_t orderId);
 
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 

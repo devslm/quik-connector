@@ -14,7 +14,7 @@ const string QueueService::QUIK_ALL_TRADES_TOPIC = "topic:quik:trades:all";
 const string QueueService::QUIK_CANDLE_CHANGE_TOPIC = "topic:quik:candle:change";
 const string QueueService::QUIK_SERVER_INFO_TOPIC = "topic:quik:server:info";
 const string QueueService::QUIK_SUBSCRIPTION_RESULT_TOPIC = "topic:quik:subscription:result";
-const string QueueService::QUIK_COMMON_ERROR_TOPIC = "topic:quik:error";
+const string QueueService::QUIK_COMMON_ERROR_TOPIC = "topic:quik:errors";
 
 const string QueueService::QUIK_ORDERS_QUEUE = "queue:quik:orders";
 

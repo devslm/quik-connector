@@ -38,6 +38,8 @@ public:
 
     list<StopOrderDto> getStopOrders(lua_State *luaState);
 
+    Option<OrderDto> getOrderById(lua_State *luaState, uint64_t orderId);
+
     bool cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest);
 
 private:

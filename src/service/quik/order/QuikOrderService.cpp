@@ -184,6 +184,37 @@ list<StopOrderDto> QuikOrderService::getStopOrders(lua_State *luaState) {
     return stopOrders;
 }
 
+Option<OrderDto> QuikOrderService::getOrderById(lua_State *luaState, uint64_t orderId) {
+    Option<OrderDto> orderOption;
+
+    if (orderId < 1) {
+        logger->error("Could not get order with id: {} because order id must be > 0!", orderId);
+
+        return orderOption;
+    }
+    auto quikOrderId = static_cast<double>(orderId);
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
+
+    FunctionArgDto args[] = {{quikOrderId}};
+
+    if (!luaCallFunction(luaState, GET_ORDER_BY_NUMBER_FUNCTION_NAME, 1, 2, args)) {
+        logger->error("Could not call QUIK {} function!", GET_ORDER_BY_NUMBER_FUNCTION_NAME);
+        return {};
+    }
+    OrderDto order;
+
+    if (toOrderDto(luaState, quik, &order)) {
+        orderOption = Option<OrderDto>(order);
+    } else {
+        logger->error("Could not get order with id: {} because could not convert order data to dto!", orderId);
+    }
+    // Remove the second returned value (order index in table)
+    lua_pop(luaState, 1);
+
+    return orderOption;
+}
+
 bool QuikOrderService::cancelStopOrderById(lua_State *luaState, CancelStopOrderRequestDto& cancelStopOrderRequest) {
     logger->info(
         "Cancel stop order with id: {}, account: {}, clientCode: {}, class code: {} and ticker: {}",
