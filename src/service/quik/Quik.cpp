@@ -392,10 +392,49 @@ void Quik::getTableValues(lua_State *luaState, const string& tableName, function
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 }
 
-set<string> Quik::getClassesList(lua_State *luaState) {
+list<TradeAccountDto> Quik::getTradeAccounts(lua_State *luaState) {
+    list<TradeAccountDto> tradeAccounts;
+    string tableName = QUIK_TRADE_ACCOUNTS_TABLE_NAME;
+
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
+    FunctionArgDto args[] = {{tableName}};
+
+    if (!luaCallFunction(luaState, GET_NUMBER_OF_FUNCTION_NAME, 1, 1, args)) {
+        logger->error("Could not call QUIK {} function for: {}!", GET_NUMBER_OF_FUNCTION_NAME, tableName);
+        return tradeAccounts;
+    }
+    double totalItems = 0.0;
+    bool isSuccess = luaGetNumber(luaState, &totalItems);
+
+    if (!isSuccess) {
+        logger->error("Can't retrieve total items number for: {}!", tableName);
+        return tradeAccounts;
+    }
+    logger->debug("Found total items: {} for: {}", totalItems, tableName);
+
+    for (int i = 0; i < totalItems; ++i) {
+        FunctionArgDto getItemArgs[] = {{tableName}, {i}};
+
+        if (!luaCallFunction(luaState, GET_ITEM_FUNCTION_NAME, 2, 1, getItemArgs)) {
+            logger->error("Could not call QUIK {} function for: {}!", GET_ITEM_FUNCTION_NAME, tableName);
+            return tradeAccounts;
+        }
+        TradeAccountDto tradeAccount;
+
+        if (toTradeAccountDto(luaState, &tradeAccount)) {
+            tradeAccounts.push_back(tradeAccount);
+        } else {
+            logger->error("Could not convert trade account data to dto with table index: {}", i);
+        }
+    }
+    return tradeAccounts;
+}
+
+set<string> Quik::getClassesList(lua_State *luaState) {
     set<string> classes;
+
+    lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     if (!luaCallFunction(luaState, GET_CLASSES_LIST_FUNCTION_NAME, 0, 1, nullptr)) {
         logger->error("Could not call QUIK {} function!", GET_CLASSES_LIST_FUNCTION_NAME);

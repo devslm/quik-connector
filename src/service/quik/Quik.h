@@ -23,6 +23,7 @@
 #include "../../mapper/quik/transaction/TransactionMapper.h"
 #include "../../mapper/quik/depo/DepoLimitMapper.h"
 #include "../../mapper/quik/param/ParamMapper.h"
+#include "../../mapper/quik/account/TradeAccountMapper.h"
 #include "../utils/string/StringUtils.h"
 #include "../../dto/quik/class/ClassInfoDto.h"
 #include "../../mapper/quik/class/ClassInfoMapper.h"
@@ -68,6 +69,7 @@ const char QUIK_TRADES_TABLE_NAME[] = "trades";
 const char QUIK_ORDERS_TABLE_NAME[] = "orders";
 const char QUIK_STOP_ORDERS_TABLE_NAME[] = "stop_orders";
 const char QUIK_CLIENT_CODES_TABLE_NAME[] = "client_codes";
+const char QUIK_TRADE_ACCOUNTS_TABLE_NAME[] = "trade_accounts";
 
 class ConfigService;
 class QuikCandleService;
@@ -164,6 +166,8 @@ public:
                                       int limitKind);
 
     set<string> getClientCodes(lua_State *luaState);
+
+    list<TradeAccountDto> getTradeAccounts(lua_State *luaState);
 
     void getTableValues(lua_State *luaState, const string& tableName, function<void(string&)> const& callback);
 
