@@ -61,6 +61,7 @@ public:
     static const string QUIK_STOP_ORDERS_TOPIC;
     static const string QUIK_CANDLES_TOPIC;
     static const string QUIK_ALL_TRADES_TOPIC;
+    static const string QUIK_TRADE_ACCOUNTS_TOPIC;
     static const string QUIK_CANDLE_CHANGE_TOPIC;
     static const string QUIK_SERVER_INFO_TOPIC;
     static const string QUIK_SUBSCRIPTION_RESULT_TOPIC;
@@ -76,6 +77,7 @@ public:
     static const string QUIK_GET_TICKERS_COMMAND;
     static const string SUBSCRIBE_TO_CANDLES_COMMAND;
     static const string UNSUBSCRIBE_FROM_CANDLES_COMMAND;
+    static const string QUIK_GET_TRADE_ACCOUNTS_COMMAND;
 
     QueueService(Quik *quik, string host, int port);
 

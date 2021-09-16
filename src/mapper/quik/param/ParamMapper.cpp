@@ -15,6 +15,14 @@ bool toParamDto(lua_State *luaState, ParamDto *param) {
 
         return false;
     }
+    if (!luaGetTableStringField(luaState, "result", &param->result)) {
+        return false;
+    }
+    param->isError = (param->result == "1" ? false : true);
+
+    if (param->isError) {
+        return false;
+    }
     string paramType;
 
     if (!luaGetTableStringField(luaState, "param_type", &paramType)) {
@@ -26,9 +34,6 @@ bool toParamDto(lua_State *luaState, ParamDto *param) {
         return false;
     }
     if (!luaGetTableStringField(luaState, "param_image", &param->paramImage)) {
-        return false;
-    }
-    if (!luaGetTableStringField(luaState, "result", &param->result)) {
         return false;
     }
     lua_pop(luaState, 1);
@@ -55,6 +60,8 @@ static ParamType getParamTypeById(const string& paramType) {
         case 6:
             return PARAM_DATE_TYPE;
         default:
+            logger->error("Found unknown param ex data type: {}", paramType);
+
             return PARAM_UNKNOWN_TYPE;
     }
 }

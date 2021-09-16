@@ -6,24 +6,41 @@
 #define QUIK_CONNECTOR_NEWSSERVICE_H
 
 #include <string>
-#include "../../quik/Quik.h"
+#include <efsw/efsw.hpp>
+#include "../../lua/Lua.h"
 
 using namespace std;
+using namespace efsw;
 
 class Quik;
-class ConfigService;
 
-class QuikNewsService {
+typedef function<void(string&)> UpdateNewsFileCallback;
+
+class QuikNewsService : public FileWatchListener {
 public:
-    explicit QuikNewsService(Quik *quik);
+    explicit QuikNewsService(const string& newsFilePath);
 
     virtual ~QuikNewsService();
 
-    void startMonitorUpdates(lua_State *luaState);
+    void startMonitorUpdates(UpdateNewsFileCallback callback);
+
+    void handleFileAction(WatchID watchid, const std::string& dir, const std::string& filename, Action action, std::string oldFilename) override {
+        if (action != Actions::Modified) {
+            logger->info("QUIK news file action: {}", action);
+            return;
+        }
+        logger->info("QUIK news file updated....");
+
+        string newsFileData = FileUtils::readFile(newsFilePath);
+
+        onUpdateCallback(newsFileData);
+    }
 
 private:
-    Quik *quik;
-    thread monitorNewsThread;
+    string newsFilePath;
+    UpdateNewsFileCallback onUpdateCallback;
+    FileWatcher* fileWatcher;
+    WatchID watchId;
 };
 
 #endif //QUIK_CONNECTOR_NEWSSERVICE_H

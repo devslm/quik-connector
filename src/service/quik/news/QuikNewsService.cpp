@@ -4,34 +4,44 @@
 
 #include "QuikNewsService.h"
 
-QuikNewsService::QuikNewsService(Quik *quik) {
-    this->quik = quik;
+#include <utility>
+
+QuikNewsService::QuikNewsService(const string& newsFilePath) {
+    this->newsFilePath = newsFilePath;
+    this->fileWatcher = new FileWatcher();
 }
 
 QuikNewsService::~QuikNewsService() {
-    monitorNewsThread.join();
+    fileWatcher->removeWatch(watchId);
+
+    delete fileWatcher;
 }
 
-void QuikNewsService::startMonitorUpdates(lua_State *luaState) {
+/*void QuikNewsService::handleFileAction(WatchID currentWatchId,
+                                       const string& dir,
+                                       const string& filename,
+                                       Action action,
+                                       string oldFilename) {
+    if (action != Actions::Modified) {
+        logger->info("QUIK news file action: {}", action);
+        return;
+    }
+    logger->info("QUIK news file updated....");
+
+    string newsFileData = FileUtils::readFile(newsFilePath);
+
+    onUpdateCallback(newsFileData);
+}*/
+
+void QuikNewsService::startMonitorUpdates(UpdateNewsFileCallback callback) {
     if (!configService->getConfig().quik.news.monitorUpdatesEnabled) {
         logger->info("Monitor news updates disabled. Skipping....");
         return;
     }
-    monitorNewsThread = thread([&luaState, this]() {
-        auto quikPath = quik->getWorkingFolder(luaState);
+    logger->info("Start monitor QUIK news file updates with path: {}", newsFilePath);
 
-        if (quikPath.isEmpty()) {
-            logger->error("Could not start QUIK news file monitor updates because QUIK working folder is invalid!");
-            return;
-        }
-        auto newsFilePath = quikPath.get() + "\\" + configService->getConfig().quik.news.fileName;
+    this->onUpdateCallback = move(callback);
+    this->watchId = fileWatcher->addWatch(newsFilePath, this, false);
 
-        logger->info("Start monitor QUIK news file updates with path: {}", newsFilePath);
-
-        while (quik->isRunning()) {
-            this_thread::sleep_for(chrono::seconds(5));
-
-            // TODO Add monitor news file update
-        }
-    });
+    fileWatcher->watch();
 }

@@ -20,6 +20,7 @@ typedef struct ParamDto {
     string paramValue;
     string paramImage;
     string result;
+    bool isError = false;
 } ParamDto;
 
 #endif //QUIK_CONNECTOR_PARAMDTO_H

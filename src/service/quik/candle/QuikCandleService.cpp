@@ -145,7 +145,7 @@ void QuikCandleService::checkCandlesRequestsComplete() {
                         candleSubscription.classCode, candleSubscription.ticker, intervalName);
                     continue;
                 }
-                logger->info("Candles prepared for class code: {}, ticker: {} and interval: {}. Total candles: {}",
+                logger->debug("Candles prepared for class code: {}, ticker: {} and interval: {}. Total candles: {}",
                     candleSubscription.classCode, candleSubscription.ticker, intervalName, candlesSize.get());
 
                 candlesRequestsTimeout.remove(requestId);
@@ -630,14 +630,15 @@ bool QuikCandleService::requestNewCandlesDataFromServer(lua_State *luaState,
     auto interval = candleSubscription.interval;
     auto intervalName = QuikUtils::getIntervalName(interval);
 
-    logger->info("Candles not exists for class code: {}, ticker: {} and interval: {}. Requesting new data....",
+    logger->debug("Candles not exists for class code: {}, ticker: {} and interval: {}. Requesting new data....",
         classCode, ticker, intervalName);
 
     // Tell QUIK to load and update candles data from server
     if (!luaGetField(luaState, dataSource, "SetEmptyCallback")) {
         logger->error(
             "Could not get candles with class code: {}, ticker: {} and interval: {} because could not get lua field <<SetEmptyCallback>>",
-            classCode, ticker, intervalName);
+            classCode, ticker, intervalName
+        );
         return false;
     }
     lua_pushvalue(luaState, dataSource);

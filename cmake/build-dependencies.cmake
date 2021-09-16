@@ -87,7 +87,7 @@ endif()
 # Include crossguid library (https://github.com/graeme-hill/crossguid)
 FetchContent_Declare(
     crossguid
-    GIT_REPOSITORY https://github.com/graeme-hill/crossguid
+    GIT_REPOSITORY https://github.com/graeme-hill/crossguid.git
     GIT_TAG v${CROSSGUID_VERSION}
 )
 
@@ -97,6 +97,21 @@ if(NOT crossguid_POPULATED)
     FetchContent_Populate(crossguid)
 
     add_subdirectory(${crossguid_SOURCE_DIR} ${crossguid_BINARY_DIR})
+endif()
+
+# Include efsw library (https://github.com/SpartanJ/efsw)
+FetchContent_Declare(
+    efsw
+    GIT_REPOSITORY https://github.com/SpartanJ/efsw.git
+    GIT_TAG ${EFSW_VERSION}
+)
+
+FetchContent_GetProperties(crossguid)
+
+if(NOT efsw_POPULATED)
+    FetchContent_Populate(efsw)
+
+    add_subdirectory(${efsw_SOURCE_DIR} ${efsw_BINARY_DIR})
 endif()
 
 # Include GoogleTest test framework (https://github.com/google/googletest)

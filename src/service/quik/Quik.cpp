@@ -24,11 +24,19 @@ int Quik::onStart(lua_State *luaState) {
 
     this->quikOrderService = new QuikOrderService(this);
 
-    //this->quikNewsService = new QuikNewsService(this);
-    //this->quikNewsService->startMonitorUpdates(luaState);
-
     isConnectorRunning = true;
 
+    auto quikPath = getWorkingFolder(luaState);
+
+    if (quikPath.isEmpty()) {
+        logger->error("Could not start QUIK news file monitor updates because QUIK working folder is invalid!");
+    } else {
+        auto newsFilePath = quikPath.get() + "\\" + configService->getConfig().quik.news.fileName;
+        this->quikNewsService = new QuikNewsService(newsFilePath);
+        this->quikNewsService->startMonitorUpdates([](string& newsData) {
+            logger->info("QUIK updated news file data length: {}", newsData.length());
+        });
+    }
     this->checkAllTradesThread = thread([this] {startCheckAllTradesThread();});
     this->checkQuotesThread = thread([this] {startCheckQuotesThread();});
     this->checkNewOrdersThread = thread([this] {startCheckNewOrdersThread();});
@@ -56,8 +64,10 @@ int Quik::onStop(lua_State *luaState) {
 
     delete quikOrderService;
     delete queueService;
-    //delete quikNewsService;
 
+    if (quikNewsService != nullptr) {
+        delete quikNewsService;
+    }
     logger->info(logMessage);
 
     message(luaState, logMessage, Quik::MessageIconType::WARNING);
@@ -428,6 +438,8 @@ list<TradeAccountDto> Quik::getTradeAccounts(lua_State *luaState) {
             logger->error("Could not convert trade account data to dto with table index: {}", i);
         }
     }
+    logger->info("Found total: {} trade accounts", tradeAccounts.size());
+
     return tradeAccounts;
 }
 
@@ -448,6 +460,8 @@ set<string> Quik::getClassesList(lua_State *luaState) {
         classes = stringSplitByDelimeter(classesStr, ',');
     }
     luaPrintStackSize(luaState, (string)__FUNCTION__);
+
+    logger->info("Found total: {} classes list", classes.size());
 
     return classes;
 }
@@ -762,6 +776,10 @@ Option<TickerDto> Quik::getTickerById(lua_State *luaState, string& classCode, st
 }
 
 Option<double> Quik::getTickerPriceStepCost(lua_State *luaState, const string& classCode, const string& ticker) {
+    // Price step cost used only for FORTS contracts otherwise it's always 1
+    if (classCode != "SPBFUT") {
+        return {1.0};
+    }
     lock_guard<recursive_mutex> lockGuard(*mutexLock);
 
     auto paramOption = getParamEx(luaState, classCode, ticker, "STEPPRICE");
@@ -800,10 +818,11 @@ Option<double> Quik::getTickerPriceStep(lua_State *luaState, const string& class
     if (paramOption.isPresent()) {
         ParamDto param = paramOption.get();
 
-        if (PARAM_DOUBLE_TYPE == param.paramType) {
+        if (PARAM_DOUBLE_TYPE == param.paramType
+                || PARAM_LONG_TYPE == param.paramType) {
             return stod(param.paramValue);
         } else {
-            logger->error("Could not get ticker price step for class code: {} and ticker: {}! Reason: Param type should be double but found: {}",
+            logger->error("Could not get ticker price step for class code: {} and ticker: {}! Reason: Param type should be double or long but found: {}",
                 classCode, ticker, param.paramType + 1);
             return {};
         }
@@ -833,10 +852,15 @@ Option<ParamDto> Quik::getParamEx(lua_State *luaState,
 
     luaPrintStackSize(luaState, (string)__FUNCTION__);
 
-    if (isSuccess) {
+    if (param.isError) {
+        logger->error("Could not get param ex value: {} for class code: {}, ticker: {} and param: {} because param not found!",
+            paramName, classCode, ticker, paramName);
+        return {};
+    } else if (isSuccess) {
         return {param};
     }
-    logger->error("Could not get param ex value for class code: {}, ticker: {} and param: {}", classCode, ticker, paramName);
+    logger->error("Could not get param ex value: {} for class code: {}, ticker: {} and param: {}",
+        paramName, classCode, ticker, paramName);
 
     return {};
 }

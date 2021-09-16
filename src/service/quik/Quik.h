@@ -30,8 +30,8 @@
 #include "../../dto/quik/connector/subscription/QuikSubscriptionDto.h"
 #include "candle/QuikCandleService.h"
 #include "order/QuikOrderService.h"
-#include "../config/ConfigService.h"
 #include "news/QuikNewsService.h"
+#include "../config/ConfigService.h"
 #include "../../dto/quik/ticker/TickerDto.h"
 #include "../../dto/quik/order/OrderDto.h"
 #include "../../dto/quik/order/StopOrderDto.h"
@@ -233,7 +233,7 @@ private:
     QuikCandleService *quikCandleService;
     QuikOrderService *quikOrderService;
     QueueService *queueService;
-    //QuikNewsService *quikNewsService;
+    QuikNewsService *quikNewsService;
 
     void startCheckAllTradesThread();
 

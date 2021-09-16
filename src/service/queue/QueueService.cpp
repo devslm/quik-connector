@@ -11,6 +11,7 @@ const string QueueService::QUIK_USER_TOPIC = "topic:quik:user";
 const string QueueService::QUIK_STOP_ORDERS_TOPIC = "topic:quik:stop:orders";
 const string QueueService::QUIK_CANDLES_TOPIC = "topic:quik:candles";
 const string QueueService::QUIK_ALL_TRADES_TOPIC = "topic:quik:trades:all";
+const string QueueService::QUIK_TRADE_ACCOUNTS_TOPIC = "topic:quik:trade:accounts";
 const string QueueService::QUIK_CANDLE_CHANGE_TOPIC = "topic:quik:candle:change";
 const string QueueService::QUIK_SERVER_INFO_TOPIC = "topic:quik:server:info";
 const string QueueService::QUIK_SUBSCRIPTION_RESULT_TOPIC = "topic:quik:subscription:result";
@@ -24,6 +25,7 @@ const string QueueService::QUIK_GET_ORDERS_COMMAND = "GET_ORDERS";
 const string QueueService::QUIK_GET_NEW_ORDERS_COMMAND = "GET_NEW_ORDERS";
 const string QueueService::QUIK_GET_STOP_ORDERS_COMMAND = "GET_STOP_ORDERS";
 const string QueueService::QUIK_GET_TICKERS_COMMAND = "GET_TICKERS";
+const string QueueService::QUIK_GET_TRADE_ACCOUNTS_COMMAND = "GET_TRADE_ACCOUNTS";
 const string QueueService::SUBSCRIBE_TO_CANDLES_COMMAND = "SUBSCRIBE_TO_CANDLES";
 const string QueueService::UNSUBSCRIBE_FROM_CANDLES_COMMAND = "UNSUBSCRIBE_FROM_CANDLES";
 
@@ -94,6 +96,12 @@ void QueueService::startCheckRequestsThread() {
                 auto newOrders = quik->getNewOrders(luaGetState());
 
                 publishOrders(newOrders);
+            } else if (QUIK_GET_TRADE_ACCOUNTS_COMMAND == commandRequest.command) {
+                auto tradeAccounts = quik->getTradeAccounts(luaGetState());
+
+                SuccessResponseDto response(requestId, toTradeAccountJson(tradeAccounts));
+
+                pubSubPublish(QUIK_TRADE_ACCOUNTS_TOPIC, response);
             } else if (QUIK_GET_TICKERS_COMMAND == commandRequest.command) {
                 auto request = toTickersRequestDto(commandRequest.commandJsonData);
                 auto classCode = request.get().classCode;

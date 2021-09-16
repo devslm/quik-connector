@@ -26,6 +26,7 @@ set(YAML_CPP_VERSION 0.7.0)
 set(SPDLOG_VERSION 1.9.0)
 set(CPP_REDIS_VERSION 4.3.1)
 set(CROSSGUID_VERSION 0.2.2)
+set(EFSW_VERSION 1.1.0)
 set(GOOGLE_TEST_FRAMEWORK_VERSION 1.11.0)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -87,6 +88,7 @@ set(
     yaml-cpp
     cpp_redis
     xg # crossguid library
+    efsw
     ${CMAKE_CURRENT_BINARY_DIR}/../external/lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
 )
 
