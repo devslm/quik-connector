@@ -58,7 +58,7 @@ bool luaGetTableIntegerField(lua_State *L, const char *key, uint64_t *buffer);
 
 bool luaGetTableStringField(lua_State *L, const char *key, string *buffer);
 
-bool luaGetString(lua_State *L, string *buffer);
+bool luaGetString(lua_State *L, string *buffer, int fieldIndexInStack = -1);
 
 bool luaGetNumber(lua_State *L, double *buffer);
 

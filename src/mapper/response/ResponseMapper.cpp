@@ -20,7 +20,8 @@ json toResponseJson(ErrorResponseDto& response) {
     errorObject["code"] = response.code;
     errorObject["detail"] = response.detail;
 
-    jsonObject["errors"] = errorObject;
+    jsonObject["errors"] = json::array();
+    jsonObject["errors"].push_back(errorObject);
 
     return jsonObject;
 }

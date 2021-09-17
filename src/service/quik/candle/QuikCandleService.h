@@ -94,6 +94,8 @@ private:
                                          QuikSubscriptionDto& candleSubscription);
 
     string toSubscriptionCacheValue(string& classCode, string& ticker, Interval& interval);
+
+    string getCreateDataSourceError(lua_State *luaState);
 };
 
 #endif //QUIK_CONNECTOR_QUIKCANDLESERVICE_H

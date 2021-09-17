@@ -301,10 +301,8 @@ bool luaGetTableStringField(lua_State *L, const char *key, string *buffer) {
     return false;
 }
 
-bool luaGetString(lua_State *L, string *buffer) {
+bool luaGetString(lua_State *L, string *buffer, int fieldIndexInStack) {
     lock_guard<recursive_mutex> lockGuard(mutexLock);
-
-    int fieldIndexInStack = -1;
 
     if (!lua_isstring(L, fieldIndexInStack)) {
         logger->error("Could not get plain string value! Current stack value type is: <<{}>> but required string!",

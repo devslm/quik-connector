@@ -292,11 +292,18 @@ bool QuikCandleService::subscribeToCandles(lua_State *luaState,
             classCode, ticker, intervalName, intervalName);
         return {};
     }
-    auto result = lua_pcall(luaState, 3 , 1, 0);
+    auto result = lua_pcall(luaState, 3 , 2, 0);
 
     if (LUA_OK != result) {
         logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
              classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+        return false;
+    }
+    string errorMessage = getCreateDataSourceError(luaState);
+
+    if (!errorMessage.empty()) {
+        logger->error("Could not subscribe to candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
+            classCode, ticker, intervalName, errorMessage);
         return false;
     }
     // Save reference to data source and remove from stack, so stack size - 1
@@ -590,11 +597,23 @@ bool QuikCandleService::getCandles(lua_State *luaState,
                 classCode, ticker, intervalName, intervalName);
             return false;
         }
-        auto result = lua_pcall(luaState, 3 , 1, 0);
+        auto result = lua_pcall(luaState, 3 , 2, 0);
 
         if (LUA_OK != result) {
             logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
                 classCode, ticker, intervalName, luaGetErrorMessage(luaState));
+            return false;
+        }
+        string errorMessage = getCreateDataSourceError(luaState);
+
+        if (!errorMessage.empty()) {
+            logger->error("Could not get candles with class code: {}, ticker: {} and interval: {}! Reason: {}",
+                classCode, ticker, intervalName, errorMessage);
+
+            ErrorResponseDto errorResponse(candlesRequest.requestId, RESPONSE_QUIK_LUA_ERROR, errorMessage);
+
+            queueService->pubSubPublish(QueueService::QUIK_CANDLES_TOPIC, errorResponse);
+
             return false;
         }
         candleSubscription.luaState = luaState;
@@ -619,6 +638,21 @@ bool QuikCandleService::getCandles(lua_State *luaState,
     candlesRequests.put(candlesRequest.requestId, candleSubscription);
 
     return true;
+}
+
+string QuikCandleService::getCreateDataSourceError(lua_State *luaState) {
+    string errorMessage;
+
+    // Index -1 -> error message, index -2 -> datasource index
+    if (!lua_isnil(luaState, -1)) {
+        if (!luaGetString(luaState, &errorMessage, -1)) {
+            errorMessage = "Could not get error message from the QUIK <<CreateDataSource>> function!";
+        }
+    }
+    // Remove error message value from the LUA stack
+    lua_pop(luaState, 1);
+
+    return errorMessage;
 }
 
 bool QuikCandleService::requestNewCandlesDataFromServer(lua_State *luaState,
