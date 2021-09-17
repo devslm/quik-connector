@@ -18,26 +18,21 @@ typedef function<void(string&)> UpdateNewsFileCallback;
 
 class QuikNewsService : public FileWatchListener {
 public:
-    explicit QuikNewsService(const string& newsFilePath);
+    QuikNewsService(const string& newsDirectory, const string& newsFileName);
 
     virtual ~QuikNewsService();
 
     void startMonitorUpdates(UpdateNewsFileCallback callback);
 
-    void handleFileAction(WatchID watchid, const std::string& dir, const std::string& filename, Action action, std::string oldFilename) override {
-        if (action != Actions::Modified) {
-            logger->info("QUIK news file action: {}", action);
-            return;
-        }
-        logger->info("QUIK news file updated....");
-
-        string newsFileData = FileUtils::readFile(newsFilePath);
-
-        onUpdateCallback(newsFileData);
-    }
+    void handleFileAction(WatchID currentWatchId,
+                          const std::string& dir,
+                          const std::string& filename,
+                          Action action,
+                          std::string oldFilename) override;
 
 private:
-    string newsFilePath;
+    string newsDirectory;
+    string newsFileName;
     UpdateNewsFileCallback onUpdateCallback;
     FileWatcher* fileWatcher;
     WatchID watchId;

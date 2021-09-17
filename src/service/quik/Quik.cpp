@@ -29,10 +29,9 @@ int Quik::onStart(lua_State *luaState) {
     auto quikPath = getWorkingFolder(luaState);
 
     if (quikPath.isEmpty()) {
-        logger->error("Could not start QUIK news file monitor updates because QUIK working folder is invalid!");
+        logger->error("Could not start QUIK news file monitor updates because QUIK working directory is invalid!");
     } else {
-        auto newsFilePath = quikPath.get() + "\\" + configService->getConfig().quik.news.fileName;
-        this->quikNewsService = new QuikNewsService(newsFilePath);
+        this->quikNewsService = new QuikNewsService(quikPath.get(), configService->getConfig().quik.news.fileName);
         this->quikNewsService->startMonitorUpdates([](string& newsData) {
             logger->info("QUIK updated news file data length: {}", newsData.length());
         });
