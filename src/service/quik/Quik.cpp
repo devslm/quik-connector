@@ -33,7 +33,7 @@ int Quik::onStart(lua_State *luaState) {
     } else {
         this->quikNewsService = new QuikNewsService(quikPath.get(), configService->getConfig().quik.news.fileName);
         this->quikNewsService->startMonitorUpdates([](string& newsData) {
-            logger->info("QUIK updated news file data length: {}", newsData.length());
+            logger->debug("QUIK updated news file data length: {}", newsData.length());
         });
     }
     this->checkAllTradesThread = thread([this] {startCheckAllTradesThread();});

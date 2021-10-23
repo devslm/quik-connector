@@ -12,6 +12,12 @@ configure_file(
 file(COPY ${PROJECT_SOURCE_DIR}/config DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR})
 file(COPY data/db/migrations DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/db)
 
+# Copy OpenSSL DLL files if enabled
+if (QUIK_INCLUDE_OPENSSL)
+    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../external/openssl-${OPENSSL_VERSION}/build/libssl-1_1-x64.dll DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/bin)
+    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/../external/openssl-${OPENSSL_VERSION}/build/libcrypto-1_1-x64.dll DESTINATION ${QUIK_CONNECTOR_OUTPUT_DIR}/bin)
+endif()
+
 set(QUIK_CONNECTOR_DLL_PATH ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
 
 option(CLION_IDE "Use Clion IDE therefore we will copy DLL from: ${PROJECT_BINARY_DIR} directory" OFF)

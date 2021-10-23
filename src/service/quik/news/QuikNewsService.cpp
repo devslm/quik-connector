@@ -50,7 +50,7 @@ void QuikNewsService::startMonitorUpdates(UpdateNewsFileCallback callback) {
         case efsw::Errors::FileOutOfScope:
         case efsw::Errors::FileRemote:
         case efsw::Errors::Unspecified:
-            logger->info("Could not start monitor QUIK news file updates with path: {}! Reason: {}",
+            logger->warn("Could not start monitor QUIK news file updates with path: {}! Reason: {}",
                 newsFilePath, Errors::Log::getLastErrorLog());
             break;
         default:

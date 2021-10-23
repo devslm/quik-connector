@@ -24,8 +24,6 @@ static int onStop(lua_State *luaState) {
     isQuikStarted = false;
     int returnCode = quik->onStop(luaState);
 
-    userRobotThread.join();
-
     delete quik;
     delete db;
     delete redis;
@@ -152,6 +150,9 @@ static int onStart(lua_State *luaState) {
     }
     isQuikStarted = false;
 
+    if (userRobotThread.joinable()) {
+        userRobotThread.join();
+    }
     return 0;
 }
 

@@ -84,6 +84,21 @@ if(NOT cpp_redis_POPULATED)
     target_include_directories(cpp_redis INTERFACE ${cpp_redis_SOURCE_DIR}/tacopie/includes)
 endif()
 
+# Include C++ http client library (https://github.com/yhirose/cpp-httplib)
+FetchContent_Declare(
+    cpp-httplib
+    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+    GIT_TAG v${CPP_HTTP_VERSION}
+)
+
+FetchContent_GetProperties(cpp-httplib)
+
+if(NOT cpp-httplib_POPULATED)
+    FetchContent_Populate(cpp-httplib)
+
+    add_subdirectory(${cpp-httplib_SOURCE_DIR} ${cpp-httplib_BINARY_DIR})
+endif()
+
 # Include crossguid library (https://github.com/graeme-hill/crossguid)
 FetchContent_Declare(
     crossguid

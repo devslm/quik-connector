@@ -44,6 +44,7 @@ bool toCandleDto(QuikSubscriptionDto *candleSubscription, CandleDto* candle, int
             isSuccess = false;
             break;
         }
+
         if(!luaGetField(candleSubscription->luaState, dataSource, "C")) {
             logger->error("Could not get candle close price with class code: {}, ticker: {} and interval: {} because could not get lua field <<C>>",
                 candle->classCode, candle->ticker, candleSubscription->interval);

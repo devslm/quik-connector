@@ -25,6 +25,8 @@ set(JSON_VERSION 3.9.1)
 set(YAML_CPP_VERSION 0.7.0)
 set(SPDLOG_VERSION 1.9.0)
 set(CPP_REDIS_VERSION 4.3.1)
+set(CPP_HTTP_VERSION 0.9.7)
+set(OPENSSL_VERSION 1.1.1l)
 set(CROSSGUID_VERSION 0.2.2)
 set(EFSW_VERSION 1.1.0)
 set(GOOGLE_TEST_FRAMEWORK_VERSION 1.11.0)
@@ -46,8 +48,18 @@ if (INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
     add_definitions(-DINCLUDE_QUIK_FUNCTIONS_TEST_CALL="${INCLUDE_QUIK_FUNCTIONS_TEST_CALL}")
 endif(INCLUDE_QUIK_FUNCTIONS_TEST_CALL)
 
+# Add definition TA_LIB to use ta_lib indicators
+option(QUIK_INCLUDE_TA_LIB "Include TA-LIB indicators library" OFF)
+
 if (QUIK_INCLUDE_TA_LIB)
     add_definitions(-DTA_LIB="${QUIK_INCLUDE_TA_LIB}")
+endif()
+
+# Add definition OPENSSL_LIB to use openssl library
+option(QUIK_INCLUDE_OPENSSL "Include OPENSSL library" OFF)
+
+if (QUIK_INCLUDE_OPENSSL)
+    add_definitions(-DOPENSSL_LIB="${QUIK_INCLUDE_OPENSSL}")
 endif()
 
 file(GLOB_RECURSE QUIK_INCLUDE_FILES "src/*.h")
@@ -87,20 +99,28 @@ set(
     nlohmann_json::nlohmann_json
     yaml-cpp
     cpp_redis
+    httplib
     xg # crossguid library
-    efsw
+    efsw # file system watcher
     ${CMAKE_CURRENT_BINARY_DIR}/../external/lua-${LUA_VERSION}/build/lua${LUA_LIB_VERSION}.lib
 )
 
-target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
-
-option(QUIK_INCLUDE_TA_LIB "Include TA-LIB indicators library" OFF)
+if (QUIK_INCLUDE_OPENSSL)
+    include_directories(
+        external/openssl-${OPENSSL_VERSION}/include
+        external/openssl-${OPENSSL_VERSION}/build/include
+    )
+    target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../external/openssl-${OPENSSL_VERSION}/build/libssl.lib)
+    target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../external/openssl-${OPENSSL_VERSION}/build/libcrypto.lib)
+endif()
 
 if (QUIK_INCLUDE_TA_LIB)
     include_directories(external/ta-lib/include)
 
     target_link_libraries(quik-connector ${CMAKE_CURRENT_BINARY_DIR}/../external/ta-lib/lib/ta_libc_cdr.lib)
 endif()
+
+target_link_libraries(quik-connector ${QUIK_LINK_LIBRARIES})
 
 option(QUIK_BUILD_TOOLS "Build QUIK tools binaries files" OFF)
 

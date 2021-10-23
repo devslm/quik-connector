@@ -542,7 +542,9 @@ vector<cpp_redis::reply> QuikCandleService::loadSubscriptionsFromCache() {
 }
 
 bool QuikCandleService::getCandles(lua_State *luaState, const CandlesRequestDto& candlesRequest) {
-    return getCandles(luaState, candlesRequest, Option<CandlesReadyCallback>());
+    auto emptyCandlesReadyCallback = Option<CandlesReadyCallback>();
+
+    return getCandles(luaState, candlesRequest, emptyCandlesReadyCallback);
 }
 
 bool QuikCandleService::getCandles(lua_State *luaState,
