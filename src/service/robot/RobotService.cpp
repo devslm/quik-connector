@@ -21,7 +21,7 @@ void RobotService::run(lua_State* luaState) {
     CandlesRequestDto candlesRequest;
     candlesRequest.requestId = connector::Uuid::createRandom();
     candlesRequest.classCode = "SPBFUT";
-    candlesRequest.ticker = "RIZ1";
+    candlesRequest.ticker = "RIH2";
     candlesRequest.interval = Interval::INTERVAL_M2;
 
     // Calculate EMA 9 after candles prepared
